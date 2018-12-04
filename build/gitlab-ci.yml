@@ -1,0 +1,25 @@
+image: golang:latest
+
+before_script:
+  - git config --global http.proxy "http://proxy-us.intel.com:911"
+  - echo "[http \"https://gitlab.devtools.intel.com\"]" >> ~/.gitconfig
+  - echo "        proxy = \"\"" >> ~/.gitconfig
+  - cd $CI_PROJECT_DIR
+
+stages:
+  - build
+  - test
+
+test:
+  stage: test
+  tags:
+    - go
+  script:
+    - go test -cover
+
+compile:
+  stage: build
+  tags:
+    - go
+  script:
+    - go build ./...
