@@ -23,6 +23,16 @@ paths:
           description: Successfully fetched Flavor
         '404':
           description: Flavor not Found
+    delete:
+      summary: Delete a Flavor
+      description: Delete a Flavor by its ID. This also deletes the image flavor link association from the database table.
+      parameters:
+        - $ref : '#/components/parameters/flavorIdParam'
+      responses:
+        '200':
+          description: Successfully fetched Flavor
+        '404':
+          description: Flavor not Found
 
   /flavors:
     post:
@@ -35,6 +45,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Flavor'
+      responses:
+        '201':
+          description: Successfully created Flavor
 
   # /reports:
   #   get:
@@ -275,22 +288,22 @@ components:
       required: true
       schema: 
         type: string
-    reportIdParam:
-      name: id
-      in: path
-      description: Report ID
-      required: true
-      schema: 
-        type: integer
-        format: int64
-    userIdParam:
-      name: id
-      in: path
-      description: User id
-      required: true
-      schema:
-        type: integer
-        format: int64
+    # reportIdParam:
+    #   name: id
+    #   in: path
+    #   description: Report ID
+    #   required: true
+    #   schema: 
+    #     type: integer
+    #     format: int64
+    # userIdParam:
+    #   name: id
+    #   in: path
+    #   description: User id
+    #   required: true
+    #   schema:
+    #     type: integer
+    #     format: int64
         
   securitySchemes:
     jwtAuth:
@@ -306,41 +319,57 @@ components:
           type: string
       example:
         message: "Example message"
-    Token:
-      required:
-        - token
-      properties:
-        token:
-          type: string
-      example:
-        token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
-    User:
+    # Token:
+    #   required:
+    #     - token
+    #   properties:
+    #     token:
+    #       type: string
+    #   example:
+    #     token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
+    Flavor:
       type: object
       required:
         - id
-        - name
-        - roles
+        - meta
+        - encryption
       properties:
         id:
-          type: integer
-          format: int64
-          readOnly: true
-        name:
           type: string
-        roles:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-        password:
+          format: uuid
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Meta:
+      type: object
+      required:
+        - description
+        - encryption
+      properties:
+        description:
+          $ref: '#/components/schemas/Description'
+        encryption:
+          $ref: '#/components/schemas/Encryption'
+    Description:
+      type: object
+      required:
+        - flavor_part
+        - label
+      properties:
+        flavor_part:
           type: string
-          writeOnly: true
-      example:
-        id: 34
-        name: dczech
-        roles: 
-          - hvs-admin
-          - tagent-admin
-          - ahub-admin
-          - wls-admin
-          - auth-admin
+          example: IMAGE
+        label:
+          type: string
+          example: Cirros-enc
+    Encryption:
+      type: object
+      required:
+        - encryption_required
+        - key_URL
+      properties:
+        encryption_required:
+          type: boolean
+        key_URL:
+          type: string
+          format: url
+          example: "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
