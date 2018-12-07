@@ -1,0 +1,346 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: ISecL Workload Service
+servers:
+  - url: http://workload-service.com
+paths:
+  # /flavors:
+  #   get:
+  #     summary: Get all Flavor documents
+  #     description: Get all Flavor documents with the specified filter criteria
+  #     operationId: GetFlavors()
+  /flavors/{id}:
+    get:
+      summary: Get a single Flavor
+      description: Get a single Flavor by its ID
+      parameters:
+        - $ref : '#/components/parameters/flavorIdParam'
+      tags:
+        - Flavors
+      responses:
+        '200':
+          description: Successfully fetched Flavor
+        '404':
+          description: Flavor not Found
+
+  /flavors:
+    post:
+      tags:
+        - Flavors
+      summary: Submit a new Flavor
+      description: Submit a new Flavor document 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Flavor'
+
+  # /reports:
+  #   get:
+  #     summary: Gets all Trust Reports
+  #     description: Retrieves all Trust Report documents and returns them in a list
+  #     tags: 
+  #       - Reports
+  #     responses:
+  #       '200':
+  #         description: Successfully fetched reports
+  #   post:
+  #     tags:
+  #       - Reports
+  #     summary: Submit a new Trust Report document
+  #     description: Submit a Trust Report document for persistent storage in the repository. Use /create-port if you want to fetch and submit a new Trust Report from a Host.
+  #     responses:
+  #       '200':
+  #         description: Successfully created a new report
+      
+  # /create-report:
+  #   post:
+  #     tags:
+  #       - Reports
+  #     summary: Create a new Trust Report for a specified Host
+  #     description: Creates a new Trust Report by fetching the Manifest from the specified Host, and verifying that Manifest against stored Flavors. 
+  #     responses:
+  #       '200':
+  #         description: Successfully created a new report for {host}
+      
+  # /reports/{id}:
+  #   get:
+  #     parameters: 
+  #       - $ref: '#/components/parameters/reportIdParam'
+  #     summary: Gets a specific Trust Report 
+  #     description: Gets a specific Trust Report with the specified identifier as part of URL
+  #     tags:
+  #       - Reports
+  #     responses:
+  #       '200':
+  #         description: "Response containing the Trust Report"
+  #       '404':
+  #         description: "Trust Report with {id} could not be found"
+  #   delete:
+  #     parameters:
+  #       - $ref: '#/components/parameters/reportIdParam'
+  #     summary: Delete a specific Trust Report
+  #     description: Deelete a specific Trust Report with the specified identifier as part of the URL
+  #     tags:
+  #       - Reports
+  #     responses:
+  #       '200':
+  #         description: Successfully deleted report
+
+
+  
+  # /users:
+  #   post:
+  #     security: 
+  #       - jwtAuth: []
+  #     summary: Creates a user and returns the user ID
+  #     operationId: createUser
+  #     tags:
+  #       - Users
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/User'
+  #     responses:
+  #       '201':
+  #         description: Created a new User
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/User'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403Forbidden'
+  #   get:
+  #     security: 
+  #       - jwtAuth: []  
+  #     summary: Queries User objects
+  #     operationId: queryUsers
+  #     tags:
+  #       - Users
+  #     parameters:
+  #       - in: query
+  #         name: name
+  #         description: Search by name
+  #         required: false
+  #         schema:
+  #           type: string
+  #           format: int64
+  #       - in: query
+  #         name: roles
+  #         description: Search by exact set of roles
+  #         required: false
+  #         schema:
+  #           type: array
+  #           items:  
+  #             type: string
+  #       - in: query
+  #         name: rolesContain
+  #         description: Search by subset of roles
+  #         required: false
+  #         schema:
+  #           type: array
+  #           items:  
+  #             type: string
+  #     responses:
+  #       '200':
+  #         description: A collection of User objects
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: '#/components/schemas/User'
+  #               uniqueItems: true
+  #             example:
+  #               - id: 1
+  #                 name: superadmin
+  #                 roles: 
+  #                   - superuser
+  #               - id: 2
+  #                 name: jdoe
+  #                 roles: 
+  #                   - hvs-admin
+  #                   - tagent-admin
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403Forbidden'
+          
+  # /users/{id}:
+  #   get:
+  #     security: 
+  #       - jwtAuth: []  
+  #     summary: Get's an User
+  #     operationId: getUser
+  #     tags:
+  #       - Users
+  #     parameters:
+  #       - $ref: '#/components/parameters/userIdParam'
+
+  #     responses:
+  #       '200':
+  #         description: A User object
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/User'
+  #       '404':
+  #         description: User with {id} not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/Message'
+  #             example:
+  #               message: "User not found"
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403Forbidden'
+  #   patch:
+  #     security: 
+  #       - jwtAuth: []  
+  #     summary: Update an User
+  #     description: "Update's an User object. This is an HTTP Patch, so it does not have to do an entire replacement. A partial object containing only the fields to be updated is acceptable."
+  #     tags:
+  #       - Users
+  #     parameters:
+  #       - $ref: '#/components/parameters/userIdParam'
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/User'
+  #           example:
+  #             username: new-username
+  #             roles: 
+  #               - updatedroles
+  #             password: new-pass-word
+  #     responses:
+  #       '204':
+  #         description: Updated User
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403Forbidden'
+  #   delete:
+  #     security: 
+  #       - jwtAuth: []  
+  #     summary: Delete's an User
+  #     tags: 
+  #       - Users
+  #     parameters:
+  #       - $ref: '#/components/parameters/userIdParam'
+  #     responses:
+  #       '204': 
+  #         description: Deleted User
+  #       '404':
+  #         description: User not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/Message'
+  #             example: "User not found"
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403Forbidden'
+components:
+  responses:
+    401Unauthorized:
+      description: Caller is not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          example:
+            message: "You must be authenticated to use this resource"
+    403Forbidden:
+      description: Caller is not authorized to use this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Message'
+          example:
+            message: "You must have the sufficient role(s) to use this resource"
+  parameters:
+    flavorIdParam:
+      name: id
+      in: path
+      description: Flavor ID
+      required: true
+      schema: 
+        type: string
+    reportIdParam:
+      name: id
+      in: path
+      description: Report ID
+      required: true
+      schema: 
+        type: integer
+        format: int64
+    userIdParam:
+      name: id
+      in: path
+      description: User id
+      required: true
+      schema:
+        type: integer
+        format: int64
+        
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Message:
+      required:
+        - message
+      properties:
+        message:
+          type: string
+      example:
+        message: "Example message"
+    Token:
+      required:
+        - token
+      properties:
+        token:
+          type: string
+      example:
+        token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - roles
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        password:
+          type: string
+          writeOnly: true
+      example:
+        id: 34
+        name: dczech
+        roles: 
+          - hvs-admin
+          - tagent-admin
+          - ahub-admin
+          - wls-admin
+          - auth-admin

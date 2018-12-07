@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/routes"
+	"intel/isecl/workload-service/resource"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,6 +10,6 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/version", routes.GetVersion)
+	r.HandleFunc("/version", resource.GetVersion)
 	http.ListenAndServe(fmt.Sprintf(":%d", Config.Port), r)
 }
