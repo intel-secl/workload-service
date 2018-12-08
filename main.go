@@ -2,14 +2,22 @@ package main
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/resource"
 	"net/http"
+
+	"intel/isecl/workload-service/config"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/version", resource.GetVersion)
-	http.ListenAndServe(fmt.Sprintf(":%d", Config.Port), r)
+	// Setup Version Endpoint
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// default handler
+	})
+	if config.UseTLS {
+		//http.ListenAndServe
+	} else {
+		http.ListenAndServe(fmt.Sprintf(":%d", config.Port), r)
+	}
 }

@@ -1,0 +1,63 @@
+package resource
+
+import (
+	"bytes"
+	"encoding/json"
+	"intel/isecl/lib/flavor"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+)
+
+// 	"flavor": {
+// 	  "id": "string",
+// 	  "meta": {
+// 		"description": {
+// 		  "flavor_part": "IMAGE",
+// 		  "label": "Cirros-enc"
+// 		},
+// 		"encryption": {
+// 		  "encryption_required": true,
+// 		  "key_URL": "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+// 		}
+// 	  }
+// 	}
+//   }
+
+func TestFlavorResource(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+
+	r := mux.NewRouter()
+	SetFlavorEndpoints(r)
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/flavor", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/flavor/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	var fResponse flavor.ImageFlavor
+	checkErr(json.Unmarshal(recorder.Body.Bytes(), &fResponse))
+	assert.Equal(*f, fResponse)
+
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/flavor/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+}

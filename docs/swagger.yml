@@ -329,6 +329,13 @@ components:
     #     token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
     Flavor:
       type: object
+      required: 
+        - flavor
+      properties:
+        flavor:
+          $ref: '#/components/schemas/Image'
+    Image:
+      type: object
       required:
         - id
         - meta
@@ -352,9 +359,9 @@ components:
     Description:
       type: object
       required:
-        - flavor_part
         - label
       properties:
+        # need to add WAY more properties here
         flavor_part:
           type: string
           example: IMAGE
