@@ -14,9 +14,9 @@ import (
 
 // SetFlavorEndpoints
 func SetFlavorEndpoints(r *mux.Router, db *gorm.DB) {
-	r.HandleFunc("/flavor/{id}", getFlavorByID(db)).Methods("GET")
-	r.HandleFunc("/flavor/{id}", deleteFlavorByID(db)).Methods("DELETE")
-	r.HandleFunc("/flavor", createFlavor(db)).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("/flavors/{id}", getFlavorByID(db)).Methods("GET")
+	r.HandleFunc("/flavors/{id}", deleteFlavorByID(db)).Methods("DELETE")
+	r.HandleFunc("/flavors", createFlavor(db)).Methods("POST").Headers("Content-Type", "application/json")
 }
 
 func getFlavorByID(db *gorm.DB) http.HandlerFunc {
