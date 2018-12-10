@@ -12,11 +12,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// SetFlavorEndpoints
-func SetFlavorEndpoints(r *mux.Router, db *gorm.DB) {
-	r.HandleFunc("/flavors/{id}", getFlavorByID(db)).Methods("GET")
-	r.HandleFunc("/flavors/{id}", deleteFlavorByID(db)).Methods("DELETE")
-	r.HandleFunc("/flavors", createFlavor(db)).Methods("POST").Headers("Content-Type", "application/json")
+// SetFlavorsEndpoints
+func SetFlavorsEndpoints(r *mux.Router, db *gorm.DB) {
+	r.HandleFunc("/{id}", getFlavorByID(db)).Methods("GET")
+	r.HandleFunc("/{id}", deleteFlavorByID(db)).Methods("DELETE")
+	r.HandleFunc("", createFlavor(db)).Methods("POST").Headers("Content-Type", "application/json")
 }
 
 func getFlavorByID(db *gorm.DB) http.HandlerFunc {

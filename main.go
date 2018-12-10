@@ -31,9 +31,9 @@ func main() {
 	if err != nil {
 		log.Fatal("could not open db", err)
 	}
-	r := mux.NewRouter()
+	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
 	// Set Resource Endpoints
-	resource.SetFlavorEndpoints(r, db)
+	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), db)
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, db)
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

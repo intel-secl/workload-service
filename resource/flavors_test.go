@@ -57,15 +57,15 @@ func TestFlavorResource(t *testing.T) {
 	checkErr(err)
 
 	r := mux.NewRouter()
-	SetFlavorEndpoints(r, db)
+	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/flavors", bytes.NewBuffer(fJSON))
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/flavors/"+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	var fResponse flavor.ImageFlavor
@@ -73,7 +73,7 @@ func TestFlavorResource(t *testing.T) {
 	assert.Equal(*f, fResponse)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 }
