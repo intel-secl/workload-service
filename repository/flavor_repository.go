@@ -5,8 +5,6 @@ import (
 	"intel/isecl/lib/flavor"
 
 	"github.com/jinzhu/gorm"
-	// Import Postgres driver
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 var (
@@ -30,11 +28,11 @@ type FlavorRepository interface {
 	DeleteByLabel(label string) error
 }
 
-type flavorPsql struct {
+type flavorRepo struct {
 	db *gorm.DB
 }
 
-func (repo *flavorPsql) Create(f *flavor.ImageFlavor) error {
+func (repo *flavorRepo) Create(f *flavor.ImageFlavor) error {
 	if f == nil {
 		return errors.New("cannot create nil flavor")
 	}
@@ -59,7 +57,7 @@ func (repo *flavorPsql) Create(f *flavor.ImageFlavor) error {
 	return tx.Commit().Error
 }
 
-func (repo *flavorPsql) RetrieveByUUID(uuid string) (*flavor.ImageFlavor, error) {
+func (repo *flavorRepo) RetrieveByUUID(uuid string) (*flavor.ImageFlavor, error) {
 	var fe flavorEntity
 	fe.ID = uuid
 	if err := repo.db.First(&fe).Error; err != nil {
@@ -68,7 +66,7 @@ func (repo *flavorPsql) RetrieveByUUID(uuid string) (*flavor.ImageFlavor, error)
 	return fe.ImageFlavor, nil
 }
 
-func (repo *flavorPsql) RetrieveByLabel(label string) (*flavor.ImageFlavor, error) {
+func (repo *flavorRepo) RetrieveByLabel(label string) (*flavor.ImageFlavor, error) {
 	var fe flavorEntity
 	if err := repo.db.Where("label = ?", label).Find(&fe).Error; err != nil {
 		return nil, err
@@ -76,35 +74,26 @@ func (repo *flavorPsql) RetrieveByLabel(label string) (*flavor.ImageFlavor, erro
 	return fe.ImageFlavor, nil
 }
 
-func (repo *flavorPsql) Delete(f *flavor.ImageFlavor) error {
+func (repo *flavorRepo) Delete(f *flavor.ImageFlavor) error {
 	if f == nil {
 		return errors.New("cannot delete nil flavor")
 	}
 	return repo.DeleteByUUID(f.Image.Meta.ID)
 }
 
-func (repo *flavorPsql) DeleteByUUID(uuid string) error {
+func (repo *flavorRepo) DeleteByUUID(uuid string) error {
 	return repo.db.Delete(&flavorEntity{ID: uuid}).Error
 }
 
-func (repo *flavorPsql) DeleteByLabel(label string) error {
+func (repo *flavorRepo) DeleteByLabel(label string) error {
 	return repo.db.Where("label = ?", label).Delete(&flavorEntity{}).Error
 }
 
-var singleton *flavorPsql
-
-// GetFlavorRepository gets the global instance of the FlavorRepository. Currently is only backed by postgresql
-func GetFlavorRepository() (FlavorRepository, error) {
-	if singleton == nil {
-		// try to open gorm
-		db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=postgres password=test sslmode=disable")
-		if err != nil {
-			return nil, err
-		}
-		db.AutoMigrate(&flavorEntity{})
-		singleton = &flavorPsql{
-			db: db,
-		}
+// GetFlavorRepository gets a Repository connector for the supplied gorm DB instance
+func GetFlavorRepository(db *gorm.DB) FlavorRepository {
+	db.AutoMigrate(&flavorEntity{})
+	repo := &flavorRepo{
+		db: db,
 	}
-	return singleton, nil
+	return repo
 }

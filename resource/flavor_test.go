@@ -8,8 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jinzhu/gorm"
+
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+
+	// Import Postgres driver
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 // 	"flavor": {
@@ -35,13 +40,15 @@ func TestFlavorResource(t *testing.T) {
 			assert.FailNow("fatal error, cannot continue test")
 		}
 	}
+	db, err := gorm.Open("postgres", "host=localhost port=5432 user=runner dbname=wls password=test sslmode=disable")
+	checkErr(err)
 	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
 
 	r := mux.NewRouter()
-	SetFlavorEndpoints(r)
+	SetFlavorEndpoints(r, db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/flavor", bytes.NewBuffer(fJSON))
 	req.Header.Add("Content-Type", "application/json")

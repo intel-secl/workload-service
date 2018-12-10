@@ -15,7 +15,7 @@ func TestGetVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetVersion)
+	handler := http.HandlerFunc(getVersion)
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(recorder.Code, http.StatusOK)
 
