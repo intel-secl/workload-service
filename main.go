@@ -26,6 +26,7 @@ func main() {
 	}
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 		config.Postgres.Hostname, config.Postgres.Port, config.Postgres.User, config.Postgres.DBName, config.Postgres.Password, sslMode))
+	defer db.Close()
 	config.Postgres.Password = ""
 	if err != nil {
 		log.Fatal("could not open db", err)
