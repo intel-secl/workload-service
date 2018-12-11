@@ -80,6 +80,19 @@ func TestImagesResource(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
+	// query all by flavorID and see if we can find boths
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/images?flavor_id="+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	var response struct {
+		ImageIDs []string `json:"image_ids"`
+	}
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	checkErr(err)
+	assert.NotEmpty(response.ImageIDs)
+	assert.ElementsMatch([]string{newImage.ImageID, newImage2.ImageID}, response.ImageIDs)
+
 	// Delete  the first one we created
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ImageID, nil)

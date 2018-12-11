@@ -1,5 +1,10 @@
 package config
 
+import (
+	"io"
+	"os"
+)
+
 // Config is a global structure of config values
 var Port int
 var UseTLS bool
@@ -11,6 +16,7 @@ var Postgres struct {
 	Port     int
 	SSLMode  bool
 }
+var LogWriter io.Writer
 
 func init() {
 	Port = 8444
@@ -21,4 +27,5 @@ func init() {
 	Postgres.Hostname = "localhost"
 	Postgres.Port = 5432
 	Postgres.SSLMode = false
+	LogWriter = os.Stdout
 }

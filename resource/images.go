@@ -3,7 +3,10 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+	"intel/isecl/lib/middleware/logger"
+	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/repository"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,10 +15,46 @@ import (
 
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db *gorm.DB) {
-	r.HandleFunc("/{id}", getImageByID(db)).Methods("GET")
-	r.HandleFunc("/{id}", deleteImageByID(db)).Methods("DELETE")
-	//r.HandleFunc("", nil).Methods("GET")
-	r.HandleFunc("", createImage(db)).Methods("POST").Headers("Content-Type", "application/json")
+	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
+	r.HandleFunc("/{id}", logger(getImageByID(db))).Methods("GET")
+	r.HandleFunc("/{id}", logger(deleteImageByID(db))).Methods("DELETE")
+	r.HandleFunc("", logger(queryImages(db))).Methods("GET")
+	r.HandleFunc("", logger(createImage(db))).Methods("POST").Headers("Content-Type", "application/json")
+}
+
+func queryImages(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		locator := repository.ImageLocator{}
+
+		imageID, ok := r.URL.Query()["image_id"]
+		if ok && len(imageID) >= 1 {
+			locator.ImageID = imageID[0]
+		}
+		flavorID, ok := r.URL.Query()["flavor_id"]
+		if ok && len(flavorID) >= 1 {
+			locator.FlavorID = flavorID[0]
+		}
+
+		ids, err := repository.GetImageFlavorRepository(db).RetrieveByFilterCriteria(locator)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if len(ids) == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		var response struct {
+			ImageIDs []string `json:"image_ids"`
+		}
+		response.ImageIDs = ids
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+		}
+	}
 }
 
 func getImageByID(db *gorm.DB) http.HandlerFunc {

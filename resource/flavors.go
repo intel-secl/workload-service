@@ -1,11 +1,14 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/config"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"intel/isecl/lib/flavor"
+	"intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/repository"
 
 	"github.com/gorilla/mux"
@@ -14,9 +17,10 @@ import (
 
 // SetFlavorsEndpoints
 func SetFlavorsEndpoints(r *mux.Router, db *gorm.DB) {
-	r.HandleFunc("/{id}", getFlavorByID(db)).Methods("GET")
-	r.HandleFunc("/{id}", deleteFlavorByID(db)).Methods("DELETE")
-	r.HandleFunc("", createFlavor(db)).Methods("POST").Headers("Content-Type", "application/json")
+	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
+	r.HandleFunc("/{id}", logger(getFlavorByID(db))).Methods("GET")
+	r.HandleFunc("/{id}", logger(deleteFlavorByID(db))).Methods("DELETE")
+	r.HandleFunc("", logger(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
 func getFlavorByID(db *gorm.DB) http.HandlerFunc {
@@ -36,9 +40,12 @@ func getFlavorByID(db *gorm.DB) http.HandlerFunc {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			} else {
-				w.WriteHeader(http.StatusOK)
-				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(flavor)
+				if err := json.NewEncoder(w).Encode(flavor); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				} else {
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+				}
 			}
 		}
 	}
