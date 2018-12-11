@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"intel/isecl/workload-service/model"
 
 	"github.com/jinzhu/gorm"
 )
@@ -16,25 +17,25 @@ type ImageLocator struct {
 	FlavorID string `json:"flavor_id, omitempty"`
 }
 
-// ImageFlavorRepository defines an interface that provides persistence operations for an Image-Flavor link.
+// ImageRepository defines an interface that provides persistence operations for an Image-Flavor link.
 // It defines High Level CRUD operations that could be implemented by any database or persistence layer (such as postgres)
 // The CRUD operations are logically grouped, but not defined to any single interface, so that FlavorRepository may customize them to its own needs, with
 // Stronger typing rather than cast everything from an interface{}
-type ImageFlavorRepository interface {
+type ImageRepository interface {
 	// C
-	Create(imageUUID string, flavorUUID string) error
+	Create(image *model.Image) error
 	// R
 	RetrieveByUUID(uuid string) (bool, error)
-	RetrieveByFilterCriteria(locator ImageLocator) ([]string, error)
+	RetrieveByFilterCriteria(locator ImageLocator) ([]model.Image, error)
 	// D
 	DeleteByUUID(uuid string) error
 }
 
-type imageFlavorRepo struct {
+type imageRepo struct {
 	db *gorm.DB
 }
 
-func (ifr *imageFlavorRepo) RetrieveByFilterCriteria(locator ImageLocator) ([]string, error) {
+func (ifr *imageRepo) RetrieveByFilterCriteria(locator ImageLocator) ([]model.Image, error) {
 	db := ifr.db
 	if len(locator.ImageID) > 0 {
 		db = db.Where("image_id = ?", locator.ImageID)
@@ -42,29 +43,29 @@ func (ifr *imageFlavorRepo) RetrieveByFilterCriteria(locator ImageLocator) ([]st
 	if len(locator.FlavorID) > 0 {
 		db = db.Where("flavor_id = ?", locator.FlavorID)
 	}
-	var entities []imageFlavorEntity
+	var entities []imageEntity
 	err := db.Find(&entities).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	ids := make([]string, len(entities))
+	ids := make([]model.Image, len(entities))
 	for i, v := range entities {
-		ids[i] = v.ID
+		ids[i] = model.Image{ID: v.ID, FlavorID: v.FlavorID}
 	}
 	return ids, nil
 }
 
-func (ifr *imageFlavorRepo) Create(imageUUID string, flavorUUID string) error {
+func (ifr *imageRepo) Create(image *model.Image) error {
 	tx := ifr.db.Begin()
-	var i imageFlavorEntity
-	if !tx.Take(&i, "id = ?", imageUUID).RecordNotFound() {
+	var i imageEntity
+	if !tx.Take(&i, "id = ?", image.ID).RecordNotFound() {
 		// already exists
 		tx.Rollback()
 		return ErrImageAssociationAlreadyExists
 	} else {
-		err := tx.Create(&imageFlavorEntity{ID: imageUUID, FlavorID: flavorUUID}).Error
+		err := tx.Create(&imageEntity{ID: image.ID, FlavorID: image.FlavorID}).Error
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -74,8 +75,8 @@ func (ifr *imageFlavorRepo) Create(imageUUID string, flavorUUID string) error {
 	}
 }
 
-func (ifr *imageFlavorRepo) RetrieveByUUID(uuid string) (bool, error) {
-	var i imageFlavorEntity
+func (ifr *imageRepo) RetrieveByUUID(uuid string) (bool, error) {
+	var i imageEntity
 	res := ifr.db.First(&i, "id = ?", uuid)
 	if res.Error != nil {
 		if res.RecordNotFound() {
@@ -88,14 +89,14 @@ func (ifr *imageFlavorRepo) RetrieveByUUID(uuid string) (bool, error) {
 	}
 }
 
-func (ifr *imageFlavorRepo) DeleteByUUID(uuid string) error {
-	return ifr.db.Delete(&imageFlavorEntity{ID: uuid}).Error
+func (ifr *imageRepo) DeleteByUUID(uuid string) error {
+	return ifr.db.Delete(&imageEntity{ID: uuid}).Error
 }
 
 // GetImageFlavorRepository gets a Repository connector for the supplied gorm DB instance
-func GetImageFlavorRepository(db *gorm.DB) ImageFlavorRepository {
-	db.AutoMigrate(&imageFlavorEntity{})
-	repo := &imageFlavorRepo{
+func GetImageFlavorRepository(db *gorm.DB) ImageRepository {
+	db.AutoMigrate(&imageEntity{})
+	repo := &imageRepo{
 		db: db,
 	}
 	return repo

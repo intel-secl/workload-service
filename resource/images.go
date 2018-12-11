@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/config"
+	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"log"
 	"net/http"
@@ -35,20 +36,16 @@ func queryImages(db *gorm.DB) http.HandlerFunc {
 			locator.FlavorID = flavorID[0]
 		}
 
-		ids, err := repository.GetImageFlavorRepository(db).RetrieveByFilterCriteria(locator)
+		images, err := repository.GetImageFlavorRepository(db).RetrieveByFilterCriteria(locator)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if len(ids) == 0 {
+		if len(images) == 0 {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		var response struct {
-			ImageIDs []string `json:"image_ids"`
-		}
-		response.ImageIDs = ids
-		if err := json.NewEncoder(w).Encode(response); err != nil {
+		if err := json.NewEncoder(w).Encode(images); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
 			w.WriteHeader(http.StatusOK)
@@ -91,23 +88,17 @@ func deleteImageByID(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// CreateImage defines the request body for a POST /image request, creating an association between ImageID and
-type CreateImage struct {
-	ImageID  string `json:"image_id"`
-	FlavorID string `json:"flavor_id"`
-}
-
 func createImage(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var formBody CreateImage
+		var formBody model.Image
 		if err := json.NewDecoder(r.Body).Decode(&formBody); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := repository.GetImageFlavorRepository(db).Create(formBody.ImageID, formBody.FlavorID); err != nil {
+		if err := repository.GetImageFlavorRepository(db).Create(&formBody); err != nil {
 			switch err {
 			case repository.ErrImageAssociationAlreadyExists:
-				http.Error(w, fmt.Sprintf("image with UUID %s is already associated with a flavor", formBody.ImageID), http.StatusConflict)
+				http.Error(w, fmt.Sprintf("image with UUID %s is already associated with a flavor", formBody.ID), http.StatusConflict)
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

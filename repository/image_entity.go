@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type imageFlavorEntity struct {
+type imageEntity struct {
 	// alias gorm.Model
 	ID        string `gorm:"type:uuid;primary_key;"`
 	CreatedAt time.Time

@@ -21,18 +21,24 @@ paths:
       responses:
         '200':
           description: Successfully fetched Flavor
+          content:
+            application/json:
+              schema:
+                $ref : '#/components/schemas/Flavor'
         '404':
           description: Flavor not Found
     delete:
+      tags:
+        - Flavors
       summary: Delete a Flavor
       description: Delete a Flavor by its ID. This also deletes the image flavor link association from the database table.
       parameters:
         - $ref : '#/components/parameters/flavorIdParam'
       responses:
-        '200':
-          description: Successfully fetched Flavor
+        '204':
+          description: Successfully deleted Flavor
         '404':
-          description: Flavor not Found
+          description: Flavor not found
 
   /flavors:
     post:
@@ -48,7 +54,20 @@ paths:
       responses:
         '201':
           description: Successfully created Flavor
-
+          
+  /images/{id}:
+    get:
+      tags:
+        - Images
+      summary: Retrieve an Image 
+      description: Query an Image by its UUID and see it's associated flavorId
+      parameters:
+        - $ref : '#/components/parameters/imageIdParam'
+      responses:
+        '200':
+          description: Successfully retrieved Image
+        '404':
+          description: Image not found
   # /reports:
   #   get:
   #     summary: Gets all Trust Reports
@@ -287,6 +306,13 @@ components:
       description: Flavor ID
       required: true
       schema: 
+        type: string
+    imageIdParam:
+      name: id
+      in: path
+      description: Image ID
+      required: true
+      schema:
         type: string
     # reportIdParam:
     #   name: id

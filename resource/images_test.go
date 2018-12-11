@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"intel/isecl/lib/flavor"
+	"intel/isecl/workload-service/model"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -57,7 +58,7 @@ func TestImagesResource(t *testing.T) {
 	// Post a new Image association
 	recorder = httptest.NewRecorder()
 	id, _ := uuid.NewV4()
-	newImage := CreateImage{ImageID: id.String(), FlavorID: f.Image.Meta.ID}
+	newImage := model.Image{ID: id.String(), FlavorID: f.Image.Meta.ID}
 	newImageJSON, _ := json.Marshal(newImage)
 	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
@@ -66,13 +67,13 @@ func TestImagesResource(t *testing.T) {
 
 	// Check and see if the Image has been created in the db
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ImageID, nil)
+	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()
-	newImage2 := CreateImage{ImageID: uuid2.String(), FlavorID: f.Image.Meta.ID}
+	newImage2 := model.Image{ID: uuid2.String(), FlavorID: f.Image.Meta.ID}
 	newImage2JSON, _ := json.Marshal(newImage2)
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImage2JSON))
@@ -85,23 +86,29 @@ func TestImagesResource(t *testing.T) {
 	req = httptest.NewRequest("GET", "/wls/images?flavor_id="+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
-	var response struct {
-		ImageIDs []string `json:"image_ids"`
-	}
+	var response []model.Image
 	err = json.Unmarshal(recorder.Body.Bytes(), &response)
 	checkErr(err)
-	assert.NotEmpty(response.ImageIDs)
-	assert.ElementsMatch([]string{newImage.ImageID, newImage2.ImageID}, response.ImageIDs)
+	assert.NotEmpty(response)
+	i1 := model.Image{
+		ID:       newImage.ID,
+		FlavorID: newImage.FlavorID,
+	}
+	i2 := model.Image{
+		ID:       newImage2.ID,
+		FlavorID: newImage2.FlavorID,
+	}
+	assert.ElementsMatch([]model.Image{i1, i2}, response)
 
 	// Delete  the first one we created
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ImageID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	// Assert that it doesn't exist anymore
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ImageID, nil)
+	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 
@@ -113,7 +120,7 @@ func TestImagesResource(t *testing.T) {
 
 	// Check to see if the second image we created was implicitly deleted
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage2.ImageID, nil)
+	req = httptest.NewRequest("GET", "/wls/images/"+newImage2.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 }
