@@ -98,6 +98,7 @@ func (repo *flavorRepo) DeleteByLabel(label string) error {
 // GetFlavorRepository gets a Repository connector for the supplied gorm DB instance
 func GetFlavorRepository(db *gorm.DB) FlavorRepository {
 	db.AutoMigrate(&flavorEntity{})
+	db.AutoMigrate(&imageFlavorEntity{})
 	repo := &flavorRepo{
 		db: db,
 	}
