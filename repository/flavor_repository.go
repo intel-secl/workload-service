@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrFlavorUUIDAlreadyExists  = errors.New("flavor already exists with UUUID")
+	ErrFlavorUUIDAlreadyExists  = errors.New("flavor already exists with UUID")
 	ErrFlavorLabelAlreadyExists = errors.New("flavor already exists with label")
 )
 
@@ -38,7 +38,7 @@ func (repo *flavorRepo) Create(f *flavor.ImageFlavor) error {
 	}
 	tx := repo.db.Begin()
 	var fe flavorEntity
-	if !tx.Where("id = ? OR label = ?", f.Image.Meta.ID, f.Image.Meta.Description.Label).Take(&fe).RecordNotFound() {
+	if !tx.Where("id = ?", f.Image.Meta.ID).Or("label = ?", f.Image.Meta.Description.Label).Take(&fe).RecordNotFound() {
 		// duplicate exists
 		tx.Rollback()
 		if fe.ID == f.Image.Meta.ID {
@@ -82,7 +82,13 @@ func (repo *flavorRepo) Delete(f *flavor.ImageFlavor) error {
 }
 
 func (repo *flavorRepo) DeleteByUUID(uuid string) error {
-	return repo.db.Delete(&flavorEntity{ID: uuid}).Error
+	err := repo.db.Delete(&flavorEntity{ID: uuid}).Error
+	if err != nil {
+		return err
+	} else {
+		// Delete associated images
+		return repo.db.Where("flavor_id = ?", uuid).Delete(imageFlavorEntity{}).Error
+	}
 }
 
 func (repo *flavorRepo) DeleteByLabel(label string) error {
