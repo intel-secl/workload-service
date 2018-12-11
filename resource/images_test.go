@@ -70,6 +70,9 @@ func TestImagesResource(t *testing.T) {
 	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
+	var getResp model.Image
+	_ = json.Unmarshal(recorder.Body.Bytes(), &getResp)
+	assert.Equal(newImage, getResp)
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()

@@ -5,11 +5,6 @@ info:
 servers:
   - url: http://workload-service.com
 paths:
-  # /flavors:
-  #   get:
-  #     summary: Get all Flavor documents
-  #     description: Get all Flavor documents with the specified filter criteria
-  #     operationId: GetFlavors()
   /flavors/{id}:
     get:
       summary: Get a single Flavor
@@ -24,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref : '#/components/schemas/Flavor'
+                $ref : '#/components/schemas/ImageFlavor'
         '404':
           description: Flavor not Found
     delete:
@@ -50,10 +45,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Flavor'
+              $ref: '#/components/schemas/ImageFlavor'
       responses:
         '201':
           description: Successfully created Flavor
+        '409':
+          description: Flavor with ID already exists
           
   /images/{id}:
     get:
@@ -66,8 +63,60 @@ paths:
       responses:
         '200':
           description: Successfully retrieved Image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
         '404':
           description: Image not found
+    delete:
+      tags:
+        - Images
+      summary: Delete an Image
+      description: Delete an Image by its UUID
+      parameters:
+        - $ref: '#/components/parameters/imageIdParam'
+      responses:
+        '204':
+          description: Successfully deleted Image
+        '404':
+          description: Image not found
+  /images:
+    post:
+      tags:
+        - Images
+      summary: Submit an Image
+      description: Submit an Image along with the FlavorID it is to be associated with
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Image'
+      responses:
+        '201':
+          description: Successfully created Image
+        '409':
+          description: Image with ID already 
+    get:
+      tags:
+        - Images
+      summary: Query Images
+      description: Query Images via filter Criteria. Filter criteria is evaluated as the "Logical AND" of all query parameters.
+      parameters:
+        - in: query
+          name: image_id
+          schema:
+            type: string
+            format: uuid
+          required: false
+          description: Filter by image uuid
+        - in: query
+          name: flavor_id
+          schema:
+            type: string
+            format: uuid
+          required: false
+          description: UUID of the flavor associated with images. Specifying this will find all Images that are associated with this flavor id.
   # /reports:
   #   get:
   #     summary: Gets all Trust Reports
@@ -307,6 +356,7 @@ components:
       required: true
       schema: 
         type: string
+        format: uuid
     imageIdParam:
       name: id
       in: path
@@ -314,6 +364,7 @@ components:
       required: true
       schema:
         type: string
+        format: uuid
     # reportIdParam:
     #   name: id
     #   in: path
@@ -353,14 +404,14 @@ components:
     #       type: string
     #   example:
     #     token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
-    Flavor:
+    ImageFlavor:
       type: object
       required: 
         - flavor
       properties:
         flavor:
-          $ref: '#/components/schemas/Image'
-    Image:
+          $ref: '#/components/schemas/flavor.Image'
+    flavor.Image:
       type: object
       required:
         - id
@@ -406,3 +457,15 @@ components:
           type: string
           format: url
           example: "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+    Image:
+      type: object
+      required:
+        - id
+        - flavor_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        flavor_id:
+          type: string
+          format: uuid

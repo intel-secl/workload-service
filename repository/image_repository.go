@@ -25,7 +25,7 @@ type ImageRepository interface {
 	// C
 	Create(image *model.Image) error
 	// R
-	RetrieveByUUID(uuid string) (bool, error)
+	RetrieveByUUID(uuid string) (*model.Image, error)
 	RetrieveByFilterCriteria(locator ImageLocator) ([]model.Image, error)
 	// D
 	DeleteByUUID(uuid string) error
@@ -64,28 +64,23 @@ func (ifr *imageRepo) Create(image *model.Image) error {
 		// already exists
 		tx.Rollback()
 		return ErrImageAssociationAlreadyExists
-	} else {
-		err := tx.Create(&imageEntity{ID: image.ID, FlavorID: image.FlavorID}).Error
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-		tx.Commit()
-		return nil
 	}
+	err := tx.Create(&imageEntity{ID: image.ID, FlavorID: image.FlavorID}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
-func (ifr *imageRepo) RetrieveByUUID(uuid string) (bool, error) {
+func (ifr *imageRepo) RetrieveByUUID(uuid string) (*model.Image, error) {
 	var i imageEntity
 	res := ifr.db.First(&i, "id = ?", uuid)
 	if res.Error != nil {
-		if res.RecordNotFound() {
-			return false, nil
-		} else {
-			return false, res.Error
-		}
+		return nil, res.Error
 	} else {
-		return true, nil
+		return &model.Image{ID: i.ID, FlavorID: i.FlavorID}, nil
 	}
 }
 

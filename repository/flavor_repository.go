@@ -85,10 +85,9 @@ func (repo *flavorRepo) DeleteByUUID(uuid string) error {
 	err := repo.db.Delete(&flavorEntity{ID: uuid}).Error
 	if err != nil {
 		return err
-	} else {
-		// Delete associated images
-		return repo.db.Where("flavor_id = ?", uuid).Delete(imageEntity{}).Error
 	}
+	// Delete associated images
+	return repo.db.Where("flavor_id = ?", uuid).Delete(imageEntity{}).Error
 }
 
 func (repo *flavorRepo) DeleteByLabel(label string) error {

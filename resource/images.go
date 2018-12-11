@@ -57,15 +57,22 @@ func queryImages(db *gorm.DB) http.HandlerFunc {
 func getImageByID(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["id"]
-		exists, err := repository.GetImageFlavorRepository(db).RetrieveByUUID(uuid)
+		image, err := repository.GetImageFlavorRepository(db).RetrieveByUUID(uuid)
 		if err == nil {
-			if exists {
-				w.WriteHeader(http.StatusOK)
-			} else {
-				w.WriteHeader(http.StatusNotFound)
+			mErr := json.NewEncoder(w).Encode(image)
+			if mErr != nil {
+				http.Error(w, mErr.Error(), http.StatusInternalServerError)
 			}
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+		} else if gorm.IsRecordNotFoundError(err) {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
 		}
 	}
 }
