@@ -82,12 +82,9 @@ func (repo *flavorRepo) Delete(f *flavor.ImageFlavor) error {
 }
 
 func (repo *flavorRepo) DeleteByUUID(uuid string) error {
-	err := repo.db.Delete(&flavorEntity{ID: uuid}).Error
-	if err != nil {
-		return err
-	}
+	return repo.db.Delete(&flavorEntity{ID: uuid}).Error
 	// Delete associated images
-	return repo.db.Where("flavor_id = ?", uuid).Delete(imageEntity{}).Error
+	//return repo.db.Where("flavor_id = ?", uuid).Delete(imageEntity{}).Error
 }
 
 func (repo *flavorRepo) DeleteByLabel(label string) error {
@@ -97,7 +94,7 @@ func (repo *flavorRepo) DeleteByLabel(label string) error {
 // GetFlavorRepository gets a Repository connector for the supplied gorm DB instance
 func GetFlavorRepository(db *gorm.DB) FlavorRepository {
 	db.AutoMigrate(&flavorEntity{})
-	db.AutoMigrate(&imageEntity{})
+	//db.AutoMigrate(&imageEntity{})
 	repo := &flavorRepo{
 		db: db,
 	}

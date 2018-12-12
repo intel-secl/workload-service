@@ -65,7 +65,7 @@ func (ifr *imageRepo) Create(image *model.Image) error {
 		tx.Rollback()
 		return ErrImageAssociationAlreadyExists
 	}
-	err := tx.Create(&imageEntity{ID: image.ID, FlavorID: image.FlavorID}).Error
+	err := tx.Create(&imageEntity{Image: *image}).Error
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -85,12 +85,13 @@ func (ifr *imageRepo) RetrieveByUUID(uuid string) (*model.Image, error) {
 }
 
 func (ifr *imageRepo) DeleteByUUID(uuid string) error {
-	return ifr.db.Delete(&imageEntity{ID: uuid}).Error
+	return ifr.db.Delete(imageEntity{}, "id = ?", uuid).Error
 }
 
 // GetImageFlavorRepository gets a Repository connector for the supplied gorm DB instance
 func GetImageFlavorRepository(db *gorm.DB) ImageRepository {
 	db.AutoMigrate(&imageEntity{})
+	db.Model(&imageEntity{}).AddForeignKey("flavor_id", "flavor_entities(id)", "CASCADE", "CASCADE")
 	repo := &imageRepo{
 		db: db,
 	}

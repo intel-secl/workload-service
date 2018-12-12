@@ -75,6 +75,7 @@ func createFlavor(db *gorm.DB) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
+
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input
 		fr := repository.GetFlavorRepository(db)
 
@@ -93,7 +94,7 @@ func createFlavor(db *gorm.DB) http.HandlerFunc {
 		case nil:
 			w.WriteHeader(http.StatusCreated)
 		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)  
 		}
 	}
 }
