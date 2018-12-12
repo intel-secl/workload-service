@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref : '#/components/schemas/ImageFlavor'
+                $ref : '#/components/schemas/Flavor'
         '404':
           description: Flavor not Found
     delete:
@@ -45,12 +45,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ImageFlavor'
+              $ref: '#/components/schemas/Flavor'
+            example:
+              flavor:
+                meta:
+                  id: 7e862b36-ed37-4231-b90b-b548864c7634
+                  description:
+                    flavor_part: IMAGE
+                    label: Cirros-enc
+                encryption:
+                  encryption_required: true
+                  key_url: 'http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer'
+                  digest: 261209df1789073192285e4e408addadb35068421ef4890a5d4d434
+                      
       responses:
         '201':
           description: Successfully created Flavor
         '409':
           description: Flavor with ID already exists
+          
           
   /images/{id}:
     get:
@@ -117,6 +130,17 @@ paths:
             format: uuid
           required: false
           description: UUID of the flavor associated with images. Specifying this will find all Images that are associated with this flavor id.
+      responses:
+        '200':
+          description: Successfully fetched Images
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Image'
+        '404':
+          description: Images
   # /reports:
   #   get:
   #     summary: Gets all Trust Reports
@@ -404,59 +428,91 @@ components:
     #       type: string
     #   example:
     #     token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.SsuL4oxS4pUJJrRKVaGEqbnBZs08R8e3Wrp4OEniqv5zWyjkjygE79pC7UxmPnsFV5mj56LxXhL2IeUKJ_fzt9Uxot5inlraziAD-wAX2n_yDuJhAr8YZxrQXWz_7dSyHrMCt9iikzvY5I5ictpO0VQHmrM4Ke3MWdNFAdG-7ku_UUKtRR86QbPFAt2_HtAYFVgPd7EBezzENa48gDiCmYATaeGL_QhzB6mNjKR-UK1i8UQUlUXPH-8qCPDJZcoGcJqcp70PTZOV1oCwwX9r96o0mxHQU_bTNcrOPTa4c3jt1PFc2evYb9t0xqhTnlxNr4vwQ0QwqkmEkYAjVRNmkQ"
-    ImageFlavor:
+    Flavor:
       type: object
       required: 
         - flavor
       properties:
         flavor:
-          $ref: '#/components/schemas/flavor.Image'
-    flavor.Image:
-      type: object
-      required:
-        - id
-        - meta
-        - encryption
-      properties:
-        id:
-          type: string
-          format: uuid
-        meta:
-          $ref: '#/components/schemas/Meta'
-    Meta:
-      type: object
-      required:
-        - description
-        - encryption
-      properties:
-        description:
-          $ref: '#/components/schemas/Description'
-        encryption:
-          $ref: '#/components/schemas/Encryption'
-    Description:
-      type: object
-      required:
-        - label
-      properties:
-        # need to add WAY more properties here
-        flavor_part:
-          type: string
-          example: IMAGE
-        label:
-          type: string
-          example: Cirros-enc
-    Encryption:
-      type: object
-      required:
-        - encryption_required
-        - key_URL
-      properties:
-        encryption_required:
-          type: boolean
-        key_URL:
-          type: string
-          format: url
-          example: "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+          type: object
+          required:
+            - meta
+            - encryption
+          properties:
+            meta:
+              type: object
+              required:
+               - id
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                schema:
+                  type: object
+                  properties:
+                    URI:
+                      type: string
+                      format: uri
+                      example: "schema://"
+                author:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                realm:
+                  type: string
+                description:
+                  type: object
+                  properties:
+                    # need to add WAY more properties here
+                    flavor_part:
+                      type: string
+                      example: IMAGE
+                    source:
+                      type: string
+                    label:
+                      type: string
+                      example: Cirros-enc
+                    ip_address:
+                      type: string
+                      format: ipv4
+                    bios_name:
+                      type: string
+                    bios_version:
+                      type: string
+                    os_name:
+                      type: string
+                    os_version:
+                      type: string
+                    vmm_name: 
+                      type: string
+                    vmm_version:
+                      type: string
+                    tpm_version:
+                      type: string
+                    hardware_uuid:
+                      type: string
+                    comment:
+                      type: string
+            encryption:
+              type: object
+              required:
+                - encryption_required
+                - key_URL
+                - digest
+              properties:
+                encryption_required:
+                  type: boolean
+                key_URL:
+                  type: string
+                  format: uri
+                  example: "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+                digest:
+                  type: string
+                initialization_vector:
+                  type: string
+                  format: byte
     Image:
       type: object
       required:
