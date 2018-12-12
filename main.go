@@ -34,11 +34,10 @@ func main() {
 	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), db)
+	// Set Image Endpoints
+	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), db)
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, db)
-	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// default handler
-	})
 	if config.UseTLS {
 		//http.ListenAndServe
 	} else {
