@@ -9,8 +9,14 @@ require (
 	github.com/stretchr/testify v1.2.2
 	intel/isecl/lib/flavor v0.0.0
 	intel/isecl/lib/middleware v0.0.0
+	intel/isecl/lib/common v0.0.0
+	intel/isecl/lib/verifier v0.0.0
 )
 
 replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor v0.0.0-20181206181952-1ec1e81fed41
 
 replace intel/isecl/lib/middleware => gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20181204232340-f34e00324e43
+
+replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common v0.0.0-20181121191214-b6cb5d0ef496
+
+replace intel/isecl/lib/verifier => gitlab.devtools.intel.com/sst/isecl/lib/verifier v1.0/develop

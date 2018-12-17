@@ -4,38 +4,24 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"intel/isecl/lib/common/pkg/vm"
-	"intel/isecl/lib/flavor"
-	"intel/isecl/lib/verifier"
-	"intel/isecl/workload-service/model"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
-	"github.com/jinzhu/gorm"
+	"intel/isecl/lib/common/pkg/vm"
+	"intel/isecl/lib/flavor"
+	"intel/isecl/lib/verifier"
+	"intel/isecl/workload-service/model"
 
+	
+	"github.com/jinzhu/gorm"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-// 	"flavor": {
-// 	  "id": "string",
-// 	  "meta": {
-// 		"description": {
-// 		  "flavor_part": "IMAGE",
-// 		  "label": "Cirros-enc"
-// 		},
-// 		"encryption": {
-// 		  "encryption_required": true,
-// 		  "key_URL": "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
-// 		}
-// 	  }
-// 	}
-//   }
 
 func TestReportResource(t *testing.T) {
 	assert := assert.New(t)
