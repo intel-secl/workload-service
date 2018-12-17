@@ -38,7 +38,7 @@ func TestReportResource(t *testing.T) {
 	} else {
 		host = "localhost"
 	}
-	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=wlsadmin dbname=wls password=password sslmode=disable", host))
+	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
 	checkErr(err)
 	
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
