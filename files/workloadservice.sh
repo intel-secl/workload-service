@@ -1,8 +1,7 @@
 #!/bin/bash
 
 DESC="Workload Service"
-NAME=workloadservice
-DAEMON=/opt/workloadservice/bin/$NAME
+NAME=workloadservice.bin
 
 if [[ ${container} == "docker" ]]; then
     DOCKER=true
@@ -87,6 +86,7 @@ WORKLOAD_SERVICE_BIN=${WORKLOAD_SERVICE_BIN:-$WORKLOAD_SERVICE_HOME/bin}
 WORKLOAD_SERVICE_ENV=${WORKLOAD_SERVICE_ENV:-$WORKLOAD_SERVICE_HOME/env.d}
 WORKLOAD_SERVICE_VAR=${WORKLOAD_SERVICE_VAR:-$WORKLOAD_SERVICE_HOME/var}
 WORKLOAD_SERVICE_LOGS=${WORKLOAD_SERVICE_LOGS:-$WORKLOAD_SERVICE_HOME/logs}
+WORKLOAD_SERVICE_SHARE=${WORKLOAD_SERVICE_SHARE:-$WORKLOAD_SERVICE_HOME/share}
 
 ###################################################################################################
 
@@ -124,32 +124,20 @@ workloadservice_setup() {
   local tasklist="$*"
   if [ -z "$tasklist" ]; then
     tasklist=$WORKLOAD_SERVICE_SETUP_TASKS
-  elif [ "$tasklist" == "--force" ]; then
-    tasklist="$WORKLOAD_SERVICE_SETUP_TASKS --force"
   fi
   $NAME setup $tasklist
   return $?
 }
 
-# Creates a password if not created earlier
-workloadservice_gen_master_password() {
-  if [ ! -f $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password ]; then
-     touch $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password
-     chown $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password
-
-     # Generate a password for config encryption
-     $NAME generate-password > $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password
-   fi
+workloadservice_status() {
+    # check if we're already running - don't start a second instance
+    if workloadservice_is_running; then
+        echo "Workload Service is running"
+    else
+        echo "Workload Service is not running"
+    fi
+    return 0
 }
-
-# Encrypts the configuration file with the generated password
-workloadservice_encrypt_config() {
-   # Encrypt the config with the password
-   export WORKLOAD_SERVICE_PASSWORD=$(cat $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password)
-   $NAME encrypt-config --in=${WORKLOAD_SERVICE_CONFIGURATION}/workloadservice.properties --out=${WORKLOAD_SERVICE_CONFIGURATION}/workloadservice.properties --env-password=WORKLOAD_SERVICE_PASSWORD
-   unset PASSWORD
-}
-
 
 workloadservice_start() {
     # check if we're already running - don't start a second instance
@@ -163,7 +151,7 @@ workloadservice_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd /opt/workloadservice
-      WORKLOAD_SERVICE_BIN/workloadservice.bin >>$WORKLOADSERVICE_HTTP_LOG_FILE 2>&1 &
+      $WORKLOAD_SERVICE_BIN/workloadservice.bin start >>$WORKLOADSERVICE_HTTP_LOG_FILE 2>&1 &
       echo $! > $WORKLOADSERVICE_PID_FILE
     )
 
@@ -191,7 +179,7 @@ workloadservice_is_running() {
     WORKLOADSERVICE_PID=$(ps ww | grep -v grep | grep "workloadservice.bin" | awk '{ print $1 }')
   fi
   if [ -z "$WORKLOADSERVICE_PID" ]; then
-    # workload service is not running
+    #echo "workload service is not running"
     return 1
   fi
   # workload service is running and WORKLOADSERVICE_PID is set
@@ -220,8 +208,7 @@ workloadservice_uninstall() {
     datestr=`date +%Y-%m-%d.%H%M`
     mkdir -p /tmp/workloadservice.configuration.$datestr
     chmod 500 /tmp/workloadservice.configuration.$datestr
-##    cp -r /opt/wokloadagent/configuration/* /tmp/workloadservice.configuration.$datestr
-	rm -f /usr/local/bin/$NAME
+	rm -f /usr/local/bin/workloadservice
     if [ -n "$WORKLOAD_SERVICE_HOME" ] && [ -d "$WORKLOAD_SERVICE_HOME" ]; then
       rm -rf $WORKLOAD_SERVICE_HOME
     fi
@@ -251,26 +238,20 @@ case "$1" in
   setup)
     shift
     workloadservice_setup $*
-
-    if [ -z "$*" ]; then
-       workloadservice_gen_master_password
-       workloadservice_encrypt_config
-       workloadservice_create_qemu_hook
-    fi
     ;;
   start)
     workloadservice_start
     ;;
-
+  status)
+    workloadservice_status
+    ;;
   stop)
     workloadservice_stop
     ;;
-
   restart)
-      workloadservice_start
       workloadservice_stop
+      workloadservice_start
     ;;
-
   uninstall)
     workloadservice_uninstall
     groupdel workloadservice > /dev/null 2>&1
@@ -284,6 +265,5 @@ case "$1" in
     fi
     ;;
 esac
-
 
 exit $?

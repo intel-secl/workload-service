@@ -14,7 +14,6 @@
 # 5. define application directory layout
 # 6. install pre-required packages
 # 7. determine if we are installing as root or non-root, create groups and users accordingly
-# 9. remove workloadservice from the monit config, stop workloadservice and restart monit
 # 10. backup current configuration and data, if they exist
 # 11. store directory layout in env file
 # 12. store workloadservice username in env file
@@ -31,7 +30,6 @@
 # 23. fix_libcrypto for RHEL
 # 24. create workloadservice-version file
 # 25. fix_existing_aikcert
-# 26. configure monit
 # 27. create WORKLOAD_SERVICE_TLS_CERT_IP list of system host addresses
 # 28. update the extensions cache file
 # 29. ensure the workloadservice owns all the content created during setup
@@ -39,7 +37,6 @@
 # 31. workloadservice start
 # 32. workloadservice setup
 # 33. register tpm password with mtwilson
-# 34. restart monit
 # 35. config logrotate
 
 
@@ -70,10 +67,14 @@ WORKLOAD_SERVICE_LAYOUT=${WORKLOAD_SERVICE_LAYOUT:-home}
 export DATABASE_HOSTNAME=${DATABASE_HOSTNAME:-127.0.0.1}
 export DATABASE_PORTNUM=${DATABASE_PORTNUM:-5432}
 export DATABASE_SCHEMA=${DATABASE_SCHEMA:-mw_ws}
+export DATABASE_USERNAME=${DATABASE_USERNAME:-root}
+export DATABASE_PASSWORD=${DATABASE_PASSWORD:-dbpassword}
 export DATABASE_VENDOR=postgres
 export POSTGRES_HOSTNAME=${DATABASE_HOSTNAME}
 export POSTGRES_PORTNUM=${DATABASE_PORTNUM}
 export POSTGRES_DATABASE=${DATABASE_SCHEMA}
+export POSTGRES_USERNAME=${DATABASE_USERNAME}
+export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
 export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
 export POSTGRES_REQUIRED_VERSION=${POSTGRES_REQUIRED_VERSION:-9.3}
 export DATABASE_VENDOR=${DATABASE_VENDOR:-postgres}
@@ -108,8 +109,7 @@ fi
 # 3. source the utility script file "functions.sh":  mtwilson-linux-util-3.0-SNAPSHOT.sh
 # FUNCTION LIBRARY
 ## TODO - no function file exists - so don't exits for now
-##if [ -f functions ]; then . functions; else echo "Missing file: functions"; exit 1; fi
-if [ -f functions ]; then . functions; else echo "Missing file: functions"; fi
+if [ -f functions ]; then . functions; else echo "Missing file: functions"; exit 1; fi
 
 # 4. source the version script file "version"
 # VERSION INFORMATION
@@ -132,6 +132,7 @@ elif [ "$WORKLOAD_SERVICE_LAYOUT" == "home" ]; then
   export WORKLOAD_SERVICE_LOGS=${WORKLOAD_SERVICE_LOGS:-$WORKLOAD_SERVICE_HOME/logs}
 fi
 export WORKLOAD_SERVICE_VAR=${WORKLOAD_SERVICE_VAR:-$WORKLOAD_SERVICE_HOME/var}
+export WORKLOAD_SERVICE_SHARE=${WORKLOAD_SERVICE_SHARE:-$WORKLOAD_SERVICE_HOME/share}
 export WORKLOAD_SERVICE_BIN=${WORKLOAD_SERVICE_BIN:-$WORKLOAD_SERVICE_HOME/bin}
 export WORKLOAD_SERVICE_BACKUP=${WORKLOAD_SERVICE_BACKUP:-$WORKLOAD_SERVICE_REPOSITORY/backup}
 export INSTALL_LOG_FILE=$WORKLOAD_SERVICE_LOGS/install.log
@@ -142,8 +143,8 @@ directory_layout
 
 # 6. install pre-required packages
 if [ "${WORKLOAD_SERVICE_SETUP_PREREQS:-yes}" == "yes" ]; then
-  chmod +x install_prereq.sh
-  ./install_prereq.sh
+  chmod +x install_prereqs.sh
+  ./install_prereqs.sh
   ipResult=$?
 
   # set WORKLOAD_SERVICE_REBOOT=no (in workloadservice.env) if you want to ensure it doesn't reboot
@@ -188,7 +189,7 @@ chown $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME $INSTALL_LOG_FILE
 logfile=$INSTALL_LOG_FILE
 
 # 8. create application directories (chown will be repeated near end of this script, after setup)
-for directory in $WORKLOAD_SERVICE_HOME $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_ENV $WORKLOAD_SERVICE_REPOSITORY $WORKLOAD_SERVICE_VAR $WORKLOAD_SERVICE_LOGS; do
+for directory in $WORKLOAD_SERVICE_HOME $WORKLOAD_SERVICE_BIN $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_ENV $WORKLOAD_SERVICE_REPOSITORY $WORKLOAD_SERVICE_VAR $WORKLOAD_SERVICE_LOGS $WORKLOAD_SERVICE_SHARE; do
   # mkdir -p will return 0 if directory exists or is a symlink to an existing directory or directory and parents can be created
   mkdir -p $directory
   if [ $? -ne 0 ]; then
@@ -209,17 +210,6 @@ fi
 profile_name=$profile_dir/$(basename $(getUserProfileFile))
 
 appendToUserProfileFile "export WORKLOAD_SERVICE_HOME=$WORKLOAD_SERVICE_HOME" $profile_name
-
-# 9. remove workloadservice from the monit config, stop workloadservice and restart monit
-# if there's a monit configuration for workloadservice, remove it to prevent
-# monit from trying to restart workloadservice while we are setting up
-if [ "$(whoami)" == "root" ] && [ -f /etc/monit/conf.d/ws.monit ]; then
-  datestr=`date +%Y%m%d.%H%M`
-  backupdir=$WORKLOAD_SERVICE_BACKUP/monit.configuration.$datestr
-  mkdir -p $backupdir
-  mv /etc/monit/conf.d/ws.monit $backupdir
-  service monit restart
-fi
 
 # if an existing workloadservice is already running, stop it while we install
 existing_workloadservice=`which workloadservice 2>/dev/null`
@@ -266,6 +256,7 @@ echo "WORKLOAD_SERVICE_JAVA=$WORKLOAD_SERVICE_JAVA" >> $WORKLOAD_SERVICE_ENV/wor
 echo "WORKLOAD_SERVICE_BIN=$WORKLOAD_SERVICE_BIN" >> $WORKLOAD_SERVICE_ENV/workloadservice-layout
 echo "WORKLOAD_SERVICE_REPOSITORY=$WORKLOAD_SERVICE_REPOSITORY" >> $WORKLOAD_SERVICE_ENV/workloadservice-layout
 echo "WORKLOAD_SERVICE_LOGS=$WORKLOAD_SERVICE_LOGS" >> $WORKLOAD_SERVICE_ENV/workloadservice-layout
+echo "WORKLOAD_SERVICE_SHARE=$WORKLOAD_SERVICE_SHARE" >> $WORKLOAD_SERVICE_ENV/workloadservice-layout
 
 # 12. store workloadservice username in env file
 echo "# $(date)" > $WORKLOAD_SERVICE_ENV/workloadservice-username
@@ -283,10 +274,12 @@ done
 
 cp version $WORKLOAD_SERVICE_CONFIGURATION/workloadservice-version
 
-# 15. extract workloadservice zip  (workloadservice-zip-0.1-SNAPSHOT.zip)
+# 15. extract workloadservice zip  (workloadservice-0.1.zip)
 echo "Extracting application..."
 WORKLOAD_SERVICE_ZIPFILE=`ls -1 workloadservice-*.zip 2>/dev/null | head -n 1`
 unzip -oq $WORKLOAD_SERVICE_ZIPFILE -d $WORKLOAD_SERVICE_HOME
+cp workloadservice.sh $WORKLOAD_SERVICE_BIN/
+ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh $WORKLOAD_SERVICE_BIN/workloadservice
 
 # add bin and sbin directories in workloadservice home directory to path
 bin_directories=$(find_subdirectories ${WORKLOAD_SERVICE_HOME} bin; find_subdirectories ${WORKLOAD_SERVICE_HOME} sbin)
@@ -298,7 +291,7 @@ export PATH=$bin_directories_path:$PATH
 appendToUserProfileFile "export PATH=${bin_directories_path}:\$PATH" $profile_name
 
 # add lib directories in workloadservice home directory to LD_LIBRARY_PATH variable env file
-lib_directories=$(find_subdirectories ${WORKLOAD_SERVICE_HOME}/share lib)
+lib_directories=$(find_subdirectories ${WORKLOAD_SERVICE_SHARE} lib)
 lib_directories_path=$(join_by : ${lib_directories[@]})
 export LD_LIBRARY_PATH=$lib_directories_path
 echo "export LD_LIBRARY_PATH=${lib_directories_path}" > $WORKLOAD_SERVICE_ENV/workloadservice-lib
@@ -310,8 +303,8 @@ if [ -f "$WORKLOAD_SERVICE_CONFIGURATION/logback.xml" ]; then
   if [ $? -eq 0 ]; then
     mv $WORKLOAD_SERVICE_CONFIGURATION/logback.xml.edited $WORKLOAD_SERVICE_CONFIGURATION/logback.xml
   fi
-else
-  echo_warning "Logback configuration not found: $WORKLOAD_SERVICE_CONFIGURATION/logback.xml"
+#else
+#  echo_warning "Logback configuration not found: $WORKLOAD_SERVICE_CONFIGURATION/logback.xml"
 fi
 
 chown -R $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME $WORKLOAD_SERVICE_HOME
@@ -322,15 +315,12 @@ chmod 755 $WORKLOAD_SERVICE_BIN/*
 if [ "$(whoami)" == "root" ] && [ -f /usr/local/bin/workloadservice ]; then
   rm /usr/local/bin/workloadservice
 fi
-EXISTING_TAGENT_COMMAND=`which workloadservice 2>/dev/null`
-if [ -n "$EXISTING_TAGENT_COMMAND" ]; then
-  rm -f "$EXISTING_TAGENT_COMMAND"
+EXISTING_WORKLOAD_SERVICE_COMMAND=`which workloadservice 2>/dev/null`
+if [ -n "$EXISTING_WORKLOAD_SERVICE_COMMAND" ]; then
+  rm -f "$EXISTING_WORKLOAD_SERVICE_COMMAND"
 fi
 # link /usr/local/bin/workloadservice -> /opt/workloadservice/bin/workloadservice
 ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh /usr/local/bin/workloadservice
-if [[ ! -h $WORKLOAD_SERVICE_BIN/workloadservice ]]; then
-  ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh $WORKLOAD_SERVICE_BIN/workloadservice
-fi
 
 # Redefine the variables to the new locations
 package_config_filename=$WORKLOAD_SERVICE_CONFIGURATION/workloadservice.properties
@@ -342,7 +332,7 @@ if [ ! -f /etc/authbind/byport/8444 ]; then
   if [ "$(whoami)" == "root" ]; then
     if [ -n "$WORKLOAD_SERVICE_USERNAME" ] && [ "$WORKLOAD_SERVICE_USERNAME" != "root" ] && [ -d /etc/authbind/byport ]; then
       touch /etc/authbind/byport/8444
-     chmod 500 /etc/authbind/byport/8444
+      chmod 500 /etc/authbind/byport/8444
       chown $WORKLOAD_SERVICE_USERNAME /etc/authbind/byport/8444
     fi
   else
@@ -358,7 +348,6 @@ cp functions "$WORKLOAD_SERVICE_HOME"/share/scripts/functions.sh
 chmod -R 700 "$WORKLOAD_SERVICE_HOME"/share/scripts
 chown -R $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME "$WORKLOAD_SERVICE_HOME"/share/scripts
 chmod +x $WORKLOAD_SERVICE_BIN/*
-
 
 
 # 24. create workloadservice-version file
@@ -379,54 +368,6 @@ if [[ "$(whoami)" == "root" && ${DOCKER} == "false" ]]; then
 else
   echo_warning "Skipping startup script registration"
 fi
-
-# 26. configure monit
-if [ "$(whoami)" == "root" ]; then
-  mkdir -p /etc/monit/conf.d
-  # ws.monit is already backed up at the beginning of setup.sh
-  # not using backup_file /etc/monit/conf.d/ws.monit because we want it in a different folder to prevent monit from reading the new ws.monit AND all the backups and complaining about duplicates
-  cp ws.monit /etc/monit/conf.d/ws.monit
-
-  if [ -f /etc/monit/monitrc ]; then
-    backupdir=$WORKLOAD_SERVICE_BACKUP/monitrc.$backupdate
-    mkdir -p $backupdir
-    cp /etc/monit/monitrc $backupdir
-  fi
-  cp monitrc /etc/monit/monitrc
-  chmod 700 /etc/monit/monitrc
-
-  if ! grep -q "include /etc/monit/conf.d/*" /etc/monit/monitrc; then 
-   echo "include /etc/monit/conf.d/*" >> /etc/monit/monitrc
-  fi
-else
-  echo_warning "Skipping monit configuration"
-fi
-
-mkdir -p /opt/mtwilson/monit/conf.d
-
-# create the monit rc files
-
-if [ -z "$NO_POSTGRES_M ONIT" ]; then
-  if [ ! -a /opt/mtwilson/monit/conf.d/postgres.mtwilson ]; then
-    echo "check process postgres matching \"postgresql\"
-      group pg-db
-      start program = \"/usr/sbin/service postgresql start\"
-      stop program = \"/usr/sbin/service postgresql stop\"
-      if failed unixsocket /var/run/postgresql/.s.PGSQL.${POSTGRES_PORTNUM:-5432} protocol pgsql
-      then restart
-      if failed host 127.0.0.1 port ${POSTGRES_PORTNUM:-5432} protocol pgsql then restart
-      if 5 restarts within 5 cycles then timeout
-      depends on pg_bin
-
-      check file pg_bin with path \"/usr/bin/psql\"
-      group pg-db
-      if does not exist then unmonitor" > /opt/mtwilson/monit/conf.d/postgres.mtwilson
-  fi
-fi
-
-echo  -n "Restarting monit service so new configs take effect... "
-service monit restart > /dev/null 2>&1
-echo "Done"
 
 # Ensure we have given workloadservice access to its files
 for directory in $WORKLOAD_SERVICE_HOME $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_ENV $WORKLOAD_SERVICE_REPOSITORY $WORKLOAD_SERVICE_VAR $WORKLOAD_SERVICE_LOGS; do
@@ -465,9 +406,5 @@ workloadservice setup
 workloadservice start
 
 ##TODO - any sort of setup tasks after setup
-## such as creating the hook for libvrt
-# 35. wlagest post-setup
+# 35. workloadservice post-setup
 # workloadservice post set up tasks
-
-## TODO - monit restart if applicable - copy over 
-# 35. restart monit
