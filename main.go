@@ -80,7 +80,9 @@ func startServer() {
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), wlsDb)
 	// Set Image Endpoints
-	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), wlsDb)
+	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), db)
+	// Setup Report Endpoints
+	resource.SetReportsEndpoints(r.PathPrefix("/reports").Subrouter(), db)
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, wlsDb)
 	if config.UseTLS {
