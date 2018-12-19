@@ -49,7 +49,7 @@ func TestFlavorResource(t *testing.T) {
 	} else {
 		host = "localhost"
 	}
-	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=mw_ws password=test sslmode=disable", host))
+	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
 	checkErr(err)
 	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
