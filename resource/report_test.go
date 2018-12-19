@@ -39,6 +39,7 @@ func TestReportResource(t *testing.T) {
 	} else {
 		host = "localhost"
 	}
+
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
 	checkErr(err)
 
@@ -70,7 +71,7 @@ func TestReportResource(t *testing.T) {
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2018-12-15%2012%3A05%3A17.054795-08&&latest_per_vm=false", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
-    var rResponse []model.Report
+        var rResponse []model.Report
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse))
 
 	recorder = httptest.NewRecorder()
