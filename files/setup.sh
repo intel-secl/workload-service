@@ -76,7 +76,7 @@ export POSTGRES_DATABASE=${DATABASE_SCHEMA}
 export POSTGRES_USERNAME=${DATABASE_USERNAME}
 export POSTGRES_PASSWORD=${DATABASE_PASSWORD}
 export POSTGRESQL_KEEP_PGPASS=${POSTGRESQL_KEEP_PGPASS:-true}
-export POSTGRES_REQUIRED_VERSION=${POSTGRES_REQUIRED_VERSION:-9.3}
+export POSTGRES_REQUIRED_VERSION=${POSTGRES_REQUIRED_VERSION:-9.4}
 export DATABASE_VENDOR=${DATABASE_VENDOR:-postgres}
 export ADD_POSTGRESQL_REPO=${ADD_POSTGRESQL_REPO:-yes}
 
@@ -279,7 +279,6 @@ echo "Extracting application..."
 WORKLOAD_SERVICE_ZIPFILE=`ls -1 workloadservice-*.zip 2>/dev/null | head -n 1`
 unzip -oq $WORKLOAD_SERVICE_ZIPFILE -d $WORKLOAD_SERVICE_HOME
 cp workloadservice.sh $WORKLOAD_SERVICE_BIN/
-ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh $WORKLOAD_SERVICE_BIN/workloadservice
 
 # add bin and sbin directories in workloadservice home directory to path
 bin_directories=$(find_subdirectories ${WORKLOAD_SERVICE_HOME} bin; find_subdirectories ${WORKLOAD_SERVICE_HOME} sbin)
@@ -319,6 +318,7 @@ EXISTING_WORKLOAD_SERVICE_COMMAND=`which workloadservice 2>/dev/null`
 if [ -n "$EXISTING_WORKLOAD_SERVICE_COMMAND" ]; then
   rm -f "$EXISTING_WORKLOAD_SERVICE_COMMAND"
 fi
+ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh $WORKLOAD_SERVICE_BIN/workloadservice
 # link /usr/local/bin/workloadservice -> /opt/workloadservice/bin/workloadservice
 ln -s $WORKLOAD_SERVICE_BIN/workloadservice.sh /usr/local/bin/workloadservice
 

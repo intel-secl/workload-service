@@ -21,7 +21,7 @@ var LogWriter io.Writer
 func init() {
 	Port = 8444
 	UseTLS = false
-	Postgres.DBName = "wls"
+	Postgres.DBName = "mw_ws"
 	Postgres.User = "wlsadmin"
 	Postgres.Password = "password"
 	Postgres.Hostname = "localhost"

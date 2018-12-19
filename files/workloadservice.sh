@@ -17,7 +17,7 @@ fi
 # configuration files; it is explicitly passed through the sudo command
 export WORKLOAD_SERVICE_HOME=${WORKLOAD_SERVICE_HOME:-/opt/workloadservice}
 
-# the env directory is not configurable; it is defined as WORKLOADSERVICE_HOME/env.d and the
+# the env directory is not configurable; it is defined as WORKLOAD_SERVICE_HOME/env.d and the
 # administrator may use a symlink if necessary to place it anywhere else
 export WORKLOAD_SERVICE_ENV=$WORKLOAD_SERVICE_HOME/env.d
 
@@ -66,14 +66,14 @@ fi
 
 ###################################################################################################
 
-# if non-root execution is specified, and we are currently root, start over; the WORKLOADSERVICE_SUDO variable limits this to one attempt
+# if non-root execution is specified, and we are currently root, start over; the WORKLOAD_SERVICE_SUDO variable limits this to one attempt
 # we make an exception for the following commands:
 # - 'uninstall' may require root access to delete users and certain directories
 # - 'update-system-info' requires root access to use dmidecode and virsh commands
 # - 'restart' requires root access as it calls workloadservice_update_system_info to update system information
-if [ -n "$WORKLOADSERVICE_USERNAME" ] && [ "$WORKLOADSERVICE_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$WORKLOADSERVICE_SUDO" ] && [ "$1" != "uninstall" ] && [ "$1" != "restart" ] && [[ "$1" != "replace-"* ]]; then
-  export WORKLOADSERVICE_SUDO=true
-  sudo -u $WORKLOADSERVICE_USERNAME -H -E $WORKLOADSERVICE_BIN/workloadservice $*
+if [ -n "$WORKLOAD_SERVICE_USERNAME" ] && [ "$WORKLOAD_SERVICE_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$WORKLOAD_SERVICE_SUDO" ] && [ "$1" != "uninstall" ] && [ "$1" != "restart" ] && [[ "$1" != "replace-"* ]]; then
+  export WORKLOAD_SERVICE_SUDO=true
+  sudo -u $WORKLOAD_SERVICE_USERNAME -H -E $WORKLOAD_SERVICE_BIN/workloadservice $*
   exit $?
 fi
 
@@ -91,33 +91,25 @@ WORKLOAD_SERVICE_SHARE=${WORKLOAD_SERVICE_SHARE:-$WORKLOAD_SERVICE_HOME/share}
 ###################################################################################################
 
 # load linux utility
-if [ -f "$WORKLOADSERVICE_HOME/share/scripts/functions.sh" ]; then
-  . $WORKLOADSERVICE_HOME/share/scripts/functions.sh
+if [ -f "$WORKLOAD_SERVICE_HOME/share/scripts/functions.sh" ]; then
+  . $WORKLOAD_SERVICE_HOME/share/scripts/functions.sh
 fi
 
 # stored master password
-if [ -z "$WORKLOADSERVICE_PASSWORD" ] && [ -f $WORKLOADSERVICE_CONFIGURATION/.workloadservice_password ]; then
-  export WORKLOADSERVICE_PASSWORD=$(cat $WORKLOADSERVICE_CONFIGURATION/.workloadservice_password)
+if [ -z "$WORKLOAD_SERVICE_PASSWORD" ] && [ -f $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password ]; then
+  export WORKLOAD_SERVICE_PASSWORD=$(cat $WORKLOAD_SERVICE_CONFIGURATION/.workloadservice_password)
 fi
 
 ###################################################################################################
 
 # all other variables with defaults
-WORKLOADSERVICE_PID_FILE=$WORKLOADSERVICE_HOME/workloadservice.pid
-WORKLOADSERVICE_HTTP_LOG_FILE=$WORKLOADSERVICE_LOGS/http.log
-WORKLOADSERVICE_SETUP_TASKS="create-keystore-password create-tls-keypair create-admin-user initialize-database and create-key-vault"
-WORKLOADSERVICE_BINARY_NAME=$NAME
+WORKLOAD_SERVICE_PID_FILE=$WORKLOAD_SERVICE_HOME/workloadservice.pid
+WORKLOAD_SERVICE_HTTP_LOG_FILE=$WORKLOAD_SERVICE_LOGS/http.log
+WORKLOAD_SERVICE_SETUP_TASKS="CreateAdminUser" # initialize-database and create-key-vault"
 ###################################################################################################
 
 # ensure that our commands can be found
 export PATH=$WORKLOAD_SERVICE_BIN/bin:$PATH
-
-# run a workloadservice command
-workloadservice_run() {
-  local args="$*"
-  $NAME $args
-  return $?
-}
 
 # arguments are optional, if provided they are the names of the tasks to run, in order
 workloadservice_setup() {
@@ -125,7 +117,7 @@ workloadservice_setup() {
   if [ -z "$tasklist" ]; then
     tasklist=$WORKLOAD_SERVICE_SETUP_TASKS
   fi
-  $NAME setup $tasklist
+  $WORKLOAD_SERVICE_BIN/workloadservice.bin setup $tasklist
   return $?
 }
 
@@ -151,8 +143,8 @@ workloadservice_start() {
     # the last background process pid $! must be stored from the subshell.
     (
       cd /opt/workloadservice
-      $WORKLOAD_SERVICE_BIN/workloadservice.bin start >>$WORKLOADSERVICE_HTTP_LOG_FILE 2>&1 &
-      echo $! > $WORKLOADSERVICE_PID_FILE
+      $WORKLOAD_SERVICE_BIN/workloadservice.bin start >>$WORKLOAD_SERVICE_HTTP_LOG_FILE 2>&1 &
+      echo $! > $WORKLOAD_SERVICE_PID_FILE
     )
 
     if workloadservice_is_running; then
@@ -163,36 +155,36 @@ workloadservice_start() {
 }
 
 # returns 0 if workload service is running, 1 if not running
-# side effects: sets WORKLOADSERVICE_PID if workload service is running, or to empty otherwise
+# side effects: sets WORKLOAD_SERVICE_PID if workload service is running, or to empty otherwise
 workloadservice_is_running() {
-  WORKLOADSERVICE_PID=
-  if [ -f $WORKLOADSERVICE_PID_FILE ]; then
-    WORKLOADSERVICE_PID=$(cat $WORKLOADSERVICE_PID_FILE)
-    local is_running=`ps -eo pid | grep "^\s*${WORKLOADSERVICE_PID}$"`
+  WORKLOAD_SERVICE_PID=
+  if [ -f $WORKLOAD_SERVICE_PID_FILE ]; then
+    WORKLOAD_SERVICE_PID=$(cat $WORKLOAD_SERVICE_PID_FILE)
+    local is_running=`ps -eo pid | grep "^\s*${WORKLOAD_SERVICE_PID}$"`
     if [ -z "$is_running" ]; then
       # stale PID file
-      WORKLOADSERVICE_PID=
+      WORKLOAD_SERVICE_PID=
     fi
   fi
-  if [ -z "$WORKLOADSERVICE_PID" ]; then
+  if [ -z "$WORKLOAD_SERVICE_PID" ]; then
     # check the process list just in case the pid file is stale
-    WORKLOADSERVICE_PID=$(ps ww | grep -v grep | grep "workloadservice.bin" | awk '{ print $1 }')
+    WORKLOAD_SERVICE_PID=$(ps ww | grep -v grep | grep "workloadservice\.bin" | awk '{ print $1 }')
   fi
-  if [ -z "$WORKLOADSERVICE_PID" ]; then
+  if [ -z "$WORKLOAD_SERVICE_PID" ]; then
     #echo "workload service is not running"
     return 1
   fi
-  # workload service is running and WORKLOADSERVICE_PID is set
+  # workload service is running and WORKLOAD_SERVICE_PID is set
   return 0
 }
 
 
 workloadservice_stop() {
   if workloadservice_is_running; then
-    kill -9 $WORKLOADSERVICE_PID
+    kill -9 $WORKLOAD_SERVICE_PID
     if [ $? ]; then
       echo "Stopped workload service"
-      rm -f $WORKLOADSERVICE_PID_FILE
+      rm -f $WORKLOAD_SERVICE_PID_FILE
     else
       echo "Failed to stop workload service"
     fi

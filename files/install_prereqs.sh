@@ -27,6 +27,23 @@ mkdir -p $(dirname $LOGFILE)
 
 ################################################################################
 
+if [ -z "$INSTALL_PKGS" ]; then
+  INSTALL_PKGS="postgres zip"
+fi
+
+FIRST=0
+#loop through INSTALL_PKG and set each entry to true
+for i in $INSTALL_PKGS; do
+  pkg=`echo $i | tr '[A-Z]' '[a-z]'`
+  eval opt_$pkg="true"
+  if [ $FIRST == 0 ]; then
+    FIRST=1;
+    LIST=$pkg
+  else
+    LIST=$LIST", "$pkg
+  fi
+done
+
 # 1. Install unzip packages
 WORKLOAD_SERVICE_YUM_PACKAGES="unzip"
 WORKLOAD_SERVICE_APT_PACKAGES="unzip"
@@ -43,7 +60,7 @@ else
 fi
 
 # 2. Install postgres
-if [[ -z "$opt_postgres" && -z "$opt_mysql" ]]; then
+if [[ -z "$opt_postgres" ]]; then
  echo_warning "Relying on an existing database installation"
 fi
 
@@ -64,8 +81,8 @@ if [ "$(whoami)" == "root" ]; then
       chmod 755 /etc/apt/trusted.gpg.d
       cp ACCC4CF8.asc "/etc/apt/trusted.gpg.d"
     fi
-    POSTGRES_SERVER_APT_PACKAGES="postgresql-9.3"
-    POSTGRES_SERVER_YUM_PACKAGES="postgresql93"
+    POSTGRES_SERVER_APT_PACKAGES="postgresql-9.4"
+    POSTGRES_SERVER_YUM_PACKAGES="postgresql94"
     if [ "$IS_RPM" != "true" ]; then
       add_postgresql_install_packages "POSTGRES_SERVER"
     fi

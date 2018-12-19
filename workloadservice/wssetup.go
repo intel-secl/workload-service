@@ -35,13 +35,13 @@ func GetSetupTasks(commandargs []string) map[string]SetupTask {
 
 	if len(commandargs) > 1  {
 		// Todo - we should be able to find structs using reflection in this
-		// package that implements the SetupTask Interface and add elements to the
+		// package that implements the SetupTask Interface and add elements to theNo arguments passed in
 		//  map. For now, we are just going to hardcode the setup tasks that we have
 
 		// First argument is "setup" - the rest should be list of tasks
 		for _, task := range commandargs[1:] {
 			switch strings.ToLower(task) {
-			case "CreateAdminUser":
+			case "createadminuser":
 				m["CreateAdminUser"] = CreateAdminUser{}
 			default:
 				log.Printf("Unknown Setup Task in list : %s", task)

@@ -8,7 +8,7 @@
 #setupconsole_dir=/opt/intel/cloudsecurity/setup-console
 #conf_dir=/etc/intel/cloudsecurity
 DEFAULT_MTWILSON_JAVA_DIR=/opt/mtwilson/java
-DEFAULT_MTWILSON_CONF_DIR=/opt/mtwilson/configuration
+DEFAULT_MTWILSON_CONF_DIR=/opt/workloadservice/configuration
 
 # TERM_DISPLAY_MODE can be "plain" or "color"
 TERM_DISPLAY_MODE=color
@@ -35,7 +35,7 @@ TERM_COLOR_NORMAL="\\033[0;39m"
 DEFAULT_JAVA_REQUIRED_VERSION="1.8"
 DEFAULT_TOMCAT_REQUIRED_VERSION="7.0"
 DEFAULT_MYSQL_REQUIRED_VERSION="5.0"
-DEFAULT_POSTGRES_REQUIRED_VERSION="9.3"
+DEFAULT_POSTGRES_REQUIRED_VERSION="9.4"
 
 DEFAULT_MTWILSON_API_BASEURL="http://127.0.0.1:"
 DEFAULT_TOMCAT_API_PORT="8443"
@@ -1779,9 +1779,9 @@ postgres_version_report() {
 # we need the postgres client to create or patch the database, but
 # the server can be installed anywhere
 postgres_install() {
-  POSTGRES_CLIENT_YUM_PACKAGES="postgresql93"
+  POSTGRES_CLIENT_YUM_PACKAGES="postgresql94"
   #POSTGRES_CLIENT_APT_PACKAGES="postgresql-client-common"
-  POSTGRES_CLIENT_APT_PACKAGES="postgresql-client-9.3"
+  POSTGRES_CLIENT_APT_PACKAGES="postgresql-client-9.4"
   postgres_detect >> $INSTALL_LOG_FILE
 
   if [[ -z "$POSTGRES_HOME" || -z "$psql" ]]; then
@@ -1825,7 +1825,7 @@ add_postgresql_install_packages() {
     # code goes here
   elif [[ -n "$yum" && -n "$yum_packages" ]]; then
     pgAddPackRequired=$(yum list $yum_packages 2>/dev/null | grep -E 'Available Packages|Installed Packages')
-    repo_url="https://download.postgresql.org/pub/repos/yum/9.3/redhat/rhel-7-x86_64/pgdg-redhat93-9.3-2.noarch.rpm"
+    repo_url="https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-2.noarch.rpm"
     distro_release=
     repo_key_path=
   #elif [[ -n "$zypper" && -n "$zypper_packages" ]]; then
@@ -1850,8 +1850,8 @@ add_postgresql_install_packages() {
 # - POSTGRES_REQUIRED_VERSION
 # installs postgres server 
 postgres_server_install(){
-  POSTGRES_SERVER_YUM_PACKAGES="postgresql93-server pgadmin3_93 postgresql93-contrib"
-  POSTGRES_SERVER_APT_PACKAGES="postgresql-9.3 pgadmin3 postgresql-contrib-9.3"
+  POSTGRES_SERVER_YUM_PACKAGES="postgresql94-server pgadmin3_94 postgresql94-contrib"
+  POSTGRES_SERVER_APT_PACKAGES="postgresql-9.4 pgadmin4 postgresql-contrib-9.4"
 
   postgres_clear; postgres_server_detect >> $INSTALL_LOG_FILE
   #echo "postgres_server_install postgres_com = $postgres_com"
@@ -1892,7 +1892,7 @@ postgres_server_install(){
 
 # postgresql had new update that puts Timeout value as infinity, which needs to be 0
 fix_postgres_systemd_file(){
-  mtwilsonConfDir="/opt/mtwilson/configuration"
+  mtwilsonConfDir="/opt/workloadservice/configuration"
   postgresSystemdFile=$(find /usr/lib/systemd/system -name postgres*.service)
   postgresSystemdFileBasename=$(basename ${postgresSystemdFile})
   fileHasInfinityTimeout=$(grep '^TimeoutSec=infinity' $postgresSystemdFile)
@@ -2708,7 +2708,7 @@ tomcat_create_ssl_cert() {
   local keystorePassword="$MTWILSON_TLS_KEYSTORE_PASS"   #changeit
   local keystore="${TOMCAT_HOME}/ssl/.keystore"
   local tomcatServerXml="${TOMCAT_HOME}/conf/server.xml"
-  local configDir="/opt/mtwilson/configuration"
+  local configDir="/opt/workloadservice/configuration"
   local mtwilsonPropertiesFile="${configDir}/mtwilson.properties"
   local keytool="${JAVA_HOME}/bin/keytool"
   local mtwilson=$(which mtwilson 2>/dev/null)
@@ -2832,7 +2832,7 @@ tomcat_sslcert_report() {
 }
 
 tomcat_init_manager() {
-  local config_file=/opt/mtwilson/configuration/mtwilson.properties
+  local config_file=/opt/workloadservice/configuration/mtwilson.properties
   TOMCAT_MANAGER_USER=""
   TOMCAT_MANAGER_PASS=""
   TOMCAT_MANAGER_PORT=""
@@ -4217,7 +4217,7 @@ key_backup() {
   export MTWILSON_PASSWORD
   if [ -z "$MTWILSON_PASSWORD" ]; then echo_failure "Encryption password cannot be null."; return 3; fi
 
-  configDir="/opt/mtwilson/configuration"
+  configDir="/opt/workloadservice/configuration"
   if [ -w "/var/" ]; then
      keyBackupDir="/var/mtwilson/key-backup"
   else
@@ -4255,7 +4255,7 @@ key_restore() {
 
   keyBackupFile="$args"
   keyBackupDir="$keyBackupFile.d"
-  configDir="/opt/mtwilson/configuration"
+  configDir="/opt/workloadservice/configuration"
   if [ ! -f "$keyBackupFile" ]; then
     echo_failure "File does not exist"
     return 4

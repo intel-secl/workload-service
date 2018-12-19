@@ -32,7 +32,7 @@ func TestImagesResource(t *testing.T) {
 	} else {
 		host = "localhost"
 	}
-	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
+	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=mw_ws password=test sslmode=disable", host))
 	checkErr(err)
 
 	// First Create a Flavor, and store it in DB
