@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/repository/postgres"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -57,7 +58,9 @@ func TestFlavorResource(t *testing.T) {
 	checkErr(err)
 
 	r := mux.NewRouter()
-	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
+	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
+	wlsDB.Migrate()
+	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
 	req.Header.Add("Content-Type", "application/json")

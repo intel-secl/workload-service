@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/workload-service/resource"
 	"log"
 	"net/http"
@@ -74,13 +75,15 @@ func startServer() {
 	if err != nil {
 		log.Fatal("could not open db", err)
 	}
+	wlsDb := postgres.PostgresDatabase{db}
+	wlsDb.Migrate()
 	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
 	// Set Resource Endpoints
-	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), db)
+	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), wlsDb)
 	// Set Image Endpoints
-	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), db)
+	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), wlsDb)
 	// Setup Version Endpoint
-	resource.SetVersionEndpoints(r, db)
+	resource.SetVersionEndpoints(r, wlsDb)
 	if config.UseTLS {
 		//http.ListenAndServe
 	} else {

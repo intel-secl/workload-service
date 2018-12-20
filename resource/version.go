@@ -1,14 +1,14 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/repository"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
 // SetVersionEndpoints installs route handler for GET /version
-func SetVersionEndpoints(r *mux.Router, db *gorm.DB) {
+func SetVersionEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/version", getVersion)
 }
 

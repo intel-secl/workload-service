@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/repository/postgres"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -17,14 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestImagesResource(t *testing.T) {
-	assert := assert.New(t)
-	checkErr := func(e error) {
-		assert.NoError(e)
-		if e != nil {
-			assert.FailNow("fatal error, cannot continue test")
-		}
-	}
+func setupServer(t *testing.T) *mux.Router {
 	_, ci := os.LookupEnv("CI")
 	var host string
 	if ci {
@@ -33,17 +27,33 @@ func TestImagesResource(t *testing.T) {
 		host = "localhost"
 	}
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
-	checkErr(err)
+	if err != nil {
+		t.Fatal("could not open DB")
+	}
+	r := mux.NewRouter()
+	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
+	wlsDB.Migrate()
+	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
+	// Setup Images Endpoints
+	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), wlsDB)
 
+	return r
+}
+
+func TestImagesResource(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupServer(t)
 	// First Create a Flavor, and store it in DB
 	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
-
-	// setup Flavor Endpoints
-	r := mux.NewRouter()
-	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
 
 	// Post a new Flavor
 	recorder := httptest.NewRecorder()
@@ -52,13 +62,10 @@ func TestImagesResource(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
-	// Setup Images Endpoints
-	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), db)
-
 	// Post a new Image association
 	recorder = httptest.NewRecorder()
 	id, _ := uuid.NewV4()
-	newImage := model.Image{ID: id.String(), FlavorID: f.Image.Meta.ID}
+	newImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	newImageJSON, _ := json.Marshal(newImage)
 	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
@@ -76,7 +83,7 @@ func TestImagesResource(t *testing.T) {
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()
-	newImage2 := model.Image{ID: uuid2.String(), FlavorID: f.Image.Meta.ID}
+	newImage2 := model.Image{ID: uuid2.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	newImage2JSON, _ := json.Marshal(newImage2)
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImage2JSON))
@@ -95,11 +102,11 @@ func TestImagesResource(t *testing.T) {
 	assert.NotEmpty(response)
 	i1 := model.Image{
 		ID:       newImage.ID,
-		FlavorID: newImage.FlavorID,
+		FlavorIDs: newImage.FlavorIDs,
 	}
 	i2 := model.Image{
 		ID:       newImage2.ID,
-		FlavorID: newImage2.FlavorID,
+		FlavorIDs: newImage2.FlavorIDs,
 	}
 	assert.ElementsMatch([]model.Image{i1, i2}, response)
 
@@ -115,15 +122,16 @@ func TestImagesResource(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 
-	// Clean up Flavor, and see if images associated are gone too.
+	// Clean up Flavor
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
-	// Check to see if the second image we created was implicitly deleted
+	// Clean up Image
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage2.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage2.ID, nil)
 	r.ServeHTTP(recorder, req)
-	assert.Equal(http.StatusNotFound, recorder.Code)
+	assert.Equal(http.StatusNoContent, recorder.Code)
 }
+

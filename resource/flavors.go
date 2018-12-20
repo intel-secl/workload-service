@@ -16,17 +16,17 @@ import (
 )
 
 // SetFlavorsEndpoints
-func SetFlavorsEndpoints(r *mux.Router, db *gorm.DB) {
+func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
 	r.HandleFunc("/{id}", logger(getFlavorByID(db))).Methods("GET")
 	r.HandleFunc("/{id}", logger(deleteFlavorByID(db))).Methods("DELETE")
 	r.HandleFunc("", logger(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
-func getFlavorByID(db *gorm.DB) http.HandlerFunc {
+func getFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		fr := repository.GetFlavorRepository(db)
+		fr := db.FlavorRepository()
 		flavor, err := fr.RetrieveByUUID(id)
 		if err != nil {
 			var code int
@@ -37,24 +37,20 @@ func getFlavorByID(db *gorm.DB) http.HandlerFunc {
 			}
 			http.Error(w, err.Error(), code)
 		} else {
-			if err != nil {
+			if err := json.NewEncoder(w).Encode(flavor); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			} else {
-				if err := json.NewEncoder(w).Encode(flavor); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-				} else {
-					w.WriteHeader(http.StatusOK)
-					w.Header().Set("Content-Type", "application/json")
-				}
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
 			}
 		}
 	}
 }
 
-func deleteFlavorByID(db *gorm.DB) http.HandlerFunc {
+func deleteFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		fr := repository.GetFlavorRepository(db)
+		fr := db.FlavorRepository()
 		if err := fr.DeleteByUUID(id); err != nil {
 			var code int
 			if gorm.IsRecordNotFoundError(err) {
@@ -69,7 +65,7 @@ func deleteFlavorByID(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func createFlavor(db *gorm.DB) http.HandlerFunc {
+func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var f flavor.ImageFlavor
 		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
@@ -77,7 +73,7 @@ func createFlavor(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input
-		fr := repository.GetFlavorRepository(db)
+		fr := db.FlavorRepository()
 
 		// Performance Related:
 		// currently, we don't decipher the creation error to see if Creation failed because a collision happened between a primary or unique key.

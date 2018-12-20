@@ -15,28 +15,32 @@ import (
 )
 
 // SetImagesEndpoints sets endpoints for /image
-func SetImagesEndpoints(r *mux.Router, db *gorm.DB) {
+func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
+	// r.HandleFunc("/{id}/flavors", nil).Methods("GET")
+	// r.HandleFunc("/{id}/flavors/{flavorID}", nil).Methods("GET")
+	// r.HandleFunc("/{id}/flavors/{flavorID}", nil).Methods("DELETE")
 	r.HandleFunc("/{id}", logger(getImageByID(db))).Methods("GET")
 	r.HandleFunc("/{id}", logger(deleteImageByID(db))).Methods("DELETE")
 	r.HandleFunc("", logger(queryImages(db))).Methods("GET")
 	r.HandleFunc("", logger(createImage(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
-func queryImages(db *gorm.DB) http.HandlerFunc {
+func getAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func queryImages(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locator := repository.ImageLocator{}
-
-		imageID, ok := r.URL.Query()["image_id"]
-		if ok && len(imageID) >= 1 {
-			locator.ImageID = imageID[0]
-		}
 		flavorID, ok := r.URL.Query()["flavor_id"]
 		if ok && len(flavorID) >= 1 {
 			locator.FlavorID = flavorID[0]
 		}
 
-		images, err := repository.GetImageFlavorRepository(db).RetrieveByFilterCriteria(locator)
+		images, err := db.ImageRepository().RetrieveByFilterCriteria(locator)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -54,10 +58,10 @@ func queryImages(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func getImageByID(db *gorm.DB) http.HandlerFunc {
+func getImageByID(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["id"]
-		image, err := repository.GetImageFlavorRepository(db).RetrieveByUUID(uuid)
+		image, err := db.ImageRepository().RetrieveByUUID(uuid)
 		if err == nil {
 			mErr := json.NewEncoder(w).Encode(image)
 			if mErr != nil {
@@ -77,10 +81,10 @@ func getImageByID(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func deleteImageByID(db *gorm.DB) http.HandlerFunc {
+func deleteImageByID(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		uuid := mux.Vars(r)["id"]
-		err := repository.GetImageFlavorRepository(db).DeleteByUUID(uuid)
+		err := db.ImageRepository().DeleteByUUID(uuid)
 		if err != nil {
 			var code int
 			if gorm.IsRecordNotFoundError(err) {
@@ -95,14 +99,14 @@ func deleteImageByID(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func createImage(db *gorm.DB) http.HandlerFunc {
+func createImage(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var formBody model.Image
 		if err := json.NewDecoder(r.Body).Decode(&formBody); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := repository.GetImageFlavorRepository(db).Create(&formBody); err != nil {
+		if err := db.ImageRepository().Create(&formBody); err != nil {
 			switch err {
 			case repository.ErrImageAssociationAlreadyExists:
 				http.Error(w, fmt.Sprintf("image with UUID %s is already associated with a flavor", formBody.ID), http.StatusConflict)
