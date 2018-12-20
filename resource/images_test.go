@@ -55,9 +55,22 @@ func TestImagesResource(t *testing.T) {
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
 
+	// Free standinf falvor that wont be associated with any images
+	f2, err := flavor.GetImageFlavor("Bad-guy", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd");
+	checkErr(err)
+	f2JSON, err := json.Marshal(f2)
+	checkErr(err)
+
 	// Post a new Flavor
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// Post second Flavor
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(f2JSON))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
@@ -125,6 +138,11 @@ func TestImagesResource(t *testing.T) {
 	// Clean up Flavor
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f2.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 

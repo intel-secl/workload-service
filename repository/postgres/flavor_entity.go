@@ -3,7 +3,7 @@ package postgres
 import (
 	"encoding/json"
 	"errors"
-	"intel/isecl/lib/flavor"
+	"intel/isecl/workload-service/model"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -19,7 +19,7 @@ type flavorEntity struct {
 	// Above 4 are Aliases
 	Label   string         `gorm:"unique"`
 	Content postgres.Jsonb `gorm:"type:jsonb;not null"`
-	//Images              []imageEntity `gorm:"many2many:image_flavors"`
+	//Images  []imageEntity  `gorm:"many2many:image_flavors"`
 }
 
 func (fe flavorEntity) TableName() string {
@@ -47,14 +47,14 @@ func (fe *flavorEntity) AfterFind(scope *gorm.Scope) error {
 	return nil
 }
 
-func (fe *flavorEntity) unmarshal() (*flavor.ImageFlavor, error) {
-	var i flavor.ImageFlavor
+func (fe *flavorEntity) unmarshal() (*model.Flavor, error) {
+	var i model.Flavor
 	// ignore error since we validate it on callbacks
 	err := json.Unmarshal(fe.Content.RawMessage, &i)
 	return &i, err
 }
 
-func (fe *flavorEntity) ImageFlavor() *flavor.ImageFlavor {
+func (fe *flavorEntity) Flavor() model.Flavor {
 	i, _ := fe.unmarshal()
-	return i
+	return *i
 }

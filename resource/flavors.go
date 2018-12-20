@@ -18,8 +18,9 @@ import (
 // SetFlavorsEndpoints
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
-	r.HandleFunc("/{id}", logger(getFlavorByID(db))).Methods("GET")
-	r.HandleFunc("/{id}", logger(deleteFlavorByID(db))).Methods("DELETE")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getFlavorByID(db))).Methods("GET")
+	r.HandleFunc("/{label}", logger(getFlavorByLabel(db))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteFlavorByID(db))).Methods("DELETE")
 	r.HandleFunc("", logger(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
@@ -28,6 +29,29 @@ func getFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 		fr := db.FlavorRepository()
 		flavor, err := fr.RetrieveByUUID(id)
+		if err != nil {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+		} else {
+			if err := json.NewEncoder(w).Encode(flavor); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			} else {
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+			}
+		}
+	}
+}
+
+func getFlavorByLabel(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		label := mux.Vars(r)["label"]
+		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		if err != nil {
 			var code int
 			if gorm.IsRecordNotFoundError(err) {
@@ -70,6 +94,7 @@ func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
 		var f flavor.ImageFlavor
 		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input

@@ -9,8 +9,8 @@ var (
 	ErrImageAssociationAlreadyExists = errors.New("image association with UUID already exists")
 )
 
-// ImageLocator specifies query filter criteria for retrieving images. Each Field may be empty
-type ImageLocator struct {
+// ImageFilter specifies query filter criteria for retrieving images. Each Field may be empty
+type ImageFilter struct {
 	FlavorID string `json:"flavor_id, omitempty"`
 }
 
@@ -23,7 +23,9 @@ type ImageRepository interface {
 	Create(image *model.Image) error
 	// R
 	RetrieveByUUID(uuid string) (*model.Image, error)
-	RetrieveByFilterCriteria(locator ImageLocator) ([]model.Image, error)
+	RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error)
+	RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error)
+	RetrieveByFilterCriteria(locator ImageFilter) ([]model.Image, error)
 	// U
 	// D
 	DeleteByUUID(uuid string) error

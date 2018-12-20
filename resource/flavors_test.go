@@ -1,11 +1,11 @@
 package resource
 
 import (
-	"intel/isecl/workload-service/repository/postgres"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"intel/isecl/lib/flavor"
+	"intel/isecl/workload-service/repository/postgres"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,12 +35,11 @@ import (
 // 	}
 //   }
 
-func TestFlavorResource(t *testing.T) {
-	assert := assert.New(t)
+func setupFlavorServer(t *testing.T) *mux.Router {
 	checkErr := func(e error) {
-		assert.NoError(e)
+		assert.NoError(t, e)
 		if e != nil {
-			assert.FailNow("fatal error, cannot continue test")
+			assert.FailNow(t, "fatal error, cannot continue test")
 		}
 	}
 	_, ci := os.LookupEnv("CI")
@@ -52,15 +51,29 @@ func TestFlavorResource(t *testing.T) {
 	}
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
 	checkErr(err)
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
-	checkErr(err)
-	fJSON, err := json.Marshal(f)
-	checkErr(err)
 
 	r := mux.NewRouter()
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
+	return r
+}
+
+func TestFlavorResource(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupFlavorServer(t)
+
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
 	req.Header.Add("Content-Type", "application/json")
@@ -75,6 +88,129 @@ func TestFlavorResource(t *testing.T) {
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &fResponse))
 	assert.Equal(*f, fResponse)
 
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+}
+
+func TestDuplicate(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupFlavorServer(t)
+
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+
+	// Post it once
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// Post it again
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusConflict, recorder.Code)
+
+	// Delete
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+
+}
+
+func TestFlavorDuplicateLabel(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupFlavorServer(t)
+
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+	f2, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	f2JSON, err := json.Marshal(f2)
+	checkErr(err)
+
+	// Post it once
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// Post it again
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(f2JSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusConflict, recorder.Code)
+
+	// Delete
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+
+}
+
+func TestFlavorInvalidJson(t *testing.T) {
+	assert := assert.New(t)
+	r := setupFlavorServer(t)
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString("asdlkfjaksdlfjklsjfd"))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusBadRequest, recorder.Code)
+}
+
+func TestFlavorDeleteByLabel(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupFlavorServer(t)
+
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+
+	// Post it once
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// Delete
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusMethodNotAllowed, recorder.Code)
+
+	// Actually Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)

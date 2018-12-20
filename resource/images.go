@@ -17,24 +17,37 @@ import (
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
-	// r.HandleFunc("/{id}/flavors", nil).Methods("GET")
-	// r.HandleFunc("/{id}/flavors/{flavorID}", nil).Methods("GET")
-	// r.HandleFunc("/{id}/flavors/{flavorID}", nil).Methods("DELETE")
-	r.HandleFunc("/{id}", logger(getImageByID(db))).Methods("GET")
-	r.HandleFunc("/{id}", logger(deleteImageByID(db))).Methods("DELETE")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors", getAllAssociatedFlavors(db)).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("DELETE")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getImageByID(db))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteImageByID(db))).Methods("DELETE")
 	r.HandleFunc("", logger(queryImages(db))).Methods("GET")
 	r.HandleFunc("", logger(createImage(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
-func getAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
+func getAllAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		uuid := mux.Vars(r)["id"]
+		flavors, err := db.ImageRepository().RetrieveAssociatedFlavors(uuid)
+		if err != nil {
+			// check 404, means uuid didn't exist
+		}
+		json.NewEncoder(w).Encode(flavors)
+	}
+}
 
+func getAssociatedFlavor(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// imageUUID := mux.Vars(r)["id"]
+		// flavorUUID := mux.Vars(r)["flavorID"]
+		return
 	}
 }
 
 func queryImages(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		locator := repository.ImageLocator{}
+		locator := repository.ImageFilter{}
 		flavorID, ok := r.URL.Query()["flavor_id"]
 		if ok && len(flavorID) >= 1 {
 			locator.FlavorID = flavorID[0]

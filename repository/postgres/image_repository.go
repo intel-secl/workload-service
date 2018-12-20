@@ -12,10 +12,11 @@ type imageRepo struct {
 	db *gorm.DB
 }
 
-func (repo imageRepo) RetrieveByFilterCriteria(locator repository.ImageLocator) ([]model.Image, error) {
+func (repo imageRepo) RetrieveByFilterCriteria(filter repository.ImageFilter) ([]model.Image, error) {
 	db := repo.db
-	if len(locator.FlavorID) > 0 {
-		db = db.Joins("LEFT JOIN flavors ON flavors.id = ?", locator.FlavorID)
+	if len(filter.FlavorID) > 0 {
+		// find all images that at least contain FlavorID as one of the associations
+		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id AND image_flavors.flavor_id = ?)", filter.FlavorID)
 	}
 
 	var entities []imageEntity
@@ -30,15 +31,6 @@ func (repo imageRepo) RetrieveByFilterCriteria(locator repository.ImageLocator) 
 		images[i] = v.Image()
 	}
 	return images, nil
-}
-
-// RetrieveAssociatedFlavors returns a list of FlavorIDs associated with the specified image uuid
-func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]string, error) {
-	i := imageEntity{}
-	if err := repo.db.Preload("Flavors").First(&i, "id = ?", uuid).Error; err != nil {
-		return nil, err
-	}
-	return i.Image().FlavorIDs, nil
 }
 
 func (repo imageRepo) Create(image *model.Image) error {
@@ -68,6 +60,26 @@ func (repo imageRepo) Create(image *model.Image) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
+	var image imageEntity
+	if err := repo.db.Preload("Flavors", "id = ?", flavorUUID).First(&image, "id = ?", imageUUID).Error; err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error) {
+	var image imageEntity
+	if err := repo.db.Preload("Flavors").First(&image, "id = ?", uuid).Error; err != nil {
+		return nil, err
+	}
+	flavors := make([]model.Flavor, len(image.Flavors))
+	for i, f := range image.Flavors {
+		flavors[i] = f.Flavor()
+	}
+	return flavors, nil
 }
 
 func (repo imageRepo) RetrieveByUUID(uuid string) (*model.Image, error) {

@@ -16,6 +16,10 @@ func (pd PostgresDatabase) Migrate() error {
 	return nil
 }
 
+func (pd PostgresDatabase) Driver() *gorm.DB {
+	return pd.DB
+}
+
 func (pd PostgresDatabase) FlavorRepository() repository.FlavorRepository {
 	return flavorRepo{db: pd.DB}
 }

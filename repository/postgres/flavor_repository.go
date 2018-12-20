@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"intel/isecl/lib/flavor"
+	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
 	"github.com/jinzhu/gorm/dialects/postgres"
@@ -47,25 +48,38 @@ func (repo flavorRepo) Create(f *flavor.ImageFlavor) error {
 	}
 	return tx.Commit().Error
 }
+func (repo flavorRepo) RetrieveByFilterCriteria(filter repository.FlavorFilter) ([]model.Flavor, error) {
+	var entities []flavorEntity
+	if err := repo.db.Find(&entities).Error; err != nil {
+		return nil, err
+	}
+	flavors := make([]model.Flavor, len(entities))
+	for i, v := range entities {
+		flavors[i] = v.Flavor()
+	}
+	return flavors, nil
+}
 
-func (repo flavorRepo) RetrieveByUUID(uuid string) (*flavor.ImageFlavor, error) {
+func (repo flavorRepo) RetrieveByUUID(uuid string) (*model.Flavor, error) {
 	var fe flavorEntity
 	fe.ID = uuid
 	if err := repo.db.First(&fe).Error; err != nil {
 		return nil, err
 	}
-	return fe.ImageFlavor(), nil
+	f := fe.Flavor()
+	return &f, nil
 }
 
-func (repo flavorRepo) RetrieveByLabel(label string) (*flavor.ImageFlavor, error) {
+func (repo flavorRepo) RetrieveByLabel(label string) (*model.Flavor, error) {
 	var fe flavorEntity
 	if err := repo.db.Where("label = ?", label).Find(&fe).Error; err != nil {
 		return nil, err
 	}
-	return fe.ImageFlavor(), nil
+	f := fe.Flavor()
+	return &f, nil
 }
 
-func (repo flavorRepo) Delete(f *flavor.ImageFlavor) error {
+func (repo flavorRepo) Delete(f *model.Flavor) error {
 	if f == nil {
 		return errors.New("cannot delete nil flavor")
 	}
@@ -76,8 +90,4 @@ func (repo flavorRepo) DeleteByUUID(uuid string) error {
 	return repo.db.Delete(&flavorEntity{ID: uuid}).Error
 	// Delete associated images
 	//return repo.db.Where("flavor_id = ?", uuid).Delete(imageEntity{}).Error
-}
-
-func (repo flavorRepo) DeleteByLabel(label string) error {
-	return repo.db.Where("label = ?", label).Delete(&flavorEntity{}).Error
 }
