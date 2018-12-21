@@ -12,15 +12,15 @@ type SetupTask interface {
 	Validate() error
 }
 
-type CreateAdminUser struct{}
+type SampleSetupTask struct{}
 
-func (CreateAdminUser) Setup() error {
-	fmt.Println("CreateAdminUser Setup Done")
+func (SampleSetupTask) Setup() error {
+	fmt.Println("SampleSetupTask Setup Done")
 	return nil
 }
 
-func (CreateAdminUser) Validate() error {
-	fmt.Println("CreateAdminUser Validate")
+func (SampleSetupTask) Validate() error {
+	fmt.Println("SampleSetupTask Validate")
 	return nil
 }
 
@@ -41,8 +41,8 @@ func GetSetupTasks(commandargs []string) map[string]SetupTask {
 		// First argument is "setup" - the rest should be list of tasks
 		for _, task := range commandargs[1:] {
 			switch strings.ToLower(task) {
-			case "createadminuser":
-				m["CreateAdminUser"] = CreateAdminUser{}
+			case "SampleSetupTask":
+				m["SampleSetupTask"] = SampleSetupTask{}
 			default:
 				log.Printf("Unknown Setup Task in list : %s", task)
 			}
@@ -50,7 +50,7 @@ func GetSetupTasks(commandargs []string) map[string]SetupTask {
 	} else {
 		fmt.Println("No arguments passed in")
 		// no specific tasks passed in. We will return a list of all tasks
-		m[reflect.TypeOf(CreateAdminUser{}).Name()] = CreateAdminUser{}
+		m[reflect.TypeOf(SampleSetupTask{}).Name()] = SampleSetupTask{}
 	}
 	return m
 }

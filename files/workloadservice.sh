@@ -33,30 +33,6 @@ workloadservice_load_env() {
   done
 }
 
-load_workloadservice_prov_env() {
-  local env_file="$@"
-  if [ -z $env_file ]; then
-    echo "No environment file provided"
-    return
-  fi
-
-  # load installer environment file, if present
-  if [ -r $env_file ]; then
-    echo "Loading environment variables from $env_file"
-    . $env_file
-    env_file_exports=$(cat $env_file | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    #echo $env_file_exports
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
-  else
-    echo "Workload Service does not have permission to read environment file"
-  fi
-}
-
-if [ -a "$2" ]; then
-  load_workloadservice_prov_env $2 2>&1 >/dev/null
-fi
-
-
 # load environment variables; these override any existing environment variables.
 # the idea is that if someone wants to override these, they must have write
 # access to the environment files that we load here. 
@@ -69,8 +45,6 @@ fi
 # if non-root execution is specified, and we are currently root, start over; the WORKLOAD_SERVICE_SUDO variable limits this to one attempt
 # we make an exception for the following commands:
 # - 'uninstall' may require root access to delete users and certain directories
-# - 'update-system-info' requires root access to use dmidecode and virsh commands
-# - 'restart' requires root access as it calls workloadservice_update_system_info to update system information
 if [ -n "$WORKLOAD_SERVICE_USERNAME" ] && [ "$WORKLOAD_SERVICE_USERNAME" != "root" ] && [ $(whoami) == "root" ] && [ -z "$WORKLOAD_SERVICE_SUDO" ] && [ "$1" != "uninstall" ] && [ "$1" != "restart" ] && [[ "$1" != "replace-"* ]]; then
   export WORKLOAD_SERVICE_SUDO=true
   sudo -u $WORKLOAD_SERVICE_USERNAME -H -E $WORKLOAD_SERVICE_BIN/workloadservice $*
@@ -78,8 +52,6 @@ if [ -n "$WORKLOAD_SERVICE_USERNAME" ] && [ "$WORKLOAD_SERVICE_USERNAME" != "roo
 fi
 
 ###################################################################################################
-
-
 # default directory layout follows the 'home' style
 WORKLOAD_SERVICE_CONFIGURATION=${WORKLOAD_SERVICE_CONFIGURATION:-${WORKLOAD_SERVICE_CONF:-$WORKLOAD_SERVICE_HOME/configuration}}
 WORKLOAD_SERVICE_BIN=${WORKLOAD_SERVICE_BIN:-$WORKLOAD_SERVICE_HOME/bin}
@@ -89,7 +61,6 @@ WORKLOAD_SERVICE_LOGS=${WORKLOAD_SERVICE_LOGS:-$WORKLOAD_SERVICE_HOME/logs}
 WORKLOAD_SERVICE_SHARE=${WORKLOAD_SERVICE_SHARE:-$WORKLOAD_SERVICE_HOME/share}
 
 ###################################################################################################
-
 # load linux utility
 if [ -f "$WORKLOAD_SERVICE_HOME/share/scripts/functions.sh" ]; then
   . $WORKLOAD_SERVICE_HOME/share/scripts/functions.sh
@@ -101,13 +72,11 @@ if [ -z "$WORKLOAD_SERVICE_PASSWORD" ] && [ -f $WORKLOAD_SERVICE_CONFIGURATION/.
 fi
 
 ###################################################################################################
-
 # all other variables with defaults
 WORKLOAD_SERVICE_PID_FILE=$WORKLOAD_SERVICE_HOME/workloadservice.pid
 WORKLOAD_SERVICE_HTTP_LOG_FILE=$WORKLOAD_SERVICE_LOGS/http.log
-WORKLOAD_SERVICE_SETUP_TASKS="CreateAdminUser" # initialize-database and create-key-vault"
+WORKLOAD_SERVICE_SETUP_TASKS="SampleSetupTask" # initialize-database and create-key-vault"
 ###################################################################################################
-
 # ensure that our commands can be found
 export PATH=$WORKLOAD_SERVICE_BIN/bin:$PATH
 
@@ -177,7 +146,6 @@ workloadservice_is_running() {
   # workload service is running and WORKLOAD_SERVICE_PID is set
   return 0
 }
-
 
 workloadservice_stop() {
   if workloadservice_is_running; then

@@ -21,9 +21,8 @@ import (
 
 func main() {
 	args := os.Args[1:]
-	fmt.Println("Command not found. Usage below ", args[0])
 	if len(args) <= 0 {
-		fmt.Println("Command not found. Usage below")
+		fmt.Println("Command not found. Usage below ", args[0])
 		printUsage()
 		return
 	}
@@ -54,10 +53,10 @@ func printUsage() {
 	fmt.Printf("setup command is used to run setup tasks\n")
 	fmt.Printf("\tusage : %s setup [<tasklist>]\n", os.Args[0])
 	fmt.Printf("\t\t<tasklist>-space seperated list of tasks\n")
-	fmt.Printf("\t\t\t-Supported tasks - CreateAdminUser\n")
+	fmt.Printf("\t\t\t-Supported tasks - SampleSetupTask\n")
 	fmt.Printf("\tExample :-\n")
 	fmt.Printf("\t\t%s setup\n", os.Args[0])
-	fmt.Printf("\t\t%s setup CreateAdminUser\n", os.Args[0])
+	fmt.Printf("\t\t%s setup SampleSetupTask\n", os.Args[0])
 }
 
 func startServer() {

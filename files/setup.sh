@@ -374,7 +374,6 @@ echo "WORKLOAD_SERVICE_RELEASE=\"${BUILD}\"" >> $package_version_filename
 if [[ "$(whoami)" == "root" && ${DOCKER} == "false" ]]; then
   echo "Registering workloadservice in start up"
   register_startup_script $WORKLOAD_SERVICE_BIN/workloadservice workloadservice 21 >>$logfile 2>&1
-  # trousers has N=20 startup number, need to lookup and do a N+1
 else
   echo_warning "Skipping startup script registration"
 fi
@@ -385,17 +384,8 @@ for directory in $WORKLOAD_SERVICE_HOME $WORKLOAD_SERVICE_CONFIGURATION $WORKLOA
   chown -R $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME $directory 2>>$logfile
 done
 
-##TODO - do we need update any system info related to workloadservice. 
-##if [[ "$(whoami)" == "root" && ${DOCKER} != "true" ]]; then
-##  echo "Updating system information"
-##  workloadservice update-system-info 2>/dev/null
-##else
-##  echo_warning "Skipping updating system information"
-##fi
-
 # Make the logs dir owned by workloadservice user
 chown -R $WORKLOAD_SERVICE_USERNAME:$WORKLOAD_SERVICE_USERNAME $WORKLOAD_SERVICE_LOGS/
-
 
 # 29. ensure the workloadservice owns all the content created during setup
 for directory in $WORKLOAD_SERVICE_HOME $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_JAVA $WORKLOAD_SERVICE_BIN $WORKLOAD_SERVICE_ENV $WORKLOAD_SERVICE_REPOSITORY $WORKLOAD_SERVICE_LOGS; do
@@ -414,7 +404,3 @@ workloadservice setup
 
 # 34. workloadservice setup
 workloadservice start
-
-##TODO - any sort of setup tasks after setup
-# 35. workloadservice post-setup
-# workloadservice post set up tasks
