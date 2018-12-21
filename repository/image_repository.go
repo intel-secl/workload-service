@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrImageAssociationAlreadyExists = errors.New("image association with UUID already exists")
+	ErrImageAssociationAlreadyExists      = errors.New("image association with UUID already exists")
+	ErrImageAssociationFlavorDoesNotExist = errors.New("one or more FlavorID's does not exist in the database")
+	ErrImageAssociationDuplicateFlavor    = errors.New("flavor with UUID already associated with image")
 )
 
 // ImageFilter specifies query filter criteria for retrieving images. Each Field may be empty
@@ -27,6 +29,9 @@ type ImageRepository interface {
 	RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error)
 	RetrieveByFilterCriteria(locator ImageFilter) ([]model.Image, error)
 	// U
+	Update(image *model.Image) error
+	AddAssociatedFlavor(imageUUID string, flavorUUID string) error
 	// D
 	DeleteByUUID(uuid string) error
+	DeleteAssociatedFlavor(imageUUID string, flavorUUID string) error
 }

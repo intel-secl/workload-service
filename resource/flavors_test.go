@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/model"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -79,14 +80,17 @@ func TestFlavorResource(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
+	var postResponse model.Flavor
+	json.Unmarshal(recorder.Body.Bytes(), &postResponse)
+	assert.Equal((model.Flavor)(*f), postResponse)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/flavors/"+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
-	var fResponse flavor.ImageFlavor
+	var fResponse model.Flavor
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &fResponse))
-	assert.Equal(*f, fResponse)
+	assert.Equal((model.Flavor)(*f), fResponse)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
@@ -209,6 +213,41 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusMethodNotAllowed, recorder.Code)
+
+	// Actually Delete it
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+}
+
+func TestGetByLabel(t *testing.T) {
+	assert := assert.New(t)
+	checkErr := func(e error) {
+		assert.NoError(e)
+		if e != nil {
+			assert.FailNow("fatal error, cannot continue test")
+		}
+	}
+	r := setupFlavorServer(t)
+
+	f, err := flavor.GetImageFlavor("TestGetByLabel", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	checkErr(err)
+	fJSON, err := json.Marshal(f)
+	checkErr(err)
+
+	// Post it once
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// Get
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
 
 	// Actually Delete it
 	recorder = httptest.NewRecorder()

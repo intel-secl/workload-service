@@ -16,7 +16,7 @@ func (repo imageRepo) RetrieveByFilterCriteria(filter repository.ImageFilter) ([
 	db := repo.db
 	if len(filter.FlavorID) > 0 {
 		// find all images that at least contain FlavorID as one of the associations
-		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id AND image_flavors.flavor_id = ?)", filter.FlavorID)
+		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id)").Where("flavor_id = ?", filter.FlavorID)
 	}
 
 	var entities []imageEntity
@@ -41,16 +41,22 @@ func (repo imageRepo) Create(image *model.Image) error {
 		tx.Rollback()
 		return repository.ErrImageAssociationAlreadyExists
 	}
+	// make sure there are no duplicates
+	set := make(map[string]bool)
+	flavorEntities := make([]flavorEntity, len(image.FlavorIDs))
+	for i, id := range image.FlavorIDs {
+		if set[id] == true {
+			return repository.ErrImageAssociationAlreadyExists
+		}
+		set[id] = true
+		flavorEntities[i] = flavorEntity{ID: id}
+	}
 	// make sure the list of flavorID's makes sense, this *could* be done at the Database schema level as an optimization
 	var count int
 	tx.Model(&flavorEntity{}).Where("id in (?)", image.FlavorIDs).Count(&count)
 	if count != len(image.FlavorIDs) {
 		// some flavor ID's dont exist
-		return errors.New("one or more FlavorID's does not exist in the database")
-	}
-	flavorEntities := make([]flavorEntity, len(image.FlavorIDs))
-	for i, id := range image.FlavorIDs {
-		flavorEntities[i] = flavorEntity{ID: id}
+		return repository.ErrImageAssociationFlavorDoesNotExist
 	}
 	ie.Flavors = flavorEntities
 	err := tx.Create(&ie).Error
@@ -63,11 +69,12 @@ func (repo imageRepo) Create(image *model.Image) error {
 }
 
 func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
-	var image imageEntity
-	if err := repo.db.Preload("Flavors", "id = ?", flavorUUID).First(&image, "id = ?", imageUUID).Error; err != nil {
+	var flavorEntity flavorEntity
+	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "id = ? AND image_id = ?", flavorUUID, imageUUID).Error; err != nil {
 		return nil, err
 	}
-	return nil, nil
+	flavor := flavorEntity.Flavor()
+	return &flavor, nil
 }
 
 func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error) {
@@ -92,6 +99,42 @@ func (repo imageRepo) RetrieveByUUID(uuid string) (*model.Image, error) {
 	return &image, nil
 }
 
+func (repo imageRepo) Update(image *model.Image) error {
+	if image == nil {
+		return errors.New("cannot update nil image")
+	}
+	tx := repo.db.Begin()
+	var ie imageEntity
+	if err := tx.First(&ie, "id = ?", image.ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	flavorEntities := make([]flavorEntity, len(image.FlavorIDs))
+	for i, id := range image.FlavorIDs {
+		flavorEntities[i] = flavorEntity{ID: id}
+	}
+	ie.Flavors = flavorEntities
+	err := tx.Create(&ie).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Save(&ie).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
+}
+
+func (repo imageRepo) AddAssociatedFlavor(imageUUID string, flavorUUID string) error {
+	return repo.db.Model(&imageEntity{ID: imageUUID}).Association("Flavors").Append(&flavorEntity{ID: flavorUUID}).Error
+}
+
 func (repo imageRepo) DeleteByUUID(uuid string) error {
 	return repo.db.Delete(imageEntity{}, "id = ?", uuid).Error
+}
+
+func (repo imageRepo) DeleteAssociatedFlavor(imageUUID string, flavorUUID string) error {
+	return repo.db.Model(&imageEntity{ID: imageUUID}).Association("Flavors").Delete(&flavorEntity{ID: flavorUUID}).Error
 }

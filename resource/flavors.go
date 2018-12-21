@@ -114,6 +114,7 @@ func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
 			http.Error(w, fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID), http.StatusConflict)
 		case nil:
 			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(f)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)  
 		}

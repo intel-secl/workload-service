@@ -17,8 +17,13 @@ import (
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors", getAllAssociatedFlavors(db)).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors", logger(getAllAssociatedFlavors(db))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+		logger(getAssociatedFlavor(db))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+		logger(putAssociatedFlavor(db))).Methods("PUT")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+		logger(deleteAssociatedFlavor(db))).Methods("DELETE")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("DELETE")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getImageByID(db))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteImageByID(db))).Methods("DELETE")
@@ -31,7 +36,14 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
 		uuid := mux.Vars(r)["id"]
 		flavors, err := db.ImageRepository().RetrieveAssociatedFlavors(uuid)
 		if err != nil {
-			// check 404, means uuid didn't exist
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+			return
 		}
 		json.NewEncoder(w).Encode(flavors)
 	}
@@ -39,9 +51,58 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
 
 func getAssociatedFlavor(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// imageUUID := mux.Vars(r)["id"]
-		// flavorUUID := mux.Vars(r)["flavorID"]
-		return
+		imageUUID := mux.Vars(r)["id"]
+		flavorUUID := mux.Vars(r)["flavorID"]
+		flavor, err := db.ImageRepository().RetrieveAssociatedFlavor(imageUUID, flavorUUID)
+		if err != nil {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+			return
+		}
+		json.NewEncoder(w).Encode(flavor)
+	}
+}
+
+func putAssociatedFlavor(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		imageUUID := mux.Vars(r)["id"]
+		flavorUUID := mux.Vars(r)["flavorID"]
+		err := db.ImageRepository().AddAssociatedFlavor(imageUUID, flavorUUID)
+		if err != nil {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func deleteAssociatedFlavor(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		imageUUID := mux.Vars(r)["id"]
+		flavorUUID := mux.Vars(r)["flavorID"]
+		err := db.ImageRepository().DeleteAssociatedFlavor(imageUUID, flavorUUID)
+		if err != nil {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -122,11 +183,16 @@ func createImage(db repository.WlsDatabase) http.HandlerFunc {
 		if err := db.ImageRepository().Create(&formBody); err != nil {
 			switch err {
 			case repository.ErrImageAssociationAlreadyExists:
-				http.Error(w, fmt.Sprintf("image with UUID %s is already associated with a flavor", formBody.ID), http.StatusConflict)
+				http.Error(w, fmt.Sprintf("image with UUID %s is already registered", formBody.ID), http.StatusConflict)
+			case repository.ErrImageAssociationDuplicateFlavor:
+				http.Error(w, fmt.Sprintf("one or more flavor ids in %v is already associated with image %s", formBody.FlavorIDs, formBody.ID), http.StatusConflict)
+			case repository.ErrImageAssociationFlavorDoesNotExist:
+				http.Error(w, fmt.Sprintf("one or more flavor ids in %v does not point to a registered flavor", formBody.FlavorIDs), http.StatusBadRequest)
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		}
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(formBody)
 	}
 }

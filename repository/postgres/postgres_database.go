@@ -12,7 +12,10 @@ type PostgresDatabase struct {
 
 func (pd PostgresDatabase) Migrate() error {
 	pd.DB.AutoMigrate(&flavorEntity{}, &imageEntity{})
-	pd.DB.Table("image_flavors").AddForeignKey("image_id", "images(id)", "CASCADE", "CASCADE").AddForeignKey("flavor_id", "flavors(id)", "CASCADE", "CASCADE")
+	pd.DB.Table("image_flavors").
+		AddForeignKey("image_id", "images(id)", "CASCADE", "CASCADE").
+		AddForeignKey("flavor_id", "flavors(id)", "CASCADE", "CASCADE").
+		AddUniqueIndex("image_flavor_index", "image_id", "flavor_id")
 	return nil
 }
 
