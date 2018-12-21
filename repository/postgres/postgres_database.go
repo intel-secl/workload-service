@@ -11,7 +11,7 @@ type PostgresDatabase struct {
 }
 
 func (pd PostgresDatabase) Migrate() error {
-	pd.DB.AutoMigrate(&flavorEntity{}, &imageEntity{})
+	pd.DB.AutoMigrate(&flavorEntity{}, &imageEntity{}, &reportEntity{})
 	pd.DB.Table("image_flavors").
 		AddForeignKey("image_id", "images(id)", "CASCADE", "CASCADE").
 		AddForeignKey("flavor_id", "flavors(id)", "CASCADE", "CASCADE").
@@ -25,6 +25,10 @@ func (pd PostgresDatabase) Driver() *gorm.DB {
 
 func (pd PostgresDatabase) FlavorRepository() repository.FlavorRepository {
 	return flavorRepo{db: pd.DB}
+}
+
+func (pd PostgresDatabase) ReportRepository() repository.ReportRepository {
+	return reportRepo{db: pd.DB}
 }
 
 func (pd PostgresDatabase) ImageRepository() repository.ImageRepository {

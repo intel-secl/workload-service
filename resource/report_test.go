@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/repository/postgres"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -42,6 +43,8 @@ func TestReportResource(t *testing.T) {
 
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=5432 user=runner dbname=wls password=test sslmode=disable", host))
 	checkErr(err)
+	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
+	wlsDB.Migrate()
 
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
 		"http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "261209df1789073192285e4e408addadb35068421ef4890a5d4d434")
@@ -51,10 +54,11 @@ func TestReportResource(t *testing.T) {
 
 
 	fJSON, err := json.Marshal(vmReport)
+	fmt.Println(string(fJSON))
 	checkErr(err)
 
 	r := mux.NewRouter()
-	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), db)
+	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), wlsDB)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/reports", bytes.NewBuffer(fJSON))
 	req.Header.Add("Content-Type", "application/json")
