@@ -7,16 +7,16 @@
 # 4. this script runs the makeself command to create the self-extracting executable
 
 # workspace is typically "target" and must contain the files to package in the installer including the setup script
-workspace="${1}" #/root/.tmp/workspace/workloadservice-0.1
+workspace="${1}" #/root/.tmp/workspace/workloadservice-1.0
 # installer name
-projectNameVersion=`basename "${workspace}"` #workloadservice-0.1
+projectNameVersion=`basename "${workspace}"` #workloadservice-1.0
 # where to save the installer (parent of directory containing files)
 targetDir=`dirname "${workspace}"` #/root/.tmp/workspace
 
 if [ -z "$workspace" ]; then
   echo "Usage: $0 <workspace>"
-  echo "Example: $0 /path/to/WorkloadService-0.1"
-  echo "The self-extracting installer WorkloadService-0.1.bin would be created in /path/to"
+  echo "Example: $0 /path/to/WorkloadService-1.0"
+  echo "The self-extracting installer WorkloadService-1.0.bin would be created in /path/to"
   exit 1
 fi
 

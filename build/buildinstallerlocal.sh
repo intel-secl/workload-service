@@ -11,7 +11,7 @@
 # copy all files 
 # call the makebin-auto.sh file 
 
-VERSION=0.1
+VERSION=1.0
 COMPONENTNAME=workloadservice
 COMPONENT=$COMPONENTNAME-$VERSION
 
@@ -25,8 +25,6 @@ rm -rf $WORKSPACEDIR
 rm -rf $TARGETDIR
 mkdir -p $WORKSPACEDIR
 mkdir -p $TARGETDIR
-ls -l $WORKSPACEDIR
-
 
 # move to the binary directory temporarily to build the binary
 cd ../
