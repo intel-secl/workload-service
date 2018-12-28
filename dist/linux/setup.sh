@@ -10,6 +10,7 @@ elif [ -f ./wls.env ]; then
 fi
 
 # export all known variables from answer file 
+export WLS_PORT
 
 # assert that installer is ran as root
 if [[ $EUID -ne 0 ]]; then

@@ -23,7 +23,7 @@ import (
 func main() {
 	args := os.Args[1:]
 	if len(args) <= 0 {
-		fmt.Println("Command not found. Usage below ", args[0])
+		fmt.Println("Command not found. Usage below ", os.Args[0])
 		printUsage()
 		return
 	}
@@ -31,7 +31,10 @@ func main() {
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
-			setup.RunSetupTasks(args[2:]...)
+			err := setup.RunSetupTasks(args[1:]...)
+			if err != nil {
+				fmt.Println("Error running setup: ", err)
+			}
 		} else {
 			fmt.Println("WLS_NOSETUP is set, skipping setup")
 		}
