@@ -19,5 +19,5 @@ func TestGetVersion(t *testing.T) {
 	handler.ServeHTTP(recorder, req)
 	assert.Equal(recorder.Code, http.StatusOK)
 
-	assert.Equal(recorder.Body.String(), "1.0")
+	assert.NotEmpty(recorder.Body.String())
 }

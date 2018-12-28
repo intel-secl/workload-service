@@ -1,6 +1,7 @@
 package main
 
 import (
+	"intel/isecl/workload-service/setup"
 	"fmt"
 	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/workload-service/resource"
@@ -8,11 +9,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"strconv"
 
 	"github.com/jinzhu/gorm"
 
 	"intel/isecl/workload-service/config"
-	"intel/isecl/workload-service/workloadservice"
 
 	"github.com/gorilla/mux"
 	// Import Postgres driver
@@ -29,12 +30,15 @@ func main() {
 
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
-		for name, task := range workloadservice.GetSetupTasks(args) {
-			fmt.Println("Running setup task : " + name)
-			task.Validate()
+		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
+			setup.RunSetupTasks(args[2:]...)
+		} else {
+			fmt.Println("WLS_NOSETUP is set, skipping setup")
 		}
 	case "start":
 		startServer()
+	case "stop":
+		stopServer()
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
@@ -47,7 +51,7 @@ func main() {
 func printUsage() {
 	fmt.Printf("Work Load Service\n")
 	fmt.Printf("===============\n\n")
-	fmt.Printf("usage : %s <command> [<args>]\n\n" , os.Args[0])
+	fmt.Printf("usage : %s <command> [<args>]\n\n", os.Args[0])
 	fmt.Printf("Following are the list of commands\n")
 	fmt.Printf("\tsetup\n\n")
 	fmt.Printf("setup command is used to run setup tasks\n")
@@ -59,18 +63,21 @@ func printUsage() {
 	fmt.Printf("\t\t%s setup SampleSetupTask\n", os.Args[0])
 }
 
+func stopServer() {
+
+}
+
 func startServer() {
 	// source configuration from somewhere
 	var sslMode string
-	if config.Postgres.SSLMode {
+	if config.Configuration.Postgres.SSLMode {
 		sslMode = "enable"
 	} else {
 		sslMode = "disable"
 	}
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
-		config.Postgres.Hostname, config.Postgres.Port, config.Postgres.User, config.Postgres.DBName, config.Postgres.Password, sslMode))
+		config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
 	defer db.Close()
-	config.Postgres.Password = ""
 	if err != nil {
 		log.Fatal("could not open db", err)
 	}
@@ -85,9 +92,5 @@ func startServer() {
 	resource.SetReportsEndpoints(r.PathPrefix("/reports").Subrouter(), db)
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, wlsDb)
-	if config.UseTLS {
-		//http.ListenAndServe
-	} else {
-		http.ListenAndServe(fmt.Sprintf(":%d", config.Port), r)
-	}
+	http.ListenAndServe(fmt.Sprintf(":%d", config.Configuration.Port), r)
 }

@@ -1,25 +1,23 @@
 # Go Workload Service
 
 ### Build
-1. cd build
-2. ./buildinstallerlocal.sh
+1. make all
 
-Build will be available in build/target/workloadservice-*.bin
+Build will be available in out/wls-*.bin
 
 ### Deploy
-./workloadservice-*.bin
+./wls-*.bin
 
 ### Config
-Add /Update following configuration in workloadservice.env
+Add /Update following configuration in wls.env
 
-WORKLOAD_SERVICE_SETUP_PREREQS=yes <br />
-WORKLOAD_SERVICE_NOSETUP=yes <br />
-WORKLOAD_SERVICE_PORTNUM=8444 <br />
-DATABASE_SCHEMA=mw_ws <br />
-DATABASE_USERNAME=root <br />
-DATABASE_PASSWORD=dbpassword <br />
-DATABASE_HOSTNAME=localhost <br />
-DATABASE_PORTNUM=5432 <br />
+WLS_NOSETUP=yes
+WLS_PORT=8444
+WLS_DB=wls
+WLS_DB_USERNAME=root
+WLS_DB_PASSWORD=dbpassword
+WLS_DB_HOSTNAME=localhost
+WLS_DB_PORT=5432
 
 ### Manage service
 * Start service

@@ -2,6 +2,7 @@ package resource
 
 import (
 	"intel/isecl/workload-service/repository"
+	"intel/isecl/workload-service/version"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,5 +16,5 @@ func SetVersionEndpoints(r *mux.Router, db repository.WlsDatabase) {
 // GetVersion handles GET /version
 func getVersion(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("1.0"))
+	w.Write([]byte(version.Version))
 }
