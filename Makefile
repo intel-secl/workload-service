@@ -12,7 +12,8 @@ installer: workload-service
 	makeself --sha256 out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./setup.sh 
 
 docker: installer
-	docker build -f ./dist/docker/Dockerfile ./out
+	docker build -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
+	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION).tar 
 
 all: docker
 
