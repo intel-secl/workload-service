@@ -13,6 +13,8 @@ variables:
   POSTGRES_DB: wls
   POSTGRES_USER: runner
   POSTGRES_PASSWORD: "test"
+  HTTPS_PROXY: http://proxy-us.intel.com:911
+  no_proxy: ".intel.com"
 
 stages:
   - build
@@ -23,11 +25,11 @@ test:
   tags:
     - go
   script:
-    - env go test ./... -cover
+    - go test ./... -cover
 
 compile:
   stage: build
   tags:
     - go
   script:
-    - env go build ./...
+    - go build ./...
