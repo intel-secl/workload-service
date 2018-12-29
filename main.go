@@ -49,11 +49,13 @@ func main() {
 			fmt.Println("Failed to start server")
 			os.Exit(1)
 		}
-	case "startServer":
+	case "startserver":
 		// this runs in attached mode
 		startServer()
 	case "stop":
 		stopServer()
+	case "uninstall":
+		uninstall()
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
@@ -61,6 +63,10 @@ func main() {
 	case "help", "-help", "--help":
 		printUsage()
 	}
+}
+
+func uninstall() {
+	fmt.Println("Not yet supported")
 }
 
 func printUsage() {
@@ -72,10 +78,10 @@ func printUsage() {
 	fmt.Printf("setup command is used to run setup tasks\n")
 	fmt.Printf("\tusage : %s setup [<tasklist>]\n", os.Args[0])
 	fmt.Printf("\t\t<tasklist>-space seperated list of tasks\n")
-	fmt.Printf("\t\t\t-Supported tasks - SampleSetupTask\n")
+	fmt.Printf("\t\t\t-Supported tasks - server database\n")
 	fmt.Printf("\tExample :-\n")
 	fmt.Printf("\t\t%s setup\n", os.Args[0])
-	fmt.Printf("\t\t%s setup SampleSetupTask\n", os.Args[0])
+	fmt.Printf("\t\t%s setup database\n", os.Args[0])
 }
 
 func stopServer() {
@@ -115,7 +121,7 @@ func startServer() {
 		config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
 	defer db.Close()
 	if err != nil {
-		log.Fatal("could not open db", err)
+		log.Fatal("could not open db: ", err)
 	}
 	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
@@ -132,5 +138,6 @@ func startServer() {
 	// store pid
 	file, _ := os.Create("/var/run/workload-service/wls.pid")
 	file.WriteString(strconv.Itoa(os.Getpid()))
+	fmt.Println("Workload Service Started")
 	http.ListenAndServe(fmt.Sprintf(":%d", config.Configuration.Port), r)
 }

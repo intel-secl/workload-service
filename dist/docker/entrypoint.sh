@@ -1,3 +1,3 @@
 #!/bin/bash 
 
-workload-service setup && workload-service start
+workload-service setup && workload-service startServer
