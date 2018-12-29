@@ -12,18 +12,34 @@ func setDbHostname() {
 
 }
 
-// Setup will run the database setup tasks, but will skip if Validate() returns no error
-func (ds Database) Setup() error {
+// Run will run the database setup tasks, but will skip if Validate() returns no error
+func (ds Database) Run() error {
 	if ds.Validate() == nil {
 		fmt.Println("Database already setup, skipping ...")
 		return nil
 	}
 	fmt.Println("Setting up database connection ...")
-	config.Configuration.Postgres.Hostname = getSetupString(config.WLS_DB_HOSTNAME, "Database Hostname")
-	config.Configuration.Postgres.Port = getSetupInt(config.WLS_DB_PORT, "Database Port")
-	config.Configuration.Postgres.User = getSetupString(config.WLS_DB_USERNAME, "Database Username")
-	config.Configuration.Postgres.Password = getSetupSecretString(config.WLS_DB_PASSWORD, "Database Password")
-	config.Configuration.Postgres.DBName = getSetupString(config.WLS_DB, "Database Schema")
+	var err error
+	config.Configuration.Postgres.Hostname, err = getSetupString(config.WLS_DB_HOSTNAME, "Database Hostname")
+	if err != nil {
+		return err
+	}
+	config.Configuration.Postgres.Port, err = getSetupInt(config.WLS_DB_PORT, "Database Port")
+	if err != nil {
+		return err
+	}
+	config.Configuration.Postgres.User, err = getSetupString(config.WLS_DB_USERNAME, "Database Username")
+	if err != nil {
+		return err
+	}
+	config.Configuration.Postgres.Password, err = getSetupSecretString(config.WLS_DB_PASSWORD, "Database Password")
+	if err != nil {
+		return err
+	}
+	config.Configuration.Postgres.DBName, err = getSetupString(config.WLS_DB, "Database Schema")
+	if err != nil {
+		return err
+	}
 	return config.Save()
 }
 

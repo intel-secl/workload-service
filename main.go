@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os/exec"
+	"io/ioutil"
+	"syscall"
 	"intel/isecl/workload-service/setup"
 	"fmt"
 	"intel/isecl/workload-service/repository/postgres"
@@ -34,11 +37,20 @@ func main() {
 			err := setup.RunSetupTasks(args[1:]...)
 			if err != nil {
 				fmt.Println("Error running setup: ", err)
+				os.Exit(1)
 			}
 		} else {
 			fmt.Println("WLS_NOSETUP is set, skipping setup")
+			os.Exit(1)
 		}
 	case "start":
+		err := start() // this starts server detached
+		if err != nil {
+			fmt.Println("Failed to start server")
+			os.Exit(1)
+		}
+	case "startServer":
+		// this runs in attached mode
 		startServer()
 	case "stop":
 		stopServer()
@@ -67,7 +79,28 @@ func printUsage() {
 }
 
 func stopServer() {
+	fmt.Println("Stopping Workload Service")
+	pidData, err := ioutil.ReadFile("/var/run/workload-service/wls.pid")
+	if err != nil {
+		pid, _ := strconv.Atoi(string(pidData))
+		syscall.Kill(pid, 9)
+	}
+}
 
+func start() error {
+	// spawn another process
+	cwd, err := os.Getwd()
+    if err != nil {
+       return err
+    }
+    cmd := exec.Command(os.Args[0], "startServer")
+    cmd.Dir = cwd
+    err = cmd.Start()
+    if err != nil {
+       return err
+    }
+    cmd.Process.Release()
+    return nil
 }
 
 func startServer() {
@@ -84,16 +117,20 @@ func startServer() {
 	if err != nil {
 		log.Fatal("could not open db", err)
 	}
-	wlsDb := postgres.PostgresDatabase{db}
+	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
 	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), wlsDb)
-	// Set Image Endpoints
-	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), db)
 	// Setup Report Endpoints
-	resource.SetReportsEndpoints(r.PathPrefix("/reports").Subrouter(), db)
+	resource.SetReportsEndpoints(r.PathPrefix("/reports").Subrouter(), wlsDb)
+	// Setup Images Endpoints
+	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), wlsDb)
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, wlsDb)
+
+	// store pid
+	file, _ := os.Create("/var/run/workload-service/wls.pid")
+	file.WriteString(strconv.Itoa(os.Getpid()))
 	http.ListenAndServe(fmt.Sprintf(":%d", config.Configuration.Port), r)
 }

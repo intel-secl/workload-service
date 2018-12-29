@@ -9,7 +9,7 @@ import (
 )
 
 type SetupTask interface {
-	Setup() error
+	Run() error
 	Validate() error
 }
 
@@ -25,7 +25,7 @@ func RunSetupTasks(tasks ...string) error {
 	if len(tasks) == 0 {
 		// run ALL the setup tasks
 		for _, t := range setupTasks() {
-			if err := t.Setup(); err != nil {
+			if err := t.Run(); err != nil {
 				return err
 			}
 			if err := t.Validate(); err != nil {
@@ -42,7 +42,7 @@ func RunSetupTasks(tasks ...string) error {
 		for _, t := range setupTasks() {
 			taskName := strings.ToLower(reflect.TypeOf(t).Name())
 			if _, ok := enabledTasks[taskName]; ok {
-				if err := t.Setup(); err != nil {
+				if err := t.Run(); err != nil {
 					return err
 				}
 				if err := t.Validate(); err != nil {
@@ -55,44 +55,32 @@ func RunSetupTasks(tasks ...string) error {
 	return nil
 }
 
-func getSetupInt(env string, description string) int {
-	fmt.Printf("Enter %s:\n", description)
-	var intValue int
+func getSetupInt(env string, description string) (int, error) {
+	fmt.Printf("%s:\n", description)
 	if intStr, ok := os.LookupEnv(env); ok {
 		val, err := strconv.ParseInt(intStr, 10, 32)
 		if err == nil {
 			fmt.Println(intStr)
-			return int(val)
+			return int(val), nil
 		}
 	}
-	for {
-		if scanned, err := fmt.Scanf("%d", &intValue); scanned == 1 && err == nil {
-			break
-		}
-		fmt.Printf("Error parsing %s, try again\n", description)
-		fmt.Printf("Enter %s:", description)
-	}
-	return intValue
+	return 0, fmt.Errorf("%s is not defined", env)
 }
 
-func getSetupString(env string, description string) string {
-	fmt.Printf("Enter %s:\n", description)
+func getSetupString(env string, description string) (string, error) {
+	fmt.Printf("%s:\n", description)
 	if str, ok := os.LookupEnv(env); ok {
 		fmt.Println(str)
-		return str
+		return str, nil
 	}
-	var str string
-	fmt.Scanln(&str)
-	return str
+	return "", fmt.Errorf("%s is not defined", env)
 }
 
-func getSetupSecretString(env string, description string) string {
-	fmt.Printf("Enter %s:\n", description)
+func getSetupSecretString(env string, description string) (string, error) {
+	fmt.Printf("%s:\n", description)
 	if str, ok := os.LookupEnv(env); ok {
 		fmt.Println("*****")
-		return str
+		return str, nil
 	}
-	var str string
-	fmt.Scanln(&str)
-	return str
+	return "", fmt.Errorf("%s is not defined", env)
 }

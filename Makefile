@@ -7,11 +7,12 @@ workload-service:
 
 installer: workload-service
 	mkdir -p out/wls
-	cp dist/linux/setup.sh out/wls/setup.sh && chmod +x out/wls/setup.sh
+	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
-	makeself --sha256 out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./setup.sh 
+	makeself --sha256 out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh 
 
 docker: installer
+	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
 	docker build -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
 	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION).tar 
 
