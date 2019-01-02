@@ -63,8 +63,6 @@ paths:
           description: Successfully created Flavor
         '409':
           description: Flavor with ID already exists
-          
-          
   /images/{id}:
     get:
       tags:
@@ -141,6 +139,72 @@ paths:
                   $ref: '#/components/schemas/Image'
         '404':
           description: Images
+  /images/{id}/flavors:
+    get:
+      parameters:
+        - $ref : '#/components/parameters/imageIdParam'
+      tags:
+        - Images
+        - Flavors
+      description: Query flavors associated with image ID
+      responses:
+        '200':
+          description: Successfully queried flavors associated with image
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flavor'
+        '404':
+          description: Image with ID does not exist or Image ID has no associated flavors
+  /images/{imageId}/flavors/{flavorId}:
+    parameters:
+      - name: imageId
+        in: path
+        description: Image ID
+        required: true
+        schema: 
+          type: string
+          format: uuid
+      - name: flavorId
+        in: path
+        description: Flavor ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+      - Images
+      - Flavors
+      responses:
+        '200':
+          description: Successfully got flavor associated with image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flavor'
+        '404':
+          description: Image ID not found or Flavor ID is not associated with image
+    put:
+      tags:
+      - Images
+      - Flavors
+      responses:
+        '201':
+          description: Successfully associated flavorID to image
+        '404':
+          description: Image or Flavor does not exist
+    delete:
+      tags:
+      - Images
+      - Flavors
+      responses:
+        '204':
+          description: Successfully removed flavor association
+        '404':
+          description: Image or Flavor does not exist
   # /reports:
   #   get:
   #     summary: Gets all Trust Reports
