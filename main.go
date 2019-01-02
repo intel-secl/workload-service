@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	csetup "intel/isecl/lib/common/setup"
 )
 
 func main() {
@@ -37,7 +38,14 @@ func main() {
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
-			err := setup.RunSetupTasks(args[1:]...)
+			setupRunner := &csetup.Runner {
+				Tasks: []csetup.Task{
+					setup.Server{},
+					setup.Database{},
+				},
+				AskInput: false,
+			}
+			err := setupRunner.RunTasks(args[1:]...)
 			if err != nil {
 				fmt.Println("Error running setup: ", err)
 				os.Exit(1)

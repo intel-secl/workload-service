@@ -3,6 +3,7 @@ package setup
 import (
 	"errors"
 	"fmt"
+	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
 )
 
@@ -13,30 +14,30 @@ func setDbHostname() {
 }
 
 // Run will run the database setup tasks, but will skip if Validate() returns no error
-func (ds Database) Run() error {
-	if ds.Validate() == nil {
+func (ds Database) Run(c csetup.Context) error {
+	if ds.Validate(c) == nil {
 		fmt.Println("Database already setup, skipping ...")
 		return nil
 	}
 	fmt.Println("Setting up database connection ...")
 	var err error
-	config.Configuration.Postgres.Hostname, err = getSetupString(config.WLS_DB_HOSTNAME, "Database Hostname")
+	config.Configuration.Postgres.Hostname, err = c.GetConfigString(config.WLS_DB_HOSTNAME, "Database Hostname")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.Port, err = getSetupInt(config.WLS_DB_PORT, "Database Port")
+	config.Configuration.Postgres.Port, err = c.GetConfigInt(config.WLS_DB_PORT, "Database Port")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.User, err = getSetupString(config.WLS_DB_USERNAME, "Database Username")
+	config.Configuration.Postgres.User, err = c.GetConfigString(config.WLS_DB_USERNAME, "Database Username")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.Password, err = getSetupSecretString(config.WLS_DB_PASSWORD, "Database Password")
+	config.Configuration.Postgres.Password, err = c.GetConfigSecretString(config.WLS_DB_PASSWORD, "Database Password")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.DBName, err = getSetupString(config.WLS_DB, "Database Schema")
+	config.Configuration.Postgres.DBName, err = c.GetConfigString(config.WLS_DB, "Database Schema")
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func (ds Database) Run() error {
 }
 
 // Validate checks whether or not the Database task was completed successfully
-func (ds Database) Validate() error {
+func (ds Database) Validate(c csetup.Context) error {
 	if config.Configuration.Postgres.Hostname == "" {
 		return errors.New("Database: Hostname is not set")
 	}
