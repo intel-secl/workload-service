@@ -3,7 +3,7 @@ info:
   version: 1.0.0
   title: ISecL Workload Service
 servers:
-  - url: http://workload-service.com
+  - url: http://workload-service.com/wls
 paths:
   /flavors/{id}:
     get:
@@ -141,6 +141,7 @@ paths:
           description: Images
   /images/{id}/flavors:
     get:
+      summary: Query flavors associated with image ID
       parameters:
         - $ref : '#/components/parameters/imageIdParam'
       tags:
@@ -175,6 +176,7 @@ paths:
           type: string
           format: uuid
     get:
+      summary: Get flavor with ID that is associated with image
       tags:
       - Images
       - Flavors
@@ -188,6 +190,7 @@ paths:
         '404':
           description: Image ID not found or Flavor ID is not associated with image
     put:
+      summary: Associate flavor ID with an image
       tags:
       - Images
       - Flavors
@@ -197,6 +200,7 @@ paths:
         '404':
           description: Image or Flavor does not exist
     delete:
+      summary: Remove flavor association with image
       tags:
       - Images
       - Flavors
@@ -205,6 +209,81 @@ paths:
           description: Successfully removed flavor association
         '404':
           description: Image or Flavor does not exist
+  /reports:
+    get:
+      summary: query all reports with criteria
+      tags:
+        - Reports
+      parameters: 
+        - in: query
+          name: num_of_days
+          schema:
+            type: integer
+        - in: query
+          name: report_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: from_date
+          schema:
+            type: string
+            format: date
+        - in: query 
+          name: hardware_uuid
+          schema:
+            type: string
+        - in: query
+          name: latest_per_vm
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully queried reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Report'
+    post:
+      summary: Create a new report
+      description: Submit a new report document. The report's UUID must be unique
+      tags:
+        - Reports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+      responses:
+        '201':
+          description: Successfully created report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '409':
+          description: Report with ID already exists
+  /reports/{id}:
+    parameters:
+      - name: id 
+        in: path
+        description: Report ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      summary: Delete report by ID
+      description: Delete report by ID
+      tags:
+        - Reports
+      responses:
+        '204':
+          description: Successfully deleted report
+        '404':
+          description: Report not found
   # /reports:
   #   get:
   #     summary: Gets all Trust Reports
@@ -589,3 +668,70 @@ components:
         flavor_id:
           type: string
           format: uuid
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vm_manifest:
+          type: object
+          properties:
+            vm_info: 
+              type: object
+              properties:
+                vm_id:
+                  type: string
+                host_hardware_uuid: 
+                  type: string
+                image_id:
+                  type: string
+            image_encrypted: 
+              type: boolean
+        policy_name: 
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              rule:
+                oneOf:
+                  - $ref: '#/components/schemas/EncryptionMatches'
+              flavor_id:
+                type: string
+                format: uuid
+              faults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    cause:
+                      type: string
+              trusted: 
+                type: boolean
+        trusted:
+          type: boolean
+    EncryptionMatches:
+      type: object
+      required:
+        - rule_name
+        - expected
+        - markers
+      properties:
+        rule_name: 
+          type: string
+        markers:
+          type: array
+          items:
+            type: string
+        expected: 
+          type: object
+          properties:
+            name:
+              type: string
+            value: 
+              type: boolean
+        
