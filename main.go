@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+	"context"
+	"os/signal"
 	"os/exec"
 	"io/ioutil"
 	"syscall"
@@ -49,6 +52,12 @@ func main() {
 			fmt.Println("Failed to start server")
 			os.Exit(1)
 		}
+	case "status":
+		if s := status(); s == Running {
+			fmt.Println("Workload Service is running")
+		} else {
+			fmt.Println("Workload Service is stopped")
+		}
 	case "startserver":
 		// this runs in attached mode
 		startServer()
@@ -63,6 +72,32 @@ func main() {
 	case "help", "-help", "--help":
 		printUsage()
 	}
+}
+
+const pidPath = "/var/run/workload-service/wls.pid"
+
+// Status indicate the process status of WLS
+type Status bool
+
+const (
+	Stopped Status = false
+	Running Status = true
+)
+
+func status() Status {
+	pid, err := readPid() 
+	if err != nil {
+		os.Remove(pidPath)
+		return Stopped
+	}
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		return Stopped
+	}
+	if err := p.Signal(syscall.Signal(0)); err != nil {
+		return Stopped
+	}
+	return Running
 }
 
 func uninstall() {
@@ -85,43 +120,71 @@ func printUsage() {
 }
 
 func stopServer() {
-	fmt.Println("Stopping Workload Service")
-	pidData, err := ioutil.ReadFile("/var/run/workload-service/wls.pid")
+	pid, err := readPid()
 	if err != nil {
-		pid, _ := strconv.Atoi(string(pidData))
-		syscall.Kill(pid, 9)
+		log.Printf("Error: %v\n", err)
 	}
+	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
+		log.Printf("Error: %v\n", err)
+	}
+	log.Println("Workload Service Stopped")
+}
+
+func readPid() (int, error) {
+	pidData, err := ioutil.ReadFile(pidPath)
+	if err != nil {
+		return 0, err
+	}
+	pid, err := strconv.Atoi(string(pidData))
+	if err != nil {
+		return 0, err
+	}
+	return pid, nil
 }
 
 func start() error {
+	// first check to see if the pid specified in /var/run is already running
 	// spawn another process
+	fmt.Println("Starting Workload Service ...")
 	cwd, err := os.Getwd()
     if err != nil {
        return err
     }
     cmd := exec.Command(os.Args[0], "startServer")
-    cmd.Dir = cwd
+	cmd.Dir = cwd
     err = cmd.Start()
     if err != nil {
        return err
-    }
-    cmd.Process.Release()
+	}
+	// store pid
+	file, _ := os.Create(pidPath)
+	file.WriteString(strconv.Itoa(cmd.Process.Pid))
+	cmd.Process.Release()
+	fmt.Println("Workload Service started")
     return nil
 }
 
 func startServer() {
-	// source configuration from somewhere
 	var sslMode string
 	if config.Configuration.Postgres.SSLMode {
 		sslMode = "enable"
 	} else {
 		sslMode = "disable"
 	}
-	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
+	var db *gorm.DB
+	var dbErr error
+	for i := 0; i < 4; i = i + 1 {
+		const retryTime = 5
+		db, dbErr = gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 		config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
+		if dbErr != nil {
+			log.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
+		}
+		time.Sleep(retryTime*time.Second)
+	}
 	defer db.Close()
-	if err != nil {
-		log.Fatal("could not open db: ", err)
+	if dbErr != nil {
+		log.Fatal("could not open db: ", dbErr)
 	}
 	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
@@ -135,9 +198,29 @@ func startServer() {
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(r, wlsDb)
 
-	// store pid
-	file, _ := os.Create("/var/run/workload-service/wls.pid")
-	file.WriteString(strconv.Itoa(os.Getpid()))
-	fmt.Println("Workload Service Started")
-	http.ListenAndServe(fmt.Sprintf(":%d", config.Configuration.Port), r)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	h := &http.Server {
+		Addr: fmt.Sprintf(":%d", config.Configuration.Port),
+		Handler: r,
+	}
+	// dispatch http listener on separate go routine
+	log.Println("Starting Workload Service ...")
+	go func() {
+		log.Println("Workload Service Started")
+		if err := h.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	// wait for a signal on the stop channel
+	<-stop // swallow the value, as we don't really care what it is
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := h.Shutdown(ctx); err != nil {
+		log.Printf("Failed to gracefully shutdown webserver: %v\n", err)
+	} else {
+		log.Println("Workload Service stopped")
+	}
 }
