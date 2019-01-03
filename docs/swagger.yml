@@ -139,6 +139,34 @@ paths:
                   $ref: '#/components/schemas/Image'
         '404':
           description: Images
+  /images/{id}/flavor-key:
+    get:
+      summary: Get flavor and key for image 
+      parameters:
+        - $ref: '#/components/parameters/imageIdParam'
+        - in: query
+          name: hardware_uuid
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: key_id
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Images
+        - Flavors
+        - RPC
+      description: Get flavor and key for image by communicating with HVS to get the saml report for the hardware UUID
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlavorKey'
   /images/{id}/flavors:
     get:
       summary: Query flavors associated with image ID
@@ -734,4 +762,15 @@ components:
               type: string
             value: 
               type: boolean
+    FlavorKey:
+      type: object
+      required: 
+        - flavor
+        - key
+      properties:
+        flavor: 
+          $ref: '#/components/schemas/Flavor'
+        key:
+          type: string
+          format: byte
         
