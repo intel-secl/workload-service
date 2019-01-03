@@ -42,6 +42,16 @@ var Configuration struct {
 		Port     int
 		SSLMode  bool
 	}
+	HVS struct {
+		URL      string
+		User     string
+		Password string
+	}
+	KMS struct {
+		URL      string
+		User     string
+		Password string
+	}
 }
 
 var LogWriter io.Writer

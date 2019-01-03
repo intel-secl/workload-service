@@ -1,12 +1,18 @@
 package resource
 
 import (
+	"io/ioutil"
+	"regexp"
+	"net/url"
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
+	"intel/isecl/lib/kms-client"
 	"log"
 	"net/http"
 
@@ -27,9 +33,103 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("DELETE")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getImageByID(db))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteImageByID(db))).Methods("DELETE")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", logger(retrieveFlavorAndKeyForImageID(db))).Methods("GET").Queries("hardware_uuid", "")
 	r.HandleFunc("", logger(queryImages(db))).Methods("GET")
 	r.HandleFunc("", logger(createImage(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
+
+func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		hwid := mux.Vars(r)["hardware_uuid"]
+		kid, kidPresent := r.URL.Query()["key_id"]
+		flavor, err := db.ImageRepository().RetrieveAssociatedImageFlavor(id)
+		if err != nil {
+			var code int
+			if gorm.IsRecordNotFoundError(err) {
+				code = http.StatusNotFound
+			} else {
+				code = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), code)
+		} else {
+			// Check if flavor keyURL is not empty
+			if len(flavor.Image.Encryption.KeyURL) > 0 {
+				// we have key URL
+				// http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+
+				// post HVS with hardwareUUID
+				// extract key_id from KeyURL
+				keyURL, err := url.Parse(flavor.Image.Encryption.KeyURL)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError) 
+					return
+				}
+				re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
+				keyID := re.FindString(keyURL.Path)
+				if !kidPresent || (kidPresent && kid[0] != keyID){
+					criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
+					req, err := http.NewRequest("POST", config.Configuration.HVS.URL+"/reports", bytes.NewBuffer(criteriaJSON))
+					req.SetBasicAuth(config.Configuration.HVS.User, config.Configuration.HVS.Password)
+					if err != nil {
+						// http error internal 500
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					req.Header.Set("Content-Type", "application/json")
+					req.Header.Set("Accept", "application/samlassertion+xml")
+	
+					client := &http.Client{
+						Transport: &http.Transport{
+							TLSClientConfig: &tls.Config{
+								InsecureSkipVerify: true,
+							},
+						},
+					}
+					resp, err := client.Do(req)
+					if err != nil {
+						// bad response from HVS
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+					saml, _ := ioutil.ReadAll(resp.Body)
+					defer resp.Body.Close()
+					// create insecure client
+					kc := &kms.Client{
+						BaseURL: config.Configuration.KMS.URL,
+						Username: config.Configuration.KMS.User,
+						Password: config.Configuration.KMS.Password,
+						HTTPClient: client,
+					}
+					// post to KBS client with saml
+					key, err := kc.Key(keyID).Transfer(saml)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError) 
+						return
+					}
+					// got key data
+					flavorKey := model.FlavorKey{
+						Flavor: *flavor,
+						Key: key,
+					}
+					if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
+						// marshalling error 500
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					return
+				}
+			}
+			if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: *flavor}); err != nil {
+				// marshalling error 500
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+}
+
 
 func getAllAssociatedFlavors(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
