@@ -41,22 +41,33 @@ func (repo imageRepo) Create(image *model.Image) error {
 		tx.Rollback()
 		return repository.ErrImageAssociationAlreadyExists
 	}
-	// make sure there are no duplicates
+
+	// make sure there are no duplicates by actually going through the ids
 	set := make(map[string]bool)
-	flavorEntities := make([]flavorEntity, len(image.FlavorIDs))
-	for i, id := range image.FlavorIDs {
+	for _, id := range image.FlavorIDs {
 		if set[id] == true {
 			return repository.ErrImageAssociationAlreadyExists
 		}
 		set[id] = true
-		flavorEntities[i] = flavorEntity{ID: id}
 	}
+	var flavorEntities []flavorEntity
 	// make sure the list of flavorID's makes sense, this *could* be done at the Database schema level as an optimization
-	var count int
-	tx.Model(&flavorEntity{}).Where("id in (?)", image.FlavorIDs).Count(&count)
-	if count != len(image.FlavorIDs) {
+	tx.Find(&flavorEntities, "id in (?)", image.FlavorIDs)
+	if len(flavorEntities) != len(image.FlavorIDs) {
 		// some flavor ID's dont exist
 		return repository.ErrImageAssociationFlavorDoesNotExist
+	}
+	// also make sure there is only ONE flavor with FlavorPart = IMAGE
+	var found bool
+	for _, fe := range flavorEntities {
+		if fe.FlavorPart == "IMAGE" {
+			if found == true {
+				// we have duplicate IMAGE flavorParts
+				tx.Rollback()
+				return repository.ErrImageAssociationDuplicateImageFlavor
+			}
+			found = true
+		}
 	}
 	ie.Flavors = flavorEntities
 	err := tx.Create(&ie).Error
@@ -66,6 +77,15 @@ func (repo imageRepo) Create(image *model.Image) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
+	var flavorEntity flavorEntity
+	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavor.id").First(&flavorEntity, "image_id = ? AND flavor_part = ?", imageUUID, "IMAGE").Error; err != nil {
+		return nil, err
+	}
+	flavor := flavorEntity.Flavor()
+	return &flavor, nil
 }
 
 func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
@@ -128,7 +148,40 @@ func (repo imageRepo) Update(image *model.Image) error {
 }
 
 func (repo imageRepo) AddAssociatedFlavor(imageUUID string, flavorUUID string) error {
-	return repo.db.Model(&imageEntity{ID: imageUUID}).Association("Flavors").Append(&flavorEntity{ID: flavorUUID}).Error
+	tx := repo.db.Begin()
+	ie := imageEntity{
+		ID: imageUUID,
+	}
+	fe := flavorEntity{
+		ID: flavorUUID,
+	}
+	if err := tx.First(&fe).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Preload("Flavors").First(&ie).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	assoc := tx.Model(&imageEntity{ID: imageUUID}).Association("Flavors")
+	if fe.FlavorPart == "IMAGE" {
+		// Image can only have 1 flavor that has FlavorPart == IMAGE,
+		// this is a very bad way of setting contraints through the application layer, and should be refactored.
+		for _, f := range ie.Flavors {
+			if f.FlavorPart == "IMAGE" {
+				if err := assoc.Delete(&fe).Error; err != nil {
+					tx.Rollback()
+					return err
+				}
+				break
+			}
+		}
+	}
+	if err := assoc.Append(&flavorEntity{ID: flavorUUID}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 func (repo imageRepo) DeleteByUUID(uuid string) error {

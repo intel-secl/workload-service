@@ -17,8 +17,9 @@ type flavorEntity struct {
 	UpdatedAt time.Time
 	// DeletedAt *time.Time
 	// Above 4 are Aliases
-	Label   string         `gorm:"unique"`
-	Content postgres.Jsonb `gorm:"type:jsonb;not null"`
+	Label      string         `gorm:"unique;not null"`
+	FlavorPart string         `gorm:"not null"`
+	Content    postgres.Jsonb `gorm:"type:jsonb;not null"`
 	//Images  []imageEntity  `gorm:"many2many:image_flavors"`
 }
 

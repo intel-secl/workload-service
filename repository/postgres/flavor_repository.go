@@ -39,9 +39,10 @@ func (repo flavorRepo) Create(f *flavor.ImageFlavor) error {
 		return errors.New("failed to marshal ImageFlavor to JSON")
 	}
 	if err := tx.Create(&flavorEntity{
-		ID:      f.Image.Meta.ID,
-		Label:   f.Image.Meta.Description.Label,
-		Content: postgres.Jsonb{RawMessage: flavorJSON},
+		ID:         f.Image.Meta.ID,
+		Label:      f.Image.Meta.Description.Label,
+		FlavorPart: f.Image.Meta.Description.FlavorPart,
+		Content:    postgres.Jsonb{RawMessage: flavorJSON},
 	}).Error; err != nil {
 		tx.Rollback()
 		return err

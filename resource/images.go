@@ -188,9 +188,12 @@ func createImage(db repository.WlsDatabase) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("one or more flavor ids in %v is already associated with image %s", formBody.FlavorIDs, formBody.ID), http.StatusConflict)
 			case repository.ErrImageAssociationFlavorDoesNotExist:
 				http.Error(w, fmt.Sprintf("one or more flavor ids in %v does not point to a registered flavor", formBody.FlavorIDs), http.StatusBadRequest)
+			case repository.ErrImageAssociationDuplicateImageFlavor:
+				http.Error(w, "image can only be associated with one flavor that has FlavorPart = IMAGE", http.StatusConflict)
 			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
+			return
 		}
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(formBody)

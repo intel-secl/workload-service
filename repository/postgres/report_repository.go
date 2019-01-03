@@ -101,7 +101,7 @@ func findLatestReports(vmID string, reportID string, hardwareUUID string, db *go
 
 	if len(hardwareUUID) > 0 {
 		// what is this JOIN for? it seems at a glance that it's just an identity operation
-		db.Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null and report_entities.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ?", hardwareUUID).Find(&reportEntities)
+		db.Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null and reports.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ?", hardwareUUID).Find(&reportEntities)
 		return getReportModels(reportEntities)
 	}
 	return getReportModels(reportEntities)
@@ -123,7 +123,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 
 		if len(hardwareUUID) > 0 {
 			if latestPerVM == "true" {
-				db.Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND report_entities.created_at > ? and report_entities.created_at < ?", hardwareUUID, fromDate, toDate).Find(&reportEntities)
+				db.Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND reports.created_at > ? and reports.created_at < ?", hardwareUUID, fromDate, toDate).Find(&reportEntities)
 				return getReportModels(reportEntities)
 			}
 			db.Order("created_at desc").Where("trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND created_at > ? and created_at < ?", hardwareUUID, fromDate, toDate).Find(&reportEntities)
@@ -131,7 +131,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 		}
 		// If only either num of days or from_date and to_date is the given filter criteria
 		if latestPerVM == "true" {
-			db.Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.created_at > ? and report_entities.created_at < ?", fromDate, toDate).Find(&reportEntities)
+			db.Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.created_at > ? and reports.created_at < ?", fromDate, toDate).Find(&reportEntities)
 			fmt.Println("only num of days")
 			return getReportModels(reportEntities)
 		}
@@ -152,7 +152,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 		if len(hardwareUUID) > 0 {
 			fmt.Println("I am heere")
 			if latestPerVM == "true" {
-				db.Table("report_entities").Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND created_at > ?", hardwareUUID, fromDate).Find(&reportEntities)
+				db.Table("reports").Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND created_at > ?", hardwareUUID, fromDate).Find(&reportEntities)
 				return getReportModels(reportEntities)
 			}
 			db.Order("created_at desc").Where("trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? and created_at > ? ", hardwareUUID, fromDate).Find(&reportEntities)
@@ -162,7 +162,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 		// If only from_date is the given filter criteria
 		if latestPerVM == "true" {
 			fmt.Println("from date")
-			db.Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.created_at > ?", fromDate).Find(&reportEntities)
+			db.Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.created_at > ?", fromDate).Find(&reportEntities)
 			return getReportModels(reportEntities)
 		}
 		db.Order("created_at desc").Where("created_at > ?", fromDate).Find(&reportEntities)
@@ -179,7 +179,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 
 	if len(hardwareUUID) > 0 {
 		if latestPerVM == "true" {
-			db.Table("report_entities").Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND report_entities.created_at < ?", hardwareUUID, toDate).Find(&reportEntities)
+			db.Table("reports").Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND reports.created_at < ?", hardwareUUID, toDate).Find(&reportEntities)
 			return getReportModels(reportEntities)
 		}
 		db.Order("created_at desc").Where("trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND created_at < ?", hardwareUUID, toDate).Find(&reportEntities)
@@ -188,7 +188,7 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 
 	// If only to_date is the given filter criteria
 	if latestPerVM == "true" {
-		db.Joins("LEFT JOIN report_entities as r2 ON report_entities.vm_id = r2.vm_id AND report_entities.created_at > r2.created_at").Where("r2.vm_id is null AND report_entities.created_at < ?", toDate).Find(&reportEntities)
+		db.Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.created_at < ?", toDate).Find(&reportEntities)
 		fmt.Println("only to date")
 		return getReportModels(reportEntities)
 	}
