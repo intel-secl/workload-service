@@ -26,7 +26,11 @@ test:
   tags:
     - go
   script:
-    - go test ./... -cover
+    - go test ./... -coverpkg=./... -coverprofile cover.out
+    - go tool cover -html=cover.out -o cover.html
+  artifacts:
+    paths:
+      - "cover.html"
 
 compile:
   stage: build
