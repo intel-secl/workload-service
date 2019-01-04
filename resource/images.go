@@ -68,7 +68,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 				re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
 				keyID := re.FindString(keyURL.Path)
 				if !kidPresent || (kidPresent && kid[0] != keyID){
-					criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
+					criteriaJSON := []byte(fmt.Sprintf(`{"hostHardwareId":"%s"}`, hwid))
 					req, err := http.NewRequest("POST", config.Configuration.HVS.URL+"/reports", bytes.NewBuffer(criteriaJSON))
 					req.SetBasicAuth(config.Configuration.HVS.User, config.Configuration.HVS.Password)
 					if err != nil {
