@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/rhel7/rhel
+FROM centos:latest
 
 COPY wls-*.bin /tmp/wls.bin
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
