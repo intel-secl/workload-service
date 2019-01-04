@@ -12,7 +12,7 @@ installer: workload-service
 	mkdir -p out/wls
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
-	makeself --sha256 out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh 
+	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh 
 
 docker: installer
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
