@@ -3,6 +3,8 @@ GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 
+.PHONY: workload-service installer docker all clean
+
 workload-service:
 	env GOOS=linux go build -ldflags "-X intel/isecl/workload-service/version.Version=$(VERSION)-$(GITCOMMIT)" -o out/workload-service
 

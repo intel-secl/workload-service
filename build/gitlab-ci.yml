@@ -1,14 +1,12 @@
 image: golang:latest
 
 before_script:
+  - echo "Acquire::http::Proxy \"http://proxy-us.intel.com:911\";" >> /etc/apt/apt.conf
+  - echo "Acquire::https::Proxy \"http://proxy-us.intel.com:911\";" >> /etc/apt/apt.conf
   - git config --global http.proxy "http://proxy-us.intel.com:911"
   - echo "[http \"https://gitlab.devtools.intel.com\"]" >> ~/.gitconfig
   - echo "        proxy = \"\"" >> ~/.gitconfig
   - cd $CI_PROJECT_DIR
-
-services:
-  - postgres:latest
-
 variables:
   POSTGRES_DB: wls
   POSTGRES_USER: runner
@@ -19,8 +17,11 @@ variables:
 stages:
   - build
   - test
+  - deploy
 
 test:
+  services:
+    - postgres:latest
   stage: test
   tags:
     - go
@@ -33,3 +34,28 @@ compile:
     - go
   script:
     - go build ./...
+
+installer:
+  stage: deploy
+  tags:
+    - go
+  script:
+    - apt-get update && apt-get install -y makeself
+    - make installer
+  artifacts:
+    paths:
+      - "out/wls-*.bin"
+    expire_in: 1 week
+
+docker:
+  stage: deploy
+  tags: 
+    - go
+    - docker
+  script:
+    - curl -sSL https://get.docker.com/ | sh
+    - apt-get update && apt-get install -y makeself
+    - make docker
+  artifacts:
+    paths:
+      - "out/*.tar"
