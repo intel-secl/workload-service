@@ -40,8 +40,10 @@ func main() {
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
 			setupRunner := &csetup.Runner {
 				Tasks: []csetup.Task{
-					setup.Server{},
-					setup.Database{},
+					new(setup.Server),
+					new(setup.Database),
+					new(setup.HVSConnection),
+					new(setup.KMSConnection),
 				},
 				AskInput: false,
 			}

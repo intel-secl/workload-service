@@ -16,6 +16,14 @@ export WLS_DB_USERNAME
 export WLS_DB_PASSWORD
 export WLS_DB_HOSTNAME
 export WLS_DB_PORT
+# export known KMS Connection variables
+export KMS_URL
+export KMS_USER
+export KMS_PASSWORD
+# export known HVS Connection variables
+export HVS_URL
+export HVS_USER
+export HVS_PASSWORD
 
 # assert that installer is ran as root
 if [[ $EUID -ne 0 ]]; then

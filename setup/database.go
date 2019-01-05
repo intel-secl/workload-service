@@ -7,11 +7,9 @@ import (
 	"intel/isecl/workload-service/config"
 )
 
+// Database is a setup task for setting up the Postgres connection to use for WLS
+// it expects you to set WLS_DB_HOSTNAME, WLS_DB_PORT, WLS_DB_USERNAME, WLS_DB_PASSWORD, and WLS_DB
 type Database struct{}
-
-func setDbHostname() {
-
-}
 
 // Run will run the database setup tasks, but will skip if Validate() returns no error
 func (ds Database) Run(c csetup.Context) error {
