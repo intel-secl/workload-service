@@ -69,7 +69,18 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 				keyID := re.FindString(keyURL.Path)
 				if !kidPresent || (kidPresent && kid[0] != keyID){
 					criteriaJSON := []byte(fmt.Sprintf(`{"hostHardwareId":"%s"}`, hwid))
-					req, err := http.NewRequest("POST", config.Configuration.HVS.URL+"/reports", bytes.NewBuffer(criteriaJSON))
+					url, err := url.Parse(config.Configuration.HVS.URL)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					reports, err := url.Parse("/reports")
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					endpoint := url.ResolveReference(reports)
+					req, err := http.NewRequest("POST", endpoint.String(), bytes.NewBuffer(criteriaJSON))
 					req.SetBasicAuth(config.Configuration.HVS.User, config.Configuration.HVS.Password)
 					if err != nil {
 						// http error internal 500
