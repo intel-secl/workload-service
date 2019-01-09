@@ -1,10 +1,10 @@
 package resource
 
 import (
-	"intel/isecl/workload-service/model"
-	"intel/isecl/workload-service/config"
 	"encoding/json"
 	"fmt"
+	"intel/isecl/workload-service/config"
+	"intel/isecl/workload-service/model"
 	"log"
 	"net/http"
 
@@ -30,7 +30,7 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 		flavor, err := fr.RetrieveByUUID(id)
 		if err != nil {
 			return err
-		} 
+		}
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			return err
 		}
@@ -46,10 +46,10 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		if err != nil {
 			return err
-		} 
+		}
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			return err
-		} 
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		return nil
@@ -62,7 +62,7 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 		fr := db.FlavorRepository()
 		if err := fr.DeleteByUUID(id); err != nil {
 			return err
-		} 
+		}
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	}
@@ -86,13 +86,13 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		//    - Currently doing this ^
 		switch err := fr.Create(&f); err {
 		case repository.ErrFlavorLabelAlreadyExists:
-			return &endpointError {
-				Message: fmt.Sprintf("Flavor with Label %s already exists", f.Image.Meta.Description.Label), 
+			return &endpointError{
+				Message:    fmt.Sprintf("Flavor with Label %s already exists", f.Image.Meta.Description.Label),
 				StatusCode: http.StatusConflict,
 			}
 		case repository.ErrFlavorUUIDAlreadyExists:
-			return &endpointError {
-				Message: fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID), 
+			return &endpointError{
+				Message:    fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID),
 				StatusCode: http.StatusConflict,
 			}
 		case nil:
@@ -102,7 +102,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			}
 			return nil
 		default:
-			return err 
+			return err
 		}
 	}
 }

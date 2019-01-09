@@ -14,20 +14,18 @@ import (
 	"intel/isecl/workload-service/repository"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
 // SetReportEndpoints
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
-	r.HandleFunc("", logger(getReport(db))).Methods("GET")
-	r.HandleFunc("", logger(createReport(db))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteReportByID(db))).Methods("DELETE")
+	r.HandleFunc("", logger(errorHandler(getReport(db)))).Methods("GET")
+	r.HandleFunc("", logger(errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(errorHandler(deleteReportByID(db)))).Methods("DELETE")
 }
 
-func getReport(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request){
-		
+func getReport(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		filter := repository.ReportFilter{}
 		vmID, ok := r.URL.Query()["vm_id"]
 		if ok && len(vmID) >= 1 {
@@ -69,25 +67,26 @@ func getReport(db repository.WlsDatabase) http.HandlerFunc {
 		
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filter)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
 		
 		if err := json.NewEncoder(w).Encode(reports); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Header().Set("Content-Type", "application/json")
-		}
+			return err
+		} 
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		return nil
 	}
 }
 
-func createReport(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func createReport(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var vtr model.Report
 		if err := json.NewDecoder(r.Body).Decode(&vtr); err != nil {
-			fmt.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			return &endpointError{
+				Message: err.Error(),
+				StatusCode: http.StatusBadRequest,
+			}
 		}
 
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input
@@ -102,37 +101,36 @@ func createReport(db repository.WlsDatabase) http.HandlerFunc {
 		//    - Currently doing this ^
 		switch err := rr.Create(&vtr); err {
 		case errors.New("report already exists with UUID"):
-			http.Error(w, fmt.Sprintf("Report with UUID %s already exists", vtr.Manifest.VmInfo.VmID), http.StatusConflict)
+			return &endpointError{
+				Message: fmt.Sprintf("Report with UUID %s already exists",vtr.Manifest.VmInfo.VmID),
+				StatusCode: http.StatusConflict,
+			}
 		case nil:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			if err := json.NewEncoder(w).Encode(vtr); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
 			} 
-			
+			return nil
 		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)  
+			return err
 		}
 	}
 }
 
-func deleteReportByID(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func deleteReportByID(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
-		if uuid == ""{
-			http.Error(w, "Report id empty", http.StatusBadRequest)
-		}
-		err := db.ReportRepository().DeleteByReportID(uuid)
-		if err != nil {
-			var code int
-			if gorm.IsRecordNotFoundError(err) {
-				code = http.StatusNotFound
-			} else {
-				code = http.StatusInternalServerError
+		if uuid == "" {
+			return &endpointError{
+				Message: "Report id cannot be empty",
+				StatusCode: http.StatusBadRequest,
 			}
-	     		http.Error(w, err.Error(), code)
-		} else {
-			w.WriteHeader(http.StatusNoContent)
 		}
+		if err := db.ReportRepository().DeleteByReportID(uuid); err != nil {
+			return err
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
  }
