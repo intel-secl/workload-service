@@ -55,6 +55,7 @@ func (repo imageRepo) Create(image *model.Image) error {
 	tx.Find(&flavorEntities, "id in (?)", image.FlavorIDs)
 	if len(flavorEntities) != len(image.FlavorIDs) {
 		// some flavor ID's dont exist
+		tx.Rollback()
 		return repository.ErrImageAssociationFlavorDoesNotExist
 	}
 	// also make sure there is only ONE flavor with FlavorPart = IMAGE

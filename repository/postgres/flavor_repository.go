@@ -35,6 +35,7 @@ func (repo flavorRepo) Create(f *model.Flavor) error {
 	}
 	flavorJSON, err := json.Marshal(f)
 	if err != nil {
+		tx.Rollback()
 		return errors.New("failed to marshal ImageFlavor to JSON")
 	}
 	if err := tx.Create(&flavorEntity{
