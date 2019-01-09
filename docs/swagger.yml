@@ -763,14 +763,13 @@ components:
             value: 
               type: boolean
     FlavorKey:
-      type: object
-      required: 
-        - flavor
-        - key
-      properties:
-        flavor: 
-          $ref: '#/components/schemas/Flavor'
-        key:
-          type: string
-          format: byte
+      allOf:
+        - $ref: '#/components/schemas/Flavor'
+        - type: object
+          required: 
+           - key
+          properties:
+            key:
+              type: string
+              format: byte
         
