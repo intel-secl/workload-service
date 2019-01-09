@@ -85,6 +85,34 @@ func mockKMS() *http.Server {
 	return h
 }
 
+func badKMS() *http.Server {
+	r := mux.NewRouter()
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Bad Request"))
+	})
+	h := &http.Server{
+		Addr:    ":1337",
+		Handler: r,
+	}
+	go h.ListenAndServe()
+	return h
+}
+
+func badHVS() *http.Server {
+	r := mux.NewRouter()
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Bad Request"))
+	})
+	h := &http.Server{
+		Addr:    ":1338",
+		Handler: r,
+	}
+	go h.ListenAndServe()
+	return h
+}
+
 var Saml = `<saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="MapAssertion" IssueInstant="2019-01-08T19:09:45.318Z" Version="2.0">
 <saml2:Issuer>https://10.105.168.177:8443</saml2:Issuer>
 <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">

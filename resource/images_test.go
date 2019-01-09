@@ -94,6 +94,28 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
+func TestFlavorKyHVSBadRequest(t *testing.T) {
+	assert := assert.New(t)
+	r := setupMockServer(t)
+	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.User = "user"
+	config.Configuration.KMS.Password = "pass"
+	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.User = "user"
+	config.Configuration.HVS.Password = "pass"
+	h := badHVS()
+	defer h.Close()
+	k := mockKMS()
+	defer k.Close()
+
+	// Test Flavor-Key
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	r.ServeHTTP(recorder, req)
+	t.Log(recorder.Body.String())
+	assert.Equal(http.StatusBadRequest, recorder.Code)
+}
+
 func TestFlavorKeyKMSDown(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
@@ -105,11 +127,32 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 	config.Configuration.HVS.Password = "pass"
 	h := mockHVS()
 	defer h.Close()
-
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
+}
+
+func TestFlavorKeyKMSBadRequest(t *testing.T) {
+	assert := assert.New(t)
+	r := setupMockServer(t)
+	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.User = "user"
+	config.Configuration.KMS.Password = "pass"
+	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.User = "user"
+	config.Configuration.HVS.Password = "pass"
+	h := mockHVS()
+	defer h.Close()
+	k := badKMS()
+	defer k.Close()
+
+	// Test Flavor-Key
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	r.ServeHTTP(recorder, req)
+	t.Log(recorder.Body.String())
+	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
