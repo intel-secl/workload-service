@@ -43,21 +43,21 @@ func setupMockServer(t *testing.T) *mux.Router {
 	return r
 }
 
-func mockHVS() *http.Server {
+func mockHVS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/mtwilson/v2/reports", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/samlassertion+xml")
 		w.Write([]byte(Saml))
 	}).Methods("POST")
 	h := &http.Server{
-		Addr:    ":1338",
+		Addr:    addr,
 		Handler: r,
 	}
 	go h.ListenAndServe()
 	return h
 }
 
-func mockKMS() *http.Server {
+func mockKMS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -78,35 +78,35 @@ func mockKMS() *http.Server {
 		w.Write(enc)
 	}).Methods("POST")
 	h := &http.Server{
-		Addr:    ":1337",
+		Addr:    addr,
 		Handler: r,
 	}
 	go h.ListenAndServe()
 	return h
 }
 
-func badKMS() *http.Server {
+func badKMS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Bad Request"))
 	})
 	h := &http.Server{
-		Addr:    ":1337",
+		Addr:    addr,
 		Handler: r,
 	}
 	go h.ListenAndServe()
 	return h
 }
 
-func badHVS() *http.Server {
+func badHVS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Bad Request"))
 	})
 	h := &http.Server{
-		Addr:    ":1338",
+		Addr:    addr,
 		Handler: r,
 	}
 	go h.ListenAndServe()

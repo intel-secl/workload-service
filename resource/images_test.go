@@ -18,9 +18,9 @@ func TestFlavorKey(t *testing.T) {
 	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	k := mockKMS()
+	k := mockKMS(":1337")
 	defer k.Close()
-	h := mockHVS()
+	h := mockHVS(":1338")
 	defer h.Close()
 
 	// Test Flavor-Key
@@ -33,15 +33,15 @@ func TestFlavorKey(t *testing.T) {
 func TestFlavorKeyMissingHWUUID(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:2337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:2338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	k := mockKMS()
+	k := mockKMS(":2337")
 	defer k.Close()
-	h := mockHVS()
+	h := mockHVS(":2338")
 	defer h.Close()
 
 	// Test Flavor-Key with no hardware_uuid
@@ -55,15 +55,15 @@ func TestFlavorKeyMissingHWUUID(t *testing.T) {
 func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:3337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:3338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	k := mockKMS()
+	k := mockKMS(":3337")
 	defer k.Close()
-	h := mockHVS()
+	h := mockHVS(":3338")
 	defer h.Close()
 
 	// Test Flavor-Key with no hardware_uuid
@@ -77,13 +77,13 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 func TestFlavorKeyHVSDown(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:4337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:4338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	k := mockKMS()
+	k := mockKMS(":4337")
 	defer k.Close()
 
 	// Test Flavor-Key
@@ -97,17 +97,16 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 func TestFlavorKyHVSBadRequest(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:5337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:5338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	h := badHVS()
-	defer h.Close()
-	k := mockKMS()
+	k := mockKMS(":5337")
 	defer k.Close()
-
+	h := badHVS(":5338")
+	defer h.Close()
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
@@ -119,13 +118,13 @@ func TestFlavorKyHVSBadRequest(t *testing.T) {
 func TestFlavorKeyKMSDown(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:6337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:6338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	h := mockHVS()
+	h := mockHVS(":6338")
 	defer h.Close()
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
@@ -138,15 +137,15 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	assert := assert.New(t)
 	r := setupMockServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:7337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:7338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	h := mockHVS()
+	h := mockHVS(":7337")
 	defer h.Close()
-	k := badKMS()
+	k := badKMS(":7338")
 	defer k.Close()
 
 	// Test Flavor-Key
