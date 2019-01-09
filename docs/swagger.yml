@@ -187,15 +187,9 @@ paths:
                   $ref: '#/components/schemas/Flavor'
         '404':
           description: Image with ID does not exist or Image ID has no associated flavors
-  /images/{imageId}/flavors/{flavorId}:
+  /images/{id}/flavors/{flavorId}:
     parameters:
-      - name: imageId
-        in: path
-        description: Image ID
-        required: true
-        schema: 
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/imageIdParam'
       - name: flavorId
         in: path
         description: Flavor ID
