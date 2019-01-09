@@ -43,16 +43,21 @@ func setupMockServer(t *testing.T) *mux.Router {
 	return r
 }
 
-func mockHVS() {
+func mockHVS() *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/mtwilson/v2/reports", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/samlassertion+xml")
 		w.Write([]byte(Saml))
 	}).Methods("POST")
-	http.ListenAndServe(":1338", r)
+	h := &http.Server{
+		Addr:    ":1338",
+		Handler: r,
+	}
+	go h.ListenAndServe()
+	return h
 }
 
-func mockKMS() {
+func mockKMS() *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -72,9 +77,13 @@ func mockKMS() {
 		I9Iri2+YRM6sGVg8ZkzcCmFd+CoTNy+cw/Y9AQ==`)
 		w.Write(enc)
 	}).Methods("POST")
-	http.ListenAndServe(":1337", r)
+	h := &http.Server{
+		Addr:    ":1337",
+		Handler: r,
+	}
+	go h.ListenAndServe()
+	return h
 }
-
 
 var Saml = `<saml2:Assertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" ID="MapAssertion" IssueInstant="2019-01-08T19:09:45.318Z" Version="2.0">
 <saml2:Issuer>https://10.105.168.177:8443</saml2:Issuer>

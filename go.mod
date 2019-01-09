@@ -23,6 +23,6 @@ replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common
 
 replace intel/isecl/lib/verifier => gitlab.devtools.intel.com/sst/isecl/lib/verifier v0.0.0-20181221212114-b1d5e4114406
 
-replace intel/isecl/lib/kms-client => gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108233307-aca988b5677b
+// replace intel/isecl/lib/kms-client => gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108233307-aca988b5677b
 
-//replace intel/isecl/lib/kms-client => ../lib/kms-client
+replace intel/isecl/lib/kms-client => ../lib/kms-client

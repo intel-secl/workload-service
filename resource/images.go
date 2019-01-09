@@ -33,15 +33,27 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", nil).Methods("DELETE")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getImageByID(db))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteImageByID(db))).Methods("DELETE")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", logger(retrieveFlavorAndKeyForImageID(db))).Methods("GET").Queries("hardware_uuid", "")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", logger(retrieveFlavorAndKeyForImageID(db))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", logger(missingQueryParameters("hardware_uuid"))).Methods("GET")
 	r.HandleFunc("", logger(queryImages(db))).Methods("GET")
 	r.HandleFunc("", logger(createImage(db))).Methods("POST").Headers("Content-Type", "application/json")
+}
+
+func missingQueryParameters(params... string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		errStr := fmt.Sprintf("Missing query parameters: %v", params)
+		http.Error(w, errStr, http.StatusBadRequest)
+	}
 }
 
 func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		hwid := mux.Vars(r)["hardware_uuid"]
+		if hwid == "" {
+			http.Error(w, "Query parameter 'hardware_uuid' cannot be nil", http.StatusBadRequest)
+			return
+		}
 		kid, kidPresent := r.URL.Query()["key_id"]
 		flavor, err := db.ImageRepository().RetrieveAssociatedImageFlavor(id)
 		if err != nil {
@@ -98,13 +110,20 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 						},
 					}
 					resp, err := client.Do(req)
-					if err != nil || resp.StatusCode != http.StatusOK {
-						// bad response from HVS
+					if err != nil {
+						// bad response from HVS from the http side
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
-					saml, _ := ioutil.ReadAll(resp.Body)
 					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusOK {
+						text, _ := ioutil.ReadAll(resp.Body)
+						errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\nMessage: %s", resp.StatusCode, string(text))
+						http.Error(w, errStr, http.StatusBadRequest)
+						return
+					}
+					saml, _ := ioutil.ReadAll(resp.Body)
+
 					// create insecure client
 					kc := &kms.Client{
 						BaseURL: config.Configuration.KMS.URL,
@@ -115,6 +134,10 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 					// post to KBS client with saml
 					key, err := kc.Key(keyID).Transfer(saml)
 					if err != nil {
+						if kmsErr, ok := err.(*kms.Error); ok {
+							http.Error(w, kmsErr.Error(), kmsErr.StatusCode)
+							return
+						}
 						http.Error(w, err.Error(), http.StatusInternalServerError) 
 						return
 					}

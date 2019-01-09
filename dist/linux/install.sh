@@ -32,7 +32,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 echo Creating Workload Service User ...
-id -u somename 2> /dev/null || useradd wls
+id -u wls 2> /dev/null || useradd wls
 
 echo Installing Workload Service ... 
 mkdir -p /opt/workload-service/bin
