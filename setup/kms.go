@@ -5,6 +5,7 @@ import (
 	"fmt"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
+	"strings"
 )
 
 // KMSConnection is a setup task for setting up the connection to the Key Management Server (KMS)
@@ -18,8 +19,14 @@ func (kms KMSConnection) Run(c csetup.Context) error {
 	}
 	fmt.Println("Setting up KMS connection ...")
 	var err error
-	if config.Configuration.KMS.URL, err = c.GetConfigString(config.KMS_URL, "Key Management Server URL"); err != nil {
+	var kmsURL string
+	if kmsURL, err = c.GetConfigString(config.KMS_URL, "Key Management Server URL"); err != nil {
 		return err
+	}
+	if strings.HasSuffix(kmsURL, "/") {
+		config.Configuration.KMS.URL = kmsURL
+	} else {
+		config.Configuration.KMS.URL = kmsURL + "/"
 	}
 	if config.Configuration.KMS.User, err = c.GetConfigString(config.KMS_USER, "Key Management Server User"); err != nil {
 		return err

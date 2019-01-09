@@ -5,6 +5,7 @@ import (
 	"fmt"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
+	"strings"
 )
 
 // HVSConnection is a setup task for setting up the connection to the Host Verification Service (HVS)
@@ -18,8 +19,14 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 	}
 	fmt.Println("Setting up HVS connection ...")
 	var err error
-	if config.Configuration.HVS.URL, err = c.GetConfigString(config.HVS_URL, "Key Management Server URL"); err != nil {
+	var hvsURL string
+	if hvsURL, err = c.GetConfigString(config.HVS_URL, "Key Management Server URL"); err != nil {
 		return err
+	}
+	if strings.HasSuffix(hvsURL, "/") {
+		config.Configuration.HVS.URL = hvsURL
+	} else {
+		config.Configuration.HVS.URL = hvsURL + "/"
 	}
 	if config.Configuration.HVS.User, err = c.GetConfigString(config.HVS_USER, "Key Management Server User"); err != nil {
 		return err

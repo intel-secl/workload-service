@@ -46,6 +46,12 @@ gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190103193235-56d0ce1
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190103193235-56d0ce14bafd/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190107233512-e554eb3f31f5 h1:S/WAdqrZJtVJORpBMlObeErS9H10v+5QJZm/86CZ93I=
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190107233512-e554eb3f31f5/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108194113-346ab5daaac1 h1:0V23i3UIthNwgPHDQ2EOEnc3ybDIraQCr4HHFJ7uS9U=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108194113-346ab5daaac1/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108231233-4b4903cb88bd h1:vRSkJLDj57Ew182ZH9hR5sLfsmRidGO9uxSY5NG4EFc=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108231233-4b4903cb88bd/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108233307-aca988b5677b h1:D7GepZ5Nb6d6AqGljENVDHgWuyvkUAVy4sAMQRgnyLo=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190108233307-aca988b5677b/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
 gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20181204232340-f34e00324e43 h1:6RF/uhg8KP/aKTzib5iW3M04YRW+X4erj2utlzsBV2k=
 gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20181204232340-f34e00324e43/go.mod h1:s1oeBEvEfM2yEoK+YDaXe4vYSnMS973qAWdhKEMJnDU=
 gitlab.devtools.intel.com/sst/isecl/lib/verifier v0.0.0-20181221212114-b1d5e4114406 h1:70NKhkDleOebcl8UjGSPvoTR+i9cKQlSe80EYorfSMo=

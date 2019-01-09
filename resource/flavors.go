@@ -1,13 +1,13 @@
 package resource
 
 import (
+	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/config"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
-	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/repository"
 
@@ -91,7 +91,7 @@ func deleteFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
 
 func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var f flavor.ImageFlavor
+		var f model.Flavor
 		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

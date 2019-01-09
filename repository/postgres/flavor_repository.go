@@ -3,7 +3,6 @@ package postgres
 import (
 	"encoding/json"
 	"errors"
-	"intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
@@ -16,7 +15,7 @@ type flavorRepo struct {
 	db *gorm.DB
 }
 
-func (repo flavorRepo) Create(f *flavor.ImageFlavor) error {
+func (repo flavorRepo) Create(f *model.Flavor) error {
 	if f == nil {
 		return errors.New("cannot create nil flavor")
 	}

@@ -68,13 +68,13 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 				re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
 				keyID := re.FindString(keyURL.Path)
 				if !kidPresent || (kidPresent && kid[0] != keyID){
-					criteriaJSON := []byte(fmt.Sprintf(`{"hostHardwareId":"%s"}`, hwid))
+					criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
 					url, err := url.Parse(config.Configuration.HVS.URL)
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
-					reports, err := url.Parse("/reports")
+					reports, err := url.Parse("reports")
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
@@ -98,9 +98,10 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) http.HandlerFunc 
 						},
 					}
 					resp, err := client.Do(req)
-					if err != nil {
+					if err != nil || resp.StatusCode != http.StatusOK {
 						// bad response from HVS
 						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
 					}
 					saml, _ := ioutil.ReadAll(resp.Body)
 					defer resp.Body.Close()

@@ -26,7 +26,7 @@ test:
   tags:
     - go
   script:
-    - go test ./... -coverpkg=./... -coverprofile cover.out
+    - go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
     - go tool cover -html=cover.out -o cover.html
   artifacts:
     paths:

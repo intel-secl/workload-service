@@ -19,12 +19,20 @@ services:
          - 5000:5000
 
       environment:
-        WLS_PORT: 5000
-        WLS_DB_HOSTNAME: wls-pg-db
-        WLS_DB: wls
-        WLS_DB_PORT: 5432
-        WLS_DB_USERNAME: runner
-        WLS_DB_PASSWORD: test
+         WLS_PORT: 5000
+         WLS_DB_HOSTNAME: wls-pg-db
+         WLS_DB: wls
+         WLS_DB_PORT: 5432
+         WLS_DB_USERNAME: runner
+         WLS_DB_PASSWORD: test
+         KMS_URL: kmsurl
+         KMS_USER: kmsuser
+         KMS_PASSWORD: kmspass
+         HVS_URL: hvsurl
+         HVS_USER: hvsuser
+         HVS_PASSWORD: hvspass
+
+        #
 
       volumes:
          - wls-config-volume:/etc/workload-service
