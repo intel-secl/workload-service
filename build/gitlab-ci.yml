@@ -46,9 +46,11 @@ installer:
   script:
     - apt-get update && apt-get install -y makeself
     - make installer
+    - cp ./docs/swagger.yml ./out/swagger.yml
   artifacts:
     paths:
       - "out/wls-*.bin"
+      - "out/swagger.yml"
     expire_in: 1 week
 
 docker:
@@ -60,6 +62,9 @@ docker:
     - curl -sSL https://get.docker.com/ | sh
     - apt-get update && apt-get install -y makeself
     - make docker
+    - cp ./docs/swagger.yml ./out/swagger.yml
   artifacts:
     paths:
       - "out/*.tar"
+      - "out/swagger.yml"
+    expire_in: 1 week
