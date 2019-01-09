@@ -12,91 +12,68 @@ import (
 	"intel/isecl/workload-service/repository"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
 // SetFlavorsEndpoints
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(getFlavorByID(db))).Methods("GET")
-	r.HandleFunc("/{label}", logger(getFlavorByLabel(db))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(deleteFlavorByID(db))).Methods("DELETE")
-	r.HandleFunc("", logger(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(errorHandler(getFlavorByID(db)))).Methods("GET")
+	r.HandleFunc("/{label}", logger(errorHandler(getFlavorByLabel(db)))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(errorHandler(deleteFlavorByID(db)))).Methods("DELETE")
+	r.HandleFunc("", logger(errorHandler(createFlavor(db)))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
-func getFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getFlavorByID(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
 		fr := db.FlavorRepository()
 		flavor, err := fr.RetrieveByUUID(id)
 		if err != nil {
-			var code int
-			if gorm.IsRecordNotFoundError(err) {
-				code = http.StatusNotFound
-			} else {
-				code = http.StatusInternalServerError
-			}
-			http.Error(w, err.Error(), code)
-		} else {
-			if err := json.NewEncoder(w).Encode(flavor); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			} else {
-				w.WriteHeader(http.StatusOK)
-				w.Header().Set("Content-Type", "application/json")
-			}
+			return err
+		} 
+		if err := json.NewEncoder(w).Encode(flavor); err != nil {
+			return err
 		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		return nil
 	}
 }
 
-func getFlavorByLabel(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		label := mux.Vars(r)["label"]
 		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		if err != nil {
-			var code int
-			if gorm.IsRecordNotFoundError(err) {
-				code = http.StatusNotFound
-			} else {
-				code = http.StatusInternalServerError
-			}
-			http.Error(w, err.Error(), code)
-		} else {
-			if err := json.NewEncoder(w).Encode(flavor); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			} else {
-				w.WriteHeader(http.StatusOK)
-				w.Header().Set("Content-Type", "application/json")
-			}
-		}
+			return err
+		} 
+		if err := json.NewEncoder(w).Encode(flavor); err != nil {
+			return err
+		} 
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		return nil
 	}
 }
 
-func deleteFlavorByID(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
 		fr := db.FlavorRepository()
 		if err := fr.DeleteByUUID(id); err != nil {
-			var code int
-			if gorm.IsRecordNotFoundError(err) {
-				code = http.StatusNotFound
-			} else {
-				code = http.StatusInternalServerError
-			}
-			http.Error(w, err.Error(), code)
-		} else {
-			w.WriteHeader(http.StatusNoContent)
-		}
+			return err
+		} 
+		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func createFlavor(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var f model.Flavor
 		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 		}
-
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input
 		fr := db.FlavorRepository()
 
@@ -109,14 +86,23 @@ func createFlavor(db repository.WlsDatabase) http.HandlerFunc {
 		//    - Currently doing this ^
 		switch err := fr.Create(&f); err {
 		case repository.ErrFlavorLabelAlreadyExists:
-			http.Error(w, fmt.Sprintf("Flavor with Label %s already exists", f.Image.Meta.Description.Label), http.StatusConflict)
+			return &endpointError {
+				Message: fmt.Sprintf("Flavor with Label %s already exists", f.Image.Meta.Description.Label), 
+				StatusCode: http.StatusConflict,
+			}
 		case repository.ErrFlavorUUIDAlreadyExists:
-			http.Error(w, fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID), http.StatusConflict)
+			return &endpointError {
+				Message: fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID), 
+				StatusCode: http.StatusConflict,
+			}
 		case nil:
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(f)
+			if err := json.NewEncoder(w).Encode(f); err != nil {
+				return err
+			}
+			return nil
 		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)  
+			return err 
 		}
 	}
 }
