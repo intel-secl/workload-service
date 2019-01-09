@@ -3,10 +3,10 @@
 package resource
 
 import (
-	"intel/isecl/workload-service/config"
 	"bytes"
 	"encoding/json"
 	"intel/isecl/lib/flavor"
+	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
 	"net/http"
 	"net/http/httptest"
@@ -19,14 +19,14 @@ import (
 func TestFlavorKeyIntegration(t *testing.T) {
 	assert := assert.New(t)
 	r := setupServer(t)
-	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
+	config.Configuration.KMS.URL = "http://localhost:8337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
-	config.Configuration.HVS.URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HVS.URL = "http://localhost:8338/mtwilson/v2/"
 	config.Configuration.HVS.User = "user"
 	config.Configuration.HVS.Password = "pass"
-	go mockKMS()
-	go mockHVS()
+	go mockKMS(":8337")
+	go mockHVS(":8338")
 	f, _ := flavor.GetImageFlavor("Cirros-enc", true, "http://localhost:1337/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	fJSON, _ := json.Marshal(f)
 
@@ -49,7 +49,7 @@ func TestFlavorKeyIntegration(t *testing.T) {
 
 	// Test Flavor-Key
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/" + id.String() + "/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req = httptest.NewRequest("GET", "/wls/images/"+id.String()+"/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
@@ -67,7 +67,6 @@ func TestFlavorKeyIntegration(t *testing.T) {
 }
 
 func TestImagesResourceIntegration(t *testing.T) {
-	
 
 	assert := assert.New(t)
 	checkErr := func(e error) {
@@ -84,7 +83,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	checkErr(err)
 
 	// Free standing falvor that wont be associated with any images
-	f2, err := flavor.GetImageFlavor("Bad-guy", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd");
+	f2, err := flavor.GetImageFlavor("Bad-guy", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
 	checkErr(err)
@@ -103,7 +102,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
-	// Post a new Image 
+	// Post a new Image
 	recorder = httptest.NewRecorder()
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID}}
@@ -142,11 +141,11 @@ func TestImagesResourceIntegration(t *testing.T) {
 	checkErr(err)
 	assert.NotEmpty(response)
 	i1 := model.Image{
-		ID:       newImage.ID,
+		ID:        newImage.ID,
 		FlavorIDs: newImage.FlavorIDs,
 	}
 	i2 := model.Image{
-		ID:       newImage2.ID,
+		ID:        newImage2.ID,
 		FlavorIDs: newImage2.FlavorIDs,
 	}
 	assert.ElementsMatch([]model.Image{i1, i2}, response)
@@ -184,7 +183,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 func TestImageDuplicate(t *testing.T) {
 	assert := assert.New(t)
 	r := setupServer(t)
-	
+
 	// Post a new Image association
 	recorder := httptest.NewRecorder()
 	id, _ := uuid.NewV4()
@@ -202,7 +201,7 @@ func TestImageDuplicate(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusConflict, recorder.Code)
 
-	// Delete it 
+	// Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
@@ -225,7 +224,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 	checkErr(err)
 
 	// Free standing falvor that wont be associated with any images
-	f2, err := flavor.GetImageFlavor("PretendSoftwareFlavor", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd");
+	f2, err := flavor.GetImageFlavor("PretendSoftwareFlavor", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	f2.Image.Meta.Description.FlavorPart = "NOT-IMAGE"
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
@@ -313,7 +312,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Delete Image
 
-	// Delete it 
+	// Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
@@ -387,7 +386,7 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
-	// Delete it 
+	// Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
 	r.ServeHTTP(recorder, req)
