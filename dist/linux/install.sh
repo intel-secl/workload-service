@@ -35,6 +35,7 @@ echo Creating Workload Service User ...
 id -u wls 2> /dev/null || useradd wls
 
 echo Installing Workload Service ... 
+# Make the dir to store bin files
 mkdir -p /opt/workload-service/bin
 cp workload-service /opt/workload-service/bin/workload-service
 ln -s /opt/workload-service/bin/workload-service /usr/local/bin/workload-service
@@ -42,7 +43,7 @@ chmod +x /usr/local/bin/workload-service
 chmod +s /usr/local/bin/workload-service 
 chown wls:wls /usr/local/bin/workload-service
 
-# Create Configuration directory in /etc
+# Create configuration directory in /etc
 mkdir -p /etc/workload-service 
 chown wls:wls /etc/workload-service
 # Create PID file directory in /var/run
@@ -51,6 +52,9 @@ chown wls:wls /var/run/workload-service
 # Create arbitrary data repository in /var/lib
 mkdir -p /var/lib/workload-service
 chown wls:wls /var/lib/workload-service
+# Create logging directory in /var/log
+mkdir -p /var/log/workload-service
+chown wls:wls /var/log/workload-service
 
 echo Running setup tasks ...
 workload-service setup

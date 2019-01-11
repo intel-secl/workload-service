@@ -2,9 +2,7 @@ package resource
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/repository"
-	"log"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
@@ -31,10 +29,8 @@ func (e endpointError) Error() string {
 type endpointHandler func(w http.ResponseWriter, r *http.Request) error
 
 func errorHandler(eh endpointHandler) http.HandlerFunc {
-	errLogger := log.New(config.LogWriter, "WLS ERROR - ", log.Ldate|log.Ltime)
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := eh(w, r); err != nil {
-			errLogger.Println(err.Error())
 			if gorm.IsRecordNotFoundError(err) {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return

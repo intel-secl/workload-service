@@ -17,7 +17,7 @@ func (ss Server) Run(c csetup.Context) error {
 	}
 	fmt.Println("Setting up webserver ...")
 	var err error
-	config.Configuration.Port, err = c.GetConfigInt(config.WLS_PORT, "Webserver Port")
+	config.Configuration.Port, err = c.GetenvInt(config.WLS_PORT, "Webserver Port")
 	if err != nil {
 		fmt.Println("Using default webserver port: 5000")
 		config.Configuration.Port = 5000

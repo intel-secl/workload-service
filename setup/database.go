@@ -19,23 +19,23 @@ func (ds Database) Run(c csetup.Context) error {
 	}
 	fmt.Println("Setting up database connection ...")
 	var err error
-	config.Configuration.Postgres.Hostname, err = c.GetConfigString(config.WLS_DB_HOSTNAME, "Database Hostname")
+	config.Configuration.Postgres.Hostname, err = c.GetenvString(config.WLS_DB_HOSTNAME, "Database Hostname")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.Port, err = c.GetConfigInt(config.WLS_DB_PORT, "Database Port")
+	config.Configuration.Postgres.Port, err = c.GetenvInt(config.WLS_DB_PORT, "Database Port")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.User, err = c.GetConfigString(config.WLS_DB_USERNAME, "Database Username")
+	config.Configuration.Postgres.User, err = c.GetenvString(config.WLS_DB_USERNAME, "Database Username")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.Password, err = c.GetConfigSecretString(config.WLS_DB_PASSWORD, "Database Password")
+	config.Configuration.Postgres.Password, err = c.GetenvSecret(config.WLS_DB_PASSWORD, "Database Password")
 	if err != nil {
 		return err
 	}
-	config.Configuration.Postgres.DBName, err = c.GetConfigString(config.WLS_DB, "Database Schema")
+	config.Configuration.Postgres.DBName, err = c.GetenvString(config.WLS_DB, "Database Schema")
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"intel/isecl/lib/common/logger"
 	"io/ioutil"
 	"regexp"
 	"net/url"
@@ -8,12 +9,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"intel/isecl/lib/middleware/logger"
+	httpLogger "intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/lib/kms-client"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -22,7 +22,7 @@ import (
 
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	logger := logger.NewLogger(config.LogWriter, "WLS - ", log.Ldate|log.Ltime)
+	logger := httpLogger.NewLogger(logger.Info)
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors", logger(errorHandler(getAllAssociatedFlavors(db)))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
 		logger(errorHandler(getAssociatedFlavor(db)))).Methods("GET")
@@ -61,8 +61,10 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 		kid, kidPresent := r.URL.Query()["key_id"]
+		logger.Debug.Printf("Retrieving Flavor and Key for Image: %s\nParameters:\n\thardware_uuid=%v\n\tkey_id=%v", id, hwid, kid)
 		flavor, err := db.ImageRepository().RetrieveAssociatedImageFlavor(id)
 		if err != nil {
+			logger.Info.Println("Failed to retrieve Flavor and Key for Image: ", id)
 			return err
 		} 
 		// Check if flavor keyURL is not empty
@@ -72,26 +74,28 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 
 			// post HVS with hardwareUUID
 			// extract key_id from KeyURL
+			logger.Debug.Println("KeyURL is not empty")
 			keyURL, err := url.Parse(flavor.Image.Encryption.KeyURL)
 			if err != nil {
+				logger.Error.Println("Flavor KeyURL is malformed: ", err)
 				return err
 			}
 			re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
 			keyID := re.FindString(keyURL.Path)
 			if !kidPresent || (kidPresent && kid[0] != keyID){
+				logger.Debug.Println("KeyID was not supplied to request")
 				criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
 				url, err := url.Parse(config.Configuration.HVS.URL)
 				if err != nil {
+					logger.Error.Println("Configured HVS URL is malformed: ", err)
 					return err
 				}
-				reports, err := url.Parse("reports")
-				if err != nil {
-					return err
-				}
+				reports, _ := url.Parse("reports")
 				endpoint := url.ResolveReference(reports)
 				req, err := http.NewRequest("POST", endpoint.String(), bytes.NewBuffer(criteriaJSON))
 				req.SetBasicAuth(config.Configuration.HVS.User, config.Configuration.HVS.Password)
 				if err != nil {
+					logger.Error.Println("Failed to instantiate http request to HVS: ", err)
 					return err
 				}
 				req.Header.Set("Content-Type", "application/json")
@@ -105,13 +109,14 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				}
 				resp, err := client.Do(req)
 				if err != nil {
-					// bad response from HVS from the http side
+					logger.Error.Println("Failed to make HTTP request to HVS: ", err)
 					return err
 				}
 				defer resp.Body.Close()
 				if resp.StatusCode != http.StatusOK {
 					text, _ := ioutil.ReadAll(resp.Body)
 					errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\nMessage: %s", resp.StatusCode, string(text))
+					logger.Info.Println(errStr)
 					return &endpointError{
 						Message: errStr,
 						StatusCode: http.StatusBadRequest,
@@ -119,8 +124,10 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				}
 				saml, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
+					logger.Error.Println("Failed to read HVS response body: ", err)
 					return err
 				}
+				logger.Debug.Printf("Successfully got SAML report from HVS: %s\n", string(saml))
 				// create insecure client
 				kc := &kms.Client{
 					BaseURL: config.Configuration.KMS.URL,
@@ -131,6 +138,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				// post to KBS client with saml
 				key, err := kc.Key(keyID).Transfer(saml)
 				if err != nil {
+					logger.Info.Println("Failed to retrieve key from KMS: ", err)
 					if kmsErr, ok := err.(*kms.Error); ok {
 						return &endpointError {
 							Message: kmsErr.Message, 
@@ -139,6 +147,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					}
 					return err
 				}
+				logger.Debug.Println("Successfully got key from KMS: ", key)
 				// got key data
 				flavorKey := model.FlavorKey{
 					Flavor: *flavor,
@@ -146,16 +155,19 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				}
 				if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
 					// marshalling error 500
+					logger.Error.Println("Unexpectedly failed to encode FlavorKey to JSON")
 					return err
 				}
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
+				logger.Debug.Println("Successfully retrieved FlavorKey: ", flavorKey)
 				return nil
 			}
 		}
 		// just return the flavor
 		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: *flavor}); err != nil {
 			// marshalling error 500
+			logger.Error.Println("Unexpectedly failed to encode FlavorKey to JSON")
 			return err
 		}
 		return nil

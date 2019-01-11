@@ -20,7 +20,7 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 	fmt.Println("Setting up HVS connection ...")
 	var err error
 	var hvsURL string
-	if hvsURL, err = c.GetConfigString(config.HVS_URL, "Key Management Server URL"); err != nil {
+	if hvsURL, err = c.GetenvString(config.HVS_URL, "Key Management Server URL"); err != nil {
 		return err
 	}
 	if strings.HasSuffix(hvsURL, "/") {
@@ -28,10 +28,10 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 	} else {
 		config.Configuration.HVS.URL = hvsURL + "/"
 	}
-	if config.Configuration.HVS.User, err = c.GetConfigString(config.HVS_USER, "Key Management Server User"); err != nil {
+	if config.Configuration.HVS.User, err = c.GetenvString(config.HVS_USER, "Key Management Server User"); err != nil {
 		return err
 	}
-	if config.Configuration.HVS.Password, err = c.GetConfigSecretString(config.HVS_PASSWORD, "Key Management Server Password"); err != nil {
+	if config.Configuration.HVS.Password, err = c.GetenvSecret(config.HVS_PASSWORD, "Key Management Server Password"); err != nil {
 		return err
 	}
 	return config.Save()

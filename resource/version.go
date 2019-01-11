@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/version"
 	"net/http"
@@ -16,5 +17,5 @@ func SetVersionEndpoints(r *mux.Router, db repository.WlsDatabase) {
 // GetVersion handles GET /version
 func getVersion(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(version.Version))
+	w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
 }

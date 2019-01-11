@@ -20,7 +20,7 @@ func (kms KMSConnection) Run(c csetup.Context) error {
 	fmt.Println("Setting up KMS connection ...")
 	var err error
 	var kmsURL string
-	if kmsURL, err = c.GetConfigString(config.KMS_URL, "Key Management Server URL"); err != nil {
+	if kmsURL, err = c.GetenvString(config.KMS_URL, "Key Management Server URL"); err != nil {
 		return err
 	}
 	if strings.HasSuffix(kmsURL, "/") {
@@ -28,10 +28,10 @@ func (kms KMSConnection) Run(c csetup.Context) error {
 	} else {
 		config.Configuration.KMS.URL = kmsURL + "/"
 	}
-	if config.Configuration.KMS.User, err = c.GetConfigString(config.KMS_USER, "Key Management Server User"); err != nil {
+	if config.Configuration.KMS.User, err = c.GetenvString(config.KMS_USER, "Key Management Server User"); err != nil {
 		return err
 	}
-	if config.Configuration.KMS.Password, err = c.GetConfigSecretString(config.KMS_PASSWORD, "Key Management Server Password"); err != nil {
+	if config.Configuration.KMS.Password, err = c.GetenvSecret(config.KMS_PASSWORD, "Key Management Server Password"); err != nil {
 		return err
 	}
 

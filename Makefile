@@ -6,7 +6,7 @@ VERSION := $(or ${GITTAG}, v0.0.0)
 .PHONY: workload-service installer docker all clean
 
 workload-service:
-	env GOOS=linux go build -ldflags "-X intel/isecl/workload-service/version.Version=$(VERSION)-$(GITCOMMIT)" -o out/workload-service
+	env GOOS=linux go build -ldflags "-X intel/isecl/workload-service/version.Version=$(VERSION) -X intel/isecl/workload-service/version.GitHash=$(GITCOMMIT)" -o out/workload-service
 
 installer: workload-service
 	mkdir -p out/wls
