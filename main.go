@@ -1,7 +1,7 @@
 package main
 
 import (
-	"intel/isecl/workload-service/version"
+	"intel/isecl/lib/common/logger"
 	"time"
 	"context"
 	"os/signal"
@@ -23,26 +23,13 @@ import (
 	"intel/isecl/workload-service/config"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	csetup "intel/isecl/lib/common/setup"
-	"intel/isecl/lib/common/logger"
 )
-
-const (
-	binpath = "/opt/workload-service"
-	configpath = "/etc/workload-service"
-	varlibpath = "/var/lib/workload-service"
-	varrunpath = "/var/run/workload-service"
-)
-
-func configureLoggers() {
-	// either replace logger.* or do logger.*.Setoutput to change the writer
-}
 
 func main() {
-	configureLoggers()
-
 	args := os.Args[1:]
 	if len(args) <= 0 {
 		fmt.Println("Command not found. Usage below ", os.Args[0])
@@ -64,7 +51,6 @@ func main() {
 			}
 			err := setupRunner.RunTasks(args[1:]...)
 			if err != nil {
-				logger.Error.Println(err)
 				fmt.Println("Error running setup: ", err)
 				os.Exit(1)
 			}
@@ -75,8 +61,7 @@ func main() {
 	case "start":
 		err := start() // this starts server detached
 		if err != nil {
-			logger.Error.Println(err)
-			fmt.Println("Failed to start server: ", err)
+			fmt.Println("Failed to start server")
 			os.Exit(1)
 		}
 	case "status":
@@ -92,8 +77,6 @@ func main() {
 		stopServer()
 	case "uninstall":
 		uninstall()
-	case "version":
-		printVersion()
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
@@ -130,18 +113,7 @@ func status() Status {
 }
 
 func uninstall() {
-	stopServer();
-	// clean up folders
-	removeDir := func(path string) {
-		err := os.RemoveAll(path)
-		if err != nil {
-			fmt.Println("Could not delete: ", path)
-		}
-	}
-	removeDir(binpath)
-	removeDir(configpath)
-	removeDir(varlibpath)
-	removeDir(varrunpath)
+	fmt.Println("Not yet supported")
 }
 
 func printUsage() {
@@ -149,7 +121,7 @@ func printUsage() {
 	fmt.Printf("===============\n\n")
 	fmt.Printf("usage : %s <command> [<args>]\n\n", os.Args[0])
 	fmt.Printf("Following are the list of commands\n")
-	fmt.Printf("\tsetup\nstart\nstop\nstatus\nuninstall\nversion\n")
+	fmt.Printf("\tsetup\n\n")
 	fmt.Printf("setup command is used to run setup tasks\n")
 	fmt.Printf("\tusage : %s setup [<tasklist>]\n", os.Args[0])
 	fmt.Printf("\t\t<tasklist>-space seperated list of tasks\n")
@@ -162,11 +134,10 @@ func printUsage() {
 func stopServer() {
 	pid, err := readPid()
 	if err != nil {
-		logger.Info.Println(err)
-		return
+		log.Printf("Error: %v\n", err)
 	}
 	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
-		logger.Info.Println(err)
+		log.Printf("Error: %v\n", err)
 	}
 	log.Println("Workload Service Stopped")
 }
@@ -214,13 +185,14 @@ func startServer() {
 	}
 	var db *gorm.DB
 	var dbErr error
-	for i := 1; i < 5; i = i + 1 {
+	for i := 0; i < 4; i = i + 1 {
+		const retryTime = 5
 		db, dbErr = gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 		config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
 		if dbErr != nil {
-			log.Printf("Failed to connect to DB, retrying in %d seconds ...\n", i)
+			log.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
 		}
-		time.Sleep(time.Duration(i)*time.Second)
+		time.Sleep(retryTime*time.Second)
 	}
 	defer db.Close()
 	if dbErr != nil {
@@ -242,7 +214,7 @@ func startServer() {
 	signal.Notify(stop, os.Interrupt)
 	h := &http.Server {
 		Addr: fmt.Sprintf(":%d", config.Configuration.Port),
-		Handler: r,
+		Handler: handlers.RecoveryHandler(handlers.RecoveryLogger(logger.Error), handlers.PrintRecoveryStack(true))(r),
 	}
 	// dispatch http listener on separate go routine
 	log.Println("Starting Workload Service ...")
@@ -263,8 +235,4 @@ func startServer() {
 	} else {
 		log.Println("Workload Service stopped")
 	}
-}
-
-func printVersion() {
-	fmt.Printf("Workload Service:\nVersion:\t%s\nRevision:\t%s\n", version.Version, version.GitHash)
 }
