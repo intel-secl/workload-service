@@ -86,6 +86,8 @@ func startServer() {
 		if dbErr != nil {
 			log.WithError(dbErr).Info("Failed to connect to DB")
 			fmt.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
+		} else {
+			break
 		}
 		time.Sleep(retryTime * time.Second)
 	}

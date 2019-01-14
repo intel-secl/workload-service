@@ -52,6 +52,7 @@ func main() {
 					new(setup.Database),
 					new(setup.HVSConnection),
 					new(setup.KMSConnection),
+					new(setup.Logs),
 				},
 				AskInput: false,
 			}

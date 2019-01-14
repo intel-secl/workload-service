@@ -19,6 +19,7 @@ services:
          - 5000:5000
 
       environment:
+         WLS_LOGLEVEL: DEBUG
          WLS_PORT: 5000
          WLS_DB_HOSTNAME: wls-pg-db
          WLS_DB: wls

@@ -48,6 +48,8 @@ const HVS_USER = "HVS_USER"
 // HVS_PASSWORD is a string environment variable for specifying the password to connect to the HVS
 const HVS_PASSWORD = "HVS_PASSWORD"
 
+const WLS_LOGLEVEL = "WLS_LOGLEVEL"
+
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
 	Port     int
