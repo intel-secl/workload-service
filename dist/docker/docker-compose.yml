@@ -36,7 +36,9 @@ services:
 
       volumes:
          - wls-config-volume:/etc/workload-service
+         - wls-log-volume:/var/log/workload-service
 
 volumes:
    wls-config-volume:
    wls-pgdata-volume:
+   wls-log-volume:

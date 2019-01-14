@@ -1,9 +1,9 @@
 package config
 
 import (
-	"io"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -45,7 +45,7 @@ const HVS_URL = "HVS_URL"
 // HVS_USER is a string environment variable for specifying the username to connect to the HVS
 const HVS_USER = "HVS_USER"
 
-// HVS_PASSWORD is a string environment variable for specifying the password to connect to the HVS 
+// HVS_PASSWORD is a string environment variable for specifying the password to connect to the HVS
 const HVS_PASSWORD = "HVS_PASSWORD"
 
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
@@ -70,9 +70,8 @@ var Configuration struct {
 		User     string
 		Password string
 	}
+	LogLevel log.Level
 }
-
-var LogWriter io.Writer
 
 // Save the configuration struct into /etc/workload-service/config.ynml
 func Save() error {
@@ -101,5 +100,4 @@ func init() {
 		defer file.Close()
 		yaml.NewDecoder(file).Decode(&Configuration)
 	}
-	LogWriter = os.Stdout
 }

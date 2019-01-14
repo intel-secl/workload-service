@@ -7,20 +7,18 @@ import (
 	"net/http"
 	"strconv"
 
-	"intel/isecl/lib/common/logger"
-	httpLogger "intel/isecl/lib/middleware/logger"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 // SetReportEndpoints
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	logger := httpLogger.NewLogger(logger.Info)
-	r.HandleFunc("", logger(errorHandler(getReport(db)))).Methods("GET")
-	r.HandleFunc("", logger(errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", logger(errorHandler(deleteReportByID(db)))).Methods("DELETE")
+	r.HandleFunc("", (errorHandler(getReport(db)))).Methods("GET")
+	r.HandleFunc("", (errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", (errorHandler(deleteReportByID(db)))).Methods("DELETE")
 }
 
 func getReport(db repository.WlsDatabase) endpointHandler {
@@ -66,12 +64,12 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filter)
 		if err != nil {
-			logger.Info.Println("Failed to retrive reports: ", err)
+			log.WithError(err).Info("Failed to retrieve reports")
 			return err
 		}
 
 		if err := json.NewEncoder(w).Encode(reports); err != nil {
-			logger.Error.Println("Unexpectedly failed to encode reports to JSON", err)
+			log.WithError(err).Error("Unexpectedly failed to encode reports to JSON")
 			return err
 		}
 		w.WriteHeader(http.StatusOK)
@@ -100,10 +98,11 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		// - Type assert the error back to PSQL (should be done in the repository layer), and bubble up that information somehow
 		// - Manually run a query to see if anything exists with uuid or label (should be done in the repository layer, so we can execute it in a transaction)
 		//    - Currently doing this ^
+		cLog := log.WithField("report", vtr)
 		switch err := rr.Create(&vtr); err {
 		case errors.New("report already exists with UUID"):
 			msg := fmt.Sprintf("Report with UUID %s already exists", vtr.Manifest.VmInfo.VmID)
-			logger.Info.Println(msg)
+			cLog.Info(msg)
 			return &endpointError{
 				Message:    msg,
 				StatusCode: http.StatusConflict,
@@ -112,12 +111,12 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			if err := json.NewEncoder(w).Encode(vtr); err != nil {
-				logger.Error.Println(err)
+				cLog.WithError(err).Error("Unexpectedly failed to encode Report to JSON")
 				return err
 			}
 			return nil
 		default:
-			logger.Error.Println(err)
+			cLog.WithError(err).Error("Unexpected error when creating report")
 			return err
 		}
 	}
@@ -126,6 +125,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 func deleteReportByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
+		cLog := log.WithField("uuid", uuid)
 		if uuid == "" {
 			return &endpointError{
 				Message:    "Report id cannot be empty",
@@ -133,11 +133,11 @@ func deleteReportByID(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 		if err := db.ReportRepository().DeleteByReportID(uuid); err != nil {
-			logger.Info.Println("Failed to delete Report by id: ", err)
+			cLog.WithError(err).Info("Failed to delete Report by UUID")
 			return err
 		}
 		w.WriteHeader(http.StatusNoContent)
-		logger.Info.Println("Successfully deleted Report with id: ", uuid)
+		cLog.Debug("Successfully deleted Report by UUID")
 		return nil
 	}
 }
