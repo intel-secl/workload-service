@@ -71,6 +71,8 @@ gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190109183622-875edaf
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190109183622-875edaf8b53a/go.mod h1:GvuweO3Yr/sMr16D9Rj5RcaX/wt1ffWmc/EvSNlCyjs=
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190109211603-42ccf1301419 h1:RL9gdN2SV6LUuqjkl2YSD+efGOdix+pekkaJGUlqywY=
 gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190109211603-42ccf1301419/go.mod h1:TN+17PttS3cVZuZB8bTnlLmp01U/8MLOhAeXeJEDpS8=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190115215917-0f326ad16148 h1:akanVnp6/L28LPtiL5Sjjug0fUUrBVCaw4Jrfezfpz8=
+gitlab.devtools.intel.com/sst/isecl/lib/kms-client v0.0.0-20190115215917-0f326ad16148/go.mod h1:TN+17PttS3cVZuZB8bTnlLmp01U/8MLOhAeXeJEDpS8=
 gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20181204232340-f34e00324e43 h1:6RF/uhg8KP/aKTzib5iW3M04YRW+X4erj2utlzsBV2k=
 gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20181204232340-f34e00324e43/go.mod h1:s1oeBEvEfM2yEoK+YDaXe4vYSnMS973qAWdhKEMJnDU=
 gitlab.devtools.intel.com/sst/isecl/lib/middleware v0.0.0-20190111193733-c44ca199cb36 h1:quHgOa2DMfqw9NKmxlkmtLkjEIp+wLsZrlSzNk/ks6s=
