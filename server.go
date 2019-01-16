@@ -50,6 +50,10 @@ func readPid() (int, error) {
 
 func start() error {
 	// first check to see if the pid specified in /var/run is already running
+	if status() == Running {
+		fmt.Println("Workload Service is already running")
+		return nil
+	}
 	// spawn another process
 	fmt.Println("Starting Workload Service ...")
 	cwd, err := os.Getwd()
