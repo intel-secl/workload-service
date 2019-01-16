@@ -680,14 +680,22 @@ components:
       type: object
       required:
         - id
-        - flavor_id
+        - flavor_ids
       properties:
         id:
           type: string
           format: uuid
-        flavor_id:
-          type: string
-          format: uuid
+        flavor_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      example:
+        id: "1234021e-9669-4e53-9224-8880fb4e4080"
+        flavor_ids:
+          - "2234021e-9669-4e53-9224-8880fb4e4080"
+          - "3234021e-9669-4e53-9224-8880fb4e4080"
+          - "4234021e-9669-4e53-9224-8880fb4e4080"
     Report:
       type: object
       properties:
