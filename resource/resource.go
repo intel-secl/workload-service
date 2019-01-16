@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const uuidv4 = "(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})"
+
 // endpointSetter is a function that takes a Gorilla Mux Subrouter, and an instance of a WlsDatabase connection,
 // and allows the end user to set and handle any API endpoints on that upaht
 type endpointSetter func(r *mux.Router, db repository.WlsDatabase)

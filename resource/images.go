@@ -1,18 +1,18 @@
 package resource
 
 import (
-	"io/ioutil"
-	"regexp"
-	"net/url"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"intel/isecl/lib/kms-client"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
-	"intel/isecl/lib/kms-client"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"regexp"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -20,27 +20,27 @@ import (
 
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors", errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4), errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		errorHandler(getAssociatedFlavor(db))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		(errorHandler(putAssociatedFlavor(db)))).Methods("PUT")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavors/{flavorID:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		errorHandler(deleteAssociatedFlavor(db))).Methods("DELETE")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
+	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
 		(errorHandler(getImageByID(db)))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
 		(errorHandler(deleteImageByID(db)))).Methods("DELETE")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
 		(errorHandler(retrieveFlavorAndKeyForImageID(db)))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}/flavor-key", (missingQueryParameters("hardware_uuid"))).Methods("GET")
-	r.HandleFunc("", 
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4), (missingQueryParameters("hardware_uuid"))).Methods("GET")
+	r.HandleFunc("",
 		(errorHandler(queryImages(db)))).Methods("GET")
-	r.HandleFunc("", 
+	r.HandleFunc("",
 		(errorHandler(createImage(db)))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
-func missingQueryParameters(params... string) http.HandlerFunc {
+func missingQueryParameters(params ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		errStr := fmt.Sprintf("Missing query parameters: %v", params)
 		log.Debug(errStr)
@@ -53,13 +53,13 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		id := mux.Vars(r)["id"]
 		hwid := mux.Vars(r)["hardware_uuid"]
 		cLog := log.WithFields(log.Fields{
-			"imageUUID": id,
+			"imageUUID":    id,
 			"hardwareUUID": hwid,
 		})
 		if hwid == "" {
 			cLog.Debug("Missing required parameter hardware_uuid")
-			return &endpointError {
-				Message: "Query parameter 'hardware_uuid' cannot be nil",
+			return &endpointError{
+				Message:    "Query parameter 'hardware_uuid' cannot be nil",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -70,7 +70,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			cLog.Info("Failed to retrieve Flavor and Key for Image")
 			return err
-		} 
+		}
 		// Check if flavor keyURL is not empty
 		if len(flavor.Image.Encryption.KeyURL) > 0 {
 			// we have key URL
@@ -87,7 +87,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			}
 			re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
 			keyID := re.FindString(keyURL.Path)
-			if !kidPresent || (kidPresent && kid[0] != keyID){
+			if !kidPresent || (kidPresent && kid[0] != keyID) {
 				criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
 				url, err := url.Parse(config.Configuration.HVS.URL)
 				if err != nil {
@@ -122,7 +122,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\nMessage: %s", resp.StatusCode, string(text))
 					cLog.WithField("statusCode", resp.StatusCode).Info(errStr)
 					return &endpointError{
-						Message: errStr,
+						Message:    errStr,
 						StatusCode: http.StatusBadRequest,
 					}
 				}
@@ -134,9 +134,9 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				cLog.WithField("saml", string(saml)).Debug("Successfully got SAML report from HVS")
 				// create insecure client
 				kc := &kms.Client{
-					BaseURL: config.Configuration.KMS.URL,
-					Username: config.Configuration.KMS.User,
-					Password: config.Configuration.KMS.Password,
+					BaseURL:    config.Configuration.KMS.URL,
+					Username:   config.Configuration.KMS.User,
+					Password:   config.Configuration.KMS.Password,
 					HTTPClient: client,
 				}
 				// post to KBS client with saml
@@ -144,8 +144,8 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				if err != nil {
 					cLog.WithError(err).Info("Failed to retrieve key from KMS")
 					if kmsErr, ok := err.(*kms.Error); ok {
-						return &endpointError {
-							Message: kmsErr.Message, 
+						return &endpointError{
+							Message:    kmsErr.Message,
 							StatusCode: kmsErr.StatusCode,
 						}
 					}
@@ -155,7 +155,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				// got key data
 				flavorKey := model.FlavorKey{
 					Flavor: *flavor,
-					Key: key,
+					Key:    key,
 				}
 				if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
 					// marshalling error 500
@@ -177,7 +177,6 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		return nil
 	}
 }
-
 
 func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
@@ -201,8 +200,8 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageUUID := mux.Vars(r)["id"]
 		flavorUUID := mux.Vars(r)["flavorID"]
-		cLog := log.WithFields(log.Fields {
-			"imageUUID": imageUUID,
+		cLog := log.WithFields(log.Fields{
+			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
 		})
 		flavor, err := db.ImageRepository().RetrieveAssociatedFlavor(imageUUID, flavorUUID)
@@ -224,8 +223,8 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageUUID := mux.Vars(r)["id"]
 		flavorUUID := mux.Vars(r)["flavorID"]
-		cLog := log.WithFields(log.Fields {
-			"imageUUID": imageUUID,
+		cLog := log.WithFields(log.Fields{
+			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
 		})
 		if err := db.ImageRepository().AddAssociatedFlavor(imageUUID, flavorUUID); err != nil {
@@ -243,7 +242,7 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 		imageUUID := mux.Vars(r)["id"]
 		flavorUUID := mux.Vars(r)["flavorID"]
 		cLog := log.WithFields(log.Fields{
-			"imageUUID": imageUUID,
+			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
 		})
 		err := db.ImageRepository().DeleteAssociatedFlavor(imageUUID, flavorUUID)
@@ -270,15 +269,15 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 			cLog.Error("Failed to retrieve Images by filter criteria")
 			return err
 		}
-		cLog.WithField("images", images)
-		if len(images) == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			return nil
+		if images == nil {
+			// coerce to return empty list instead of null
+			images = []model.Image{}
 		}
+		cLog.WithField("images", images)
 		if err := json.NewEncoder(w).Encode(images); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode array of Images to JSON")
 			return err
-		} 
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		cLog.Debug("Successfully queried Images by filter criteria")
@@ -294,7 +293,7 @@ func getImageByID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			cLog.WithError(err).Info("Failed to retrieve Image by UUID")
 			return err
-		} 
+		}
 		cLog = cLog.WithField("image", image)
 		if err := json.NewEncoder(w).Encode(image); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode Image to JSON")
@@ -326,8 +325,8 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 		var formBody model.Image
 		if err := json.NewDecoder(r.Body).Decode(&formBody); err != nil {
 			log.WithError(err).Info("Failed to encode request body as Image")
-			return &endpointError {
-				Message: err.Error(),
+			return &endpointError{
+				Message:    err.Error(),
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -336,26 +335,26 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 			switch err {
 			case repository.ErrImageAssociationAlreadyExists:
 				cLog.Info("Image with UUID already exists")
-				return &endpointError {
-					Message: fmt.Sprintf("image with UUID %s is already registered", formBody.ID), 
+				return &endpointError{
+					Message:    fmt.Sprintf("image with UUID %s is already registered", formBody.ID),
 					StatusCode: http.StatusConflict,
 				}
 			case repository.ErrImageAssociationDuplicateFlavor:
 				cLog.Info("One or more flavor IDs is already associated with this image")
-				return &endpointError {
-					Message: fmt.Sprintf("one or more flavor ids in %v is already associated with image %s", formBody.FlavorIDs, formBody.ID), 
+				return &endpointError{
+					Message:    fmt.Sprintf("one or more flavor ids in %v is already associated with image %s", formBody.FlavorIDs, formBody.ID),
 					StatusCode: http.StatusConflict,
 				}
 			case repository.ErrImageAssociationFlavorDoesNotExist:
 				cLog.Info("One or more flavor IDs does not exist")
-				return &endpointError {
-					Message: fmt.Sprintf("one or more flavor ids in %v does not point to a registered flavor", formBody.FlavorIDs), 
+				return &endpointError{
+					Message:    fmt.Sprintf("one or more flavor ids in %v does not point to a registered flavor", formBody.FlavorIDs),
 					StatusCode: http.StatusBadRequest,
 				}
 			case repository.ErrImageAssociationDuplicateImageFlavor:
 				cLog.Info("Image can only be associated with a single ImageFlavor")
-				return &endpointError {
-					Message: "image can only be associated with one flavor that has FlavorPart = IMAGE", 
+				return &endpointError{
+					Message:    "image can only be associated with one flavor that has FlavorPart = IMAGE",
 					StatusCode: http.StatusConflict,
 				}
 			default:

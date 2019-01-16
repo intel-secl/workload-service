@@ -3,7 +3,7 @@ package resource
 import (
 	"encoding/base64"
 	"fmt"
-	"intel/isecl/workload-service/repository/mock"
+	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/repository/postgres"
 	"net/http"
 	"os"
@@ -34,9 +34,8 @@ func setupServer(t *testing.T) *mux.Router {
 	return r
 }
 
-func setupMockServer(t *testing.T) *mux.Router {
+func setupMockServer(db repository.WlsDatabase) *mux.Router {
 	r := mux.NewRouter()
-	db := mock.DatabaseMock{}
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
 	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), db)
 	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), db)

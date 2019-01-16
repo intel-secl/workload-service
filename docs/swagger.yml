@@ -137,8 +137,6 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/Image'
-        '404':
-          description: Images
   /images/{id}/flavor-key:
     get:
       summary: Get flavor and key for image 

@@ -5,46 +5,87 @@ import (
 	"intel/isecl/workload-service/repository"
 )
 
-type mockImage struct{}
+type MockImage struct {
+	CreateFn                        func(*model.Image) error
+	RetrieveByUUIDFn                func(string) (*model.Image, error)
+	RetrieveAssociatedImageFlavorFn func(string) (*model.Flavor, error)
+	RetrieveByFilterCriteriaFn      func(repository.ImageFilter) ([]model.Image, error)
+	RetrieveAssociatedFlavorFn      func(string, string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorsFn     func(string) ([]model.Flavor, error)
+	UpdateFn                        func(*model.Image) error
+	AddAssociatedFlavorFn           func(string, string) error
+	DeleteByUUIDFn                  func(string) error
+	DeleteAssociatedFlavorFn        func(string, string) error
+}
 
-func (m mockImage) Create(image *model.Image) error {
+func (m *MockImage) Create(image *model.Image) error {
+	if m.CreateFn != nil {
+		return m.CreateFn(image)
+	}
 	return nil
 }
 
-func (m mockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
+func (m *MockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
+	if m.RetrieveByUUIDFn != nil {
+		return m.RetrieveByUUIDFn(uuid)
+	}
 	image := i
 	image.ID = uuid
 	return &i, nil
 }
 
-func (m mockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
+func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
+	if m.RetrieveAssociatedImageFlavorFn != nil {
+		return m.RetrieveAssociatedImageFlavorFn(imageUUID)
+	}
 	return &f, nil
 }
 
-func (m mockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]model.Image, error) {
+func (m *MockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]model.Image, error) {
+	if m.RetrieveByFilterCriteriaFn != nil {
+		return m.RetrieveByFilterCriteriaFn(locator)
+	}
 	return []model.Image{i}, nil
 }
 
-func (m mockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
+func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
+	if m.RetrieveAssociatedFlavorFn != nil {
+		return m.RetrieveAssociatedFlavorFn(imageUUID, flavorUUID)
+	}
 	return &f, nil
 }
 
-func (m mockImage) RetrieveAssociatedFlavors(imageUUID string) ([]model.Flavor, error) {
+func (m *MockImage) RetrieveAssociatedFlavors(imageUUID string) ([]model.Flavor, error) {
+	if m.RetrieveAssociatedFlavorsFn != nil {
+		return m.RetrieveAssociatedFlavorsFn(imageUUID)
+	}
 	return []model.Flavor{f}, nil
 }
 
-func (m mockImage) Update(image *model.Image) error {
+func (m *MockImage) Update(image *model.Image) error {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(image)
+	}
 	return nil
 }
 
-func (m mockImage) AddAssociatedFlavor(string, string) error {
+func (m *MockImage) AddAssociatedFlavor(imageID string, flavorID string) error {
+	if m.AddAssociatedFlavorFn != nil {
+		return m.AddAssociatedFlavorFn(imageID, flavorID)
+	}
 	return nil
 }
 
-func (m mockImage) DeleteByUUID(string) error {
+func (m *MockImage) DeleteByUUID(imageID string) error {
+	if m.DeleteByUUIDFn != nil {
+		return m.DeleteByUUIDFn(imageID)
+	}
 	return nil
 }
 
-func (m mockImage) DeleteAssociatedFlavor(string, string) error {
+func (m *MockImage) DeleteAssociatedFlavor(imageID string, flavorID string) error {
+	if m.DeleteAssociatedFlavorFn != nil {
+		return m.DeleteAssociatedFlavorFn(imageID, flavorID)
+	}
 	return nil
 }

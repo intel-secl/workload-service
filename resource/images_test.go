@@ -1,9 +1,14 @@
 package resource
 
 import (
+	"encoding/json"
 	"intel/isecl/workload-service/config"
+	"intel/isecl/workload-service/model"
+	"intel/isecl/workload-service/repository"
+	"intel/isecl/workload-service/repository/mock"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +16,8 @@ import (
 
 func TestFlavorKey(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:1337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -32,7 +38,8 @@ func TestFlavorKey(t *testing.T) {
 
 func TestFlavorKeyMissingHWUUID(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:2337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -54,7 +61,8 @@ func TestFlavorKeyMissingHWUUID(t *testing.T) {
 
 func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:3337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -76,7 +84,8 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 
 func TestFlavorKeyHVSDown(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:4337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -96,7 +105,8 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 
 func TestFlavorKyHVSBadRequest(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:5337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -117,7 +127,8 @@ func TestFlavorKyHVSBadRequest(t *testing.T) {
 
 func TestFlavorKeyKMSDown(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:6337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -136,7 +147,8 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 
 func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	assert := assert.New(t)
-	r := setupMockServer(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
 	config.Configuration.KMS.URL = "http://localhost:7337/v1/"
 	config.Configuration.KMS.User = "user"
 	config.Configuration.KMS.Password = "pass"
@@ -154,4 +166,41 @@ func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusBadRequest, recorder.Code)
+}
+
+func TestQueryEmptyImagesResource(t *testing.T) {
+	assert := assert.New(t)
+	db := new(mock.Database)
+	db.MockImage.RetrieveByFilterCriteriaFn = func(repository.ImageFilter) ([]model.Image, error) {
+		return nil, nil
+	}
+	r := setupMockServer(db)
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/images", nil)
+	r.ServeHTTP(recorder, req)
+	t.Log(recorder.Body.String())
+	assert.Equal(http.StatusOK, recorder.Code)
+	assert.Equal("[]", strings.TrimSpace(recorder.Body.String()))
+}
+
+func TestQueryImagesResource(t *testing.T) {
+	assert := assert.New(t)
+	db := new(mock.Database)
+	db.MockImage.RetrieveByFilterCriteriaFn = func(repository.ImageFilter) ([]model.Image, error) {
+		return []model.Image{
+			model.Image{ID: "ffff021e-9669-4e53-9224-8880fb4e4080"},
+			model.Image{ID: "ffff021e-9669-4e53-9224-8880fb4e4081"},
+		}, nil
+	}
+	r := setupMockServer(db)
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/images", nil)
+	r.ServeHTTP(recorder, req)
+	t.Log(recorder.Body.String())
+	assert.Equal(http.StatusOK, recorder.Code)
+	var models []model.Image
+	json.Unmarshal(recorder.Body.Bytes(), &models)
+	assert.Len(models, 2)
+	assert.Equal("ffff021e-9669-4e53-9224-8880fb4e4080", models[0].ID)
+	assert.Equal("ffff021e-9669-4e53-9224-8880fb4e4081", models[1].ID)
 }

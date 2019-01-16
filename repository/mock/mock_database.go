@@ -6,25 +6,29 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// DatabaseMock provides a mock Db
-type DatabaseMock struct{}
+// Database provides a mock Db
+type Database struct {
+	MockFlavor MockFlavor
+	MockImage  MockImage
+	MockReport MockReport
+}
 
-func (m DatabaseMock) Migrate() error {
+func (m *Database) Migrate() error {
 	return nil
 }
 
-func (m DatabaseMock) FlavorRepository() repository.FlavorRepository {
-	return new(mockFlavor)
+func (m *Database) FlavorRepository() repository.FlavorRepository {
+	return &m.MockFlavor
 }
 
-func (m DatabaseMock) ImageRepository() repository.ImageRepository {
-	return new(mockImage)
+func (m *Database) ImageRepository() repository.ImageRepository {
+	return &m.MockImage
 }
 
-func (m DatabaseMock) ReportRepository() repository.ReportRepository {
-	return new(mockReport)
+func (m *Database) ReportRepository() repository.ReportRepository {
+	return &m.MockReport
 }
 
-func (m DatabaseMock) Driver() *gorm.DB {
+func (m *Database) Driver() *gorm.DB {
 	return nil
 }
