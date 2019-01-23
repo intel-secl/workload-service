@@ -18,6 +18,7 @@ func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(getFlavorByID(db))).Methods("GET")
 	r.HandleFunc("/{label}", errorHandler(getFlavorByLabel(db))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(deleteFlavorByID(db))).Methods("DELETE")
+	r.HandleFunc("/{badid}", badId).Methods("DELETE")
 	r.HandleFunc("", errorHandler(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
 }
 

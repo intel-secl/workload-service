@@ -19,6 +19,7 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("", (errorHandler(getReport(db)))).Methods("GET")
 	r.HandleFunc("", (errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", (errorHandler(deleteReportByID(db)))).Methods("DELETE")
+	r.HandleFunc("/{badid}", badId)
 }
 
 func getReport(db repository.WlsDatabase) endpointHandler {

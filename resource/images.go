@@ -38,6 +38,14 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 		(errorHandler(queryImages(db)))).Methods("GET")
 	r.HandleFunc("",
 		(errorHandler(createImage(db)))).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("/{badid}", badId)
+}
+
+func badId(w http.ResponseWriter, r *http.Request) {
+	badid := mux.Vars(r)["badid"]
+	log.WithField("uuid", badid).Info("Request made with non compliant UUIDv4")
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte(fmt.Sprintf("%s is not uuidv4 compliant", badid)))
 }
 
 func missingQueryParameters(params ...string) http.HandlerFunc {

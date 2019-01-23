@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"bytes"
 	"encoding/json"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
@@ -203,4 +204,28 @@ func TestQueryImagesResource(t *testing.T) {
 	assert.Len(models, 2)
 	assert.Equal("ffff021e-9669-4e53-9224-8880fb4e4080", models[0].ID)
 	assert.Equal("ffff021e-9669-4e53-9224-8880fb4e4081", models[1].ID)
+}
+
+func TestInvalidImageID(t *testing.T) {
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("DELETE", "/wls/images/yaddablahblahblbahlbah", nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusBadRequest, recorder.Code)
+	assert.Contains(recorder.Body.String(), "is not uuidv4 compliant")
+}
+
+func TestCreateImageEmptyFlavors(t *testing.T) {
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	iJSON := `{"id": "ffff021e-9669-4e53-9224-8880fb4e4080", "flavor_ids":[]}`
+	req := httptest.NewRequest("POST", "/wls/images", bytes.NewBufferString(iJSON))
+	req.Header.Add("Content-Type", "application/json")
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusCreated, recorder.Code)
 }

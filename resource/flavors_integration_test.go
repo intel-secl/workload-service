@@ -214,7 +214,8 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
 	r.ServeHTTP(recorder, req)
-	assert.Equal(http.StatusMethodNotAllowed, recorder.Code)
+	assert.Equal(http.StatusBadRequest, recorder.Code)
+	assert.Contains(recorder.Body.String(), "compliant")
 
 	// Actually Delete it
 	recorder = httptest.NewRecorder()
