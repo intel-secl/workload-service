@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"time"
 	"bytes"
 	"encoding/json"
 	"intel/isecl/workload-service/config"
@@ -29,6 +30,7 @@ func TestFlavorKey(t *testing.T) {
 	defer k.Close()
 	h := mockHVS(":1338")
 	defer h.Close()
+	time.Sleep(1*time.Second)
 
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
@@ -51,7 +53,7 @@ func TestFlavorKeyMissingHWUUID(t *testing.T) {
 	defer k.Close()
 	h := mockHVS(":2338")
 	defer h.Close()
-
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key with no hardware_uuid
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key", nil)
@@ -74,7 +76,7 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	defer k.Close()
 	h := mockHVS(":3338")
 	defer h.Close()
-
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key with no hardware_uuid
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid", nil)
@@ -95,7 +97,7 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 	config.Configuration.HVS.Password = "pass"
 	k := mockKMS(":4337")
 	defer k.Close()
-
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
@@ -118,6 +120,7 @@ func TestFlavorKyHVSBadRequest(t *testing.T) {
 	defer k.Close()
 	h := badHVS(":5338")
 	defer h.Close()
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
@@ -138,6 +141,7 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 	config.Configuration.HVS.Password = "pass"
 	h := mockHVS(":6338")
 	defer h.Close()
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
@@ -160,7 +164,7 @@ func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	defer h.Close()
 	k := badKMS(":7338")
 	defer k.Close()
-
+	time.Sleep(1*time.Second)
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
