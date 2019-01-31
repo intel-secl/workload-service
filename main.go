@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/setup"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ func main() {
 		log.WithError(err).Info("Failed to open log file, using stderr")
 		log.SetOutput(os.Stderr)
 	} else {
-		log.SetOutput(wlsLogFile)
+		log.SetOutput(io.MultiWriter(os.Stderr, wlsLogFile))
 	}
 	log.SetLevel(config.Configuration.LogLevel)
 	// override standard golang log
