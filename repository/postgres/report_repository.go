@@ -207,9 +207,14 @@ func (repo reportRepo) Create(report *model.Report) error {
 	if err != nil {
 		return err
 	}
+	signedJSON, err := json.Marshal(report.SignedData)
+	if err != nil {
+		return err
+	}
 	if err := repo.db.Create(
 		&reportEntity{
 			TrustReport: postgres.Jsonb{RawMessage: reportJSON},
+			SignedData: postgres.Jsonb{RawMessage: signedJSON},
 			VMID:        report.Manifest.VmInfo.VmID,
 		}).Error; err != nil {
 		return err

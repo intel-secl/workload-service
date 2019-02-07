@@ -17,7 +17,7 @@ import (
 // SetReportEndpoints
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("", (errorHandler(getReport(db)))).Methods("GET")
-	r.HandleFunc("", (errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json").Headers("Accept", "application/json")
+	r.HandleFunc("", (errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", (errorHandler(deleteReportByID(db)))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId)
 }
@@ -82,7 +82,14 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 func createReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var vtr model.Report
-		if err := json.NewDecoder(r.Body).Decode(&vtr); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&vtr.SignedData); err != nil {
+			return &endpointError{
+				Message:    err.Error(),
+				StatusCode: http.StatusBadRequest,
+			}
+		}
+
+		if err := json.Unmarshal(vtr.Data, &vtr.VMTrustReport); err != nil {
 			return &endpointError{
 				Message:    err.Error(),
 				StatusCode: http.StatusBadRequest,

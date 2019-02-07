@@ -21,6 +21,7 @@ type reportEntity struct {
 	VMID        string `gorm:"type:uuid;not null"`
 	Saml        string
 	TrustReport postgres.Jsonb `gorm:"type:jsonb;not null"`
+	SignedData  postgres.Jsonb `gorm:"type:jsonb;not null"`
 }
 
 func (re reportEntity) TableName() string {
@@ -38,7 +39,11 @@ func (re *reportEntity) BeforeCreate(scope *gorm.Scope) error {
 	}
 
 	if !json.Valid(re.TrustReport.RawMessage) {
-		return errors.New("reports: TrustReport JSON Content is not valid")
+		return errors.New("trust report json content is not valid")
+	}
+
+	if !json.Valid(re.SignedData.RawMessage) {
+		return errors.New("signed data json content is not valid")
 	}
 
 	return nil
@@ -54,8 +59,14 @@ func (re *reportEntity) AfterFind(scope *gorm.Scope) error {
 
 func (re *reportEntity) unmarshal() (*model.Report, error) {
 	var report model.Report
+
 	if err := json.Unmarshal(re.TrustReport.RawMessage, &report.VMTrustReport); err != nil {
 		fmt.Println(string(re.TrustReport.RawMessage))
+		fmt.Println(err)
+		return nil, err
+	}
+	if err := json.Unmarshal(re.SignedData.RawMessage, &report.SignedData); err != nil {
+		fmt.Println(string(re.SignedData.RawMessage))
 		fmt.Println(err)
 		return nil, err
 	}

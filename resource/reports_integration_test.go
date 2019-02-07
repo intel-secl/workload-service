@@ -7,8 +7,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"crypto"
 
 	"intel/isecl/lib/common/pkg/vm"
+	"intel/isecl/lib/common/crypt"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
@@ -59,10 +61,22 @@ func TestReportResource(t *testing.T) {
 	fmt.Println(string(fJSON))
 	checkErr(err)
 
+	//create an rsa keypair, and test certificate
+	rsaPriv, cert, err := crypt.CreateSelfSignedCertAndRSAPrivKeys()
+	checkErr(err)
+
+	signature, err := crypt.HashAndSignPKCS1v15([]byte(fJSON), rsaPriv, crypto.SHA256)
+	checkErr(err)
+
+	signedReport:= crypt.SignedData{fJSON, crypt.GetHashingAlgorithmName(crypto.SHA256), cert, signature}
+
+	signedJSON, err := json.Marshal(signedReport)
+	checkErr(err)
+
 	r := mux.NewRouter()
 	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), wlsDB)
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/reports", bytes.NewBuffer(fJSON))
+	req := httptest.NewRequest("POST", "/wls/reports", bytes.NewBuffer(signedJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	r.ServeHTTP(recorder, req)
