@@ -11,7 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,6 +69,15 @@ func TestImagesResourceIntegration(t *testing.T) {
 	var getResp model.Image
 	_ = json.Unmarshal(recorder.Body.Bytes(), &getResp)
 	assert.Equal(newImage, getResp)
+
+	// Check and see if the Image flavor has been associated in the db correctly
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavor?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	var getResp model.Flavor
+	_ = json.Unmarshal(recorder.Body.Bytes(), &getResp)
+	assert.Equal(f, getResp)
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()

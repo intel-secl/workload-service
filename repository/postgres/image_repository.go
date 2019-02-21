@@ -98,6 +98,15 @@ func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID stri
 	return &flavor, nil
 }
 
+func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error) {
+	var flavorEntity flavorEntity
+	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND flavor_part = ?", imageUUID, flavorPart).Error; err != nil {
+		return nil, err
+	}
+	flavor := flavorEntity.Flavor()
+	return &flavor, nil
+}
+
 func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error) {
 	var image imageEntity
 	if err := repo.db.Preload("Flavors").First(&image, "id = ?", uuid).Error; err != nil {

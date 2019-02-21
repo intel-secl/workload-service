@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"intel/isecl/lib/kms-client"
+	kms "intel/isecl/lib/kms-client"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
@@ -20,7 +20,8 @@ import (
 
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4), errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+		errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		errorHandler(getAssociatedFlavor(db))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
@@ -33,7 +34,10 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 		(errorHandler(deleteImageByID(db)))).Methods("DELETE")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
 		(errorHandler(retrieveFlavorAndKeyForImageID(db)))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4), (missingQueryParameters("hardware_uuid"))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
+		(missingQueryParameters("hardware_uuid"))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+		errorHandler(retrieveFlavorForImageID(db))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("",
 		(errorHandler(queryImages(db)))).Methods("GET")
 	r.HandleFunc("",
@@ -178,6 +182,38 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		}
 		// just return the flavor
 		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: *flavor}); err != nil {
+			// marshalling error 500
+			cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
+			return err
+		}
+		return nil
+	}
+}
+
+func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		id := mux.Vars(r)["id"]
+		fp := mux.Vars(r)["flavor_part"]
+		cLog := log.WithFields(log.Fields{
+			"imageUUID":  id,
+			"flavorPart": fp,
+		})
+		if fp == "" {
+			cLog.Debug("Missing required parameter flavor_part")
+			return &endpointError{
+				Message:    "Query parameter 'flavor_part' cannot be nil",
+				StatusCode: http.StatusBadRequest,
+			}
+		}
+		cLog.Debug("Retrieving Flavor for Image")
+		flavor, err := db.ImageRepository().RetrieveAssociatedFlavorByFlavorPart(id, fp)
+		if err != nil {
+			cLog.Info("Failed to retrieve Flavor for Image")
+			return err
+		}
+
+		// just return the flavor
+		if err := json.NewEncoder(w).Encode(*flavor); err != nil {
 			// marshalling error 500
 			cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
 			return err

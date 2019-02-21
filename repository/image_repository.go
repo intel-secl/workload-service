@@ -28,6 +28,7 @@ type ImageRepository interface {
 	RetrieveByUUID(uuid string) (*model.Image, error)
 	RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error)
 	RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error)
 	RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error)
 	RetrieveByFilterCriteria(locator ImageFilter) ([]model.Image, error)
 	// U
