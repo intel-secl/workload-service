@@ -6,16 +6,17 @@ import (
 )
 
 type MockImage struct {
-	CreateFn                        func(*model.Image) error
-	RetrieveByUUIDFn                func(string) (*model.Image, error)
-	RetrieveAssociatedImageFlavorFn func(string) (*model.Flavor, error)
-	RetrieveByFilterCriteriaFn      func(repository.ImageFilter) ([]model.Image, error)
-	RetrieveAssociatedFlavorFn      func(string, string) (*model.Flavor, error)
-	RetrieveAssociatedFlavorsFn     func(string) ([]model.Flavor, error)
-	UpdateFn                        func(*model.Image) error
-	AddAssociatedFlavorFn           func(string, string) error
-	DeleteByUUIDFn                  func(string) error
-	DeleteAssociatedFlavorFn        func(string, string) error
+	CreateFn                               func(*model.Image) error
+	RetrieveByUUIDFn                       func(string) (*model.Image, error)
+	RetrieveAssociatedImageFlavorFn        func(string) (*model.Flavor, error)
+	RetrieveByFilterCriteriaFn             func(repository.ImageFilter) ([]model.Image, error)
+	RetrieveAssociatedFlavorFn             func(string, string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorByFlavorPartFn func(string, string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorsFn            func(string) ([]model.Flavor, error)
+	UpdateFn                               func(*model.Image) error
+	AddAssociatedFlavorFn                  func(string, string) error
+	DeleteByUUIDFn                         func(string) error
+	DeleteAssociatedFlavorFn               func(string, string) error
 }
 
 func (m *MockImage) Create(image *model.Image) error {
@@ -51,6 +52,13 @@ func (m *MockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]
 func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
 	if m.RetrieveAssociatedFlavorFn != nil {
 		return m.RetrieveAssociatedFlavorFn(imageUUID, flavorUUID)
+	}
+	return &f, nil
+}
+
+func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error) {
+	if m.RetrieveAssociatedFlavorFn != nil {
+		return m.RetrieveAssociatedFlavorByFlavorPartFn(imageUUID, flavorPart)
 	}
 	return &f, nil
 }
