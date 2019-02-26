@@ -82,7 +82,7 @@ func (repo imageRepo) Create(image *model.Image) error {
 
 func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
 	var flavorEntity flavorEntity
-	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND flavor_part = ?", imageUUID, "IMAGE").Error; err != nil {
+	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND (flavor_part = ? OR flavor_part = ?)", imageUUID, "IMAGE", "CONTAINER_IMAGE").Error; err != nil {
 		return nil, err
 	}
 	flavor := flavorEntity.Flavor()
