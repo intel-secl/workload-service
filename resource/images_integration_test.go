@@ -72,7 +72,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// Check and see if the Image flavor has been associated in the db correctly
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavor?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
+	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	var resp model.Flavor
