@@ -200,10 +200,10 @@ func (repo reportRepo) Create(report *model.Report) error {
 	if report == nil {
 		return errors.New("cannot create nil report")
 	}
-	if len(report.Manifest.VmInfo.VmID) == 0 && len(report.Manifest.VmInfo.HostHardwareUUID) == 0 && len(report.Manifest.VmInfo.ImageID) == 0 {
+	if len(report.Manifest.ImageInfo.InstanceID) == 0 && len(report.Manifest.ImageInfo.HostHardwareUUID) == 0 && len(report.Manifest.ImageInfo.ImageID) == 0 {
 		return errors.New("Instance uuid cannot be empty")
 	}
-	reportJSON, err := json.Marshal(report.VMTrustReport)
+	reportJSON, err := json.Marshal(report.ImageTrustReport)
 	if err != nil {
 		return err
 	}
@@ -214,8 +214,8 @@ func (repo reportRepo) Create(report *model.Report) error {
 	if err := repo.db.Create(
 		&reportEntity{
 			TrustReport: postgres.Jsonb{RawMessage: reportJSON},
-			SignedData: postgres.Jsonb{RawMessage: signedJSON},
-			VMID:        report.Manifest.VmInfo.VmID,
+			SignedData:  postgres.Jsonb{RawMessage: signedJSON},
+			VMID:        report.Manifest.ImageInfo.InstanceID,
 		}).Error; err != nil {
 		return err
 	}

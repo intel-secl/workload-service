@@ -3,14 +3,14 @@
 package resource
 
 import (
-	"intel/isecl/workload-service/repository/postgres"
 	"bytes"
+	"crypto"
 	"encoding/json"
 	"fmt"
-	"crypto"
+	"intel/isecl/workload-service/repository/postgres"
 
-	"intel/isecl/lib/common/pkg/vm"
 	"intel/isecl/lib/common/crypt"
+	"intel/isecl/lib/common/pkg/image"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
@@ -27,7 +27,6 @@ import (
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
-
 
 func TestReportResource(t *testing.T) {
 	assert := assert.New(t)
@@ -52,12 +51,11 @@ func TestReportResource(t *testing.T) {
 
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
 		"http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "261209df1789073192285e4e408addadb35068421ef4890a5d4d434")
-	manifest := vm.Manifest{VmInfo: vm.Info{VmID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
+	manifest := image.Manifest{ImageInfo: image.Info{InstanceID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
 	report, err := verifier.Verify(&manifest, flavor)
-	vmReport, _ := report.(*verifier.VMTrustReport)
+	imageReport, _ := report.(*verifier.ImageTrustReport)
 
-
-	fJSON, err := json.Marshal(vmReport)
+	fJSON, err := json.Marshal(imageReport)
 	fmt.Println(string(fJSON))
 	checkErr(err)
 
@@ -68,7 +66,7 @@ func TestReportResource(t *testing.T) {
 	signature, err := crypt.HashAndSignPKCS1v15([]byte(fJSON), rsaPriv, crypto.SHA256)
 	checkErr(err)
 
-	signedReport:= crypt.SignedData{fJSON, crypt.GetHashingAlgorithmName(crypto.SHA256), cert, signature}
+	signedReport := crypt.SignedData{fJSON, crypt.GetHashingAlgorithmName(crypto.SHA256), cert, signature}
 
 	signedJSON, err := json.Marshal(signedReport)
 	checkErr(err)
@@ -91,7 +89,7 @@ func TestReportResource(t *testing.T) {
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2018-12-15%2012%3A05%3A17.054795-08&&latest_per_vm=false", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
-        var rResponse []model.Report
+	var rResponse []model.Report
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse))
 
 	recorder = httptest.NewRecorder()
@@ -125,7 +123,7 @@ func TestReportResource(t *testing.T) {
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID , nil)
+	req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
