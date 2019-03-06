@@ -77,7 +77,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	assert.Equal(http.StatusOK, recorder.Code)
 	var resp model.Flavor
 	_ = json.Unmarshal(recorder.Body.Bytes(), &resp)
-	assert.Equal(f, resp)
+	assert.Equal((model.Flavor)(*f), resp)
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()
