@@ -15,8 +15,8 @@ import (
 
 type reportEntity struct {
 	ID        string `gorm:"type:uuid;primary_key;"`
-	CreatedAt time.Time
-	ExpiresOn time.Time
+	CreatedAt time.Time `sql:"type:timestamp"`
+	ExpiresOn time.Time `sql:"type:timestamp"`
 	// normalize VMID
 	VMID        string `gorm:"type:uuid;not null"`
 	Saml        string
