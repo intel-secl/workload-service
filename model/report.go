@@ -8,6 +8,6 @@ import (
 // Report is an alias to verifier.VMTrustReport
 type Report struct {
 	ID string `json:"id,omitempty"`
-	verifier.ImageTrustReport
+	verifier.InstanceTrustReport
 	crypt.SignedData
 }

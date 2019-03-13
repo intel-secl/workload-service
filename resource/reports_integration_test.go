@@ -10,7 +10,7 @@ import (
 	"intel/isecl/workload-service/repository/postgres"
 
 	"intel/isecl/lib/common/crypt"
-	"intel/isecl/lib/common/pkg/image"
+	"intel/isecl/lib/common/pkg/instance"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
@@ -51,11 +51,11 @@ func TestReportResource(t *testing.T) {
 
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
 		"http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "261209df1789073192285e4e408addadb35068421ef4890a5d4d434")
-	manifest := image.Manifest{ImageInfo: image.Info{InstanceID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
+	manifest := instance.Manifest{InstanceInfo: instance.Info{InstanceID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
 	report, err := verifier.Verify(&manifest, flavor)
-	imageReport, _ := report.(*verifier.ImageTrustReport)
+	instanceReport, _ := report.(*verifier.InstanceTrustReport)
 
-	fJSON, err := json.Marshal(imageReport)
+	fJSON, err := json.Marshal(instanceReport)
 	fmt.Println(string(fJSON))
 	checkErr(err)
 

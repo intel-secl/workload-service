@@ -60,7 +60,7 @@ func (re *reportEntity) AfterFind(scope *gorm.Scope) error {
 func (re *reportEntity) unmarshal() (*model.Report, error) {
 	var report model.Report
 
-	if err := json.Unmarshal(re.TrustReport.RawMessage, &report.ImageTrustReport); err != nil {
+	if err := json.Unmarshal(re.TrustReport.RawMessage, &report.InstanceTrustReport); err != nil {
 		fmt.Println(string(re.TrustReport.RawMessage))
 		fmt.Println(err)
 		return nil, err

@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"intel/isecl/lib/common/pkg/image"
+	"intel/isecl/lib/common/pkg/instance"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
@@ -12,9 +12,9 @@ var f2, _ = flavor.GetImageFlavor("Cirros-enc", true, "http://localhost:1337/v1/
 var i = model.Image{}
 var r = model.Report{
 	ID: "ffff021e-9669-4e53-9224-8880fb4e4080",
-	ImageTrustReport: verifier.ImageTrustReport{
-		Manifest: image.Manifest{
-			ImageInfo: image.Info{
+	InstanceTrustReport: verifier.InstanceTrustReport{
+		Manifest: instance.Manifest{
+			InstanceInfo: instance.Info{
 				InstanceID:       "0000021e-9669-4e53-9224-8880fb4e4080",
 				HostHardwareUUID: "0000021e-9669-4e53-9224-8880fb4e4080",
 				ImageID:          "0000021e-9669-4e53-9224-8880fb4e4080",

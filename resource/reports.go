@@ -89,7 +89,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 
-		if err := json.Unmarshal(vtr.Data, &vtr.ImageTrustReport); err != nil {
+		if err := json.Unmarshal(vtr.Data, &vtr.InstanceTrustReport); err != nil {
 			return &endpointError{
 				Message:    err.Error(),
 				StatusCode: http.StatusBadRequest,
@@ -109,7 +109,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		cLog := log.WithField("report", vtr)
 		switch err := rr.Create(&vtr); err {
 		case errors.New("report already exists with UUID"):
-			msg := fmt.Sprintf("Report with UUID %s already exists", vtr.Manifest.ImageInfo.InstanceID)
+			msg := fmt.Sprintf("Report with UUID %s already exists", vtr.Manifest.InstanceInfo.InstanceID)
 			cLog.Info(msg)
 			return &endpointError{
 				Message:    msg,
