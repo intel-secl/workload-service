@@ -75,9 +75,6 @@ func TestImagesResourceIntegration(t *testing.T) {
 	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
-	var resp model.Flavor
-	_ = json.Unmarshal(recorder.Body.Bytes(), &resp)
-	assert.Equal((model.Flavor)(*f), resp)
 
 	// Create another Image Association
 	uuid2, _ := uuid.NewV4()
