@@ -110,7 +110,7 @@ func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, fla
 func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error) {
 	var image imageEntity
 	if err := repo.db.Preload("Flavors").First(&image, "id = ?", uuid).Error; err != nil {
-		return nil, err
+		return make([]model.Flavor, 0), err
 	}
 	flavors := make([]model.Flavor, len(image.Flavors))
 	for i, f := range image.Flavors {

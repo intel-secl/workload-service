@@ -228,7 +228,12 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 		cLog := log.WithField("uuid", uuid)
 		flavors, err := db.ImageRepository().RetrieveAssociatedFlavors(uuid)
 		if err != nil {
-			cLog.WithError(err).Info("Failed to retrieve associated flavors for image")
+			cLog.WithError(err).Info("Failed to retrieve associated flavors for image defg")
+			if err.Error() == "record not found" {
+				cLog.Info("No Flavor found for Image")
+				json.NewEncoder(w).Encode(flavors)
+				return nil
+			}
 			return err
 		}
 		if err := json.NewEncoder(w).Encode(flavors); err != nil {
