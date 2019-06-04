@@ -702,13 +702,13 @@ components:
         id:
           type: string
           format: uuid
-        vm_manifest:
+        instance_manifest:
           type: object
           properties:
-            vm_info: 
+            instance_info: 
               type: object
               properties:
-                vm_id:
+                instance_id:
                   type: string
                 host_hardware_uuid: 
                   type: string
@@ -742,6 +742,16 @@ components:
                 type: boolean
         trusted:
           type: boolean
+        data:
+          type: string
+          format: byte
+        hash_alg:
+          type: string
+        cert:
+          type: string
+        signature: 
+          type: string
+          format: byte
     EncryptionMatches:
       type: object
       required:
