@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"intel/isecl/workload-service/model"
 	"net/http"
+	"strconv"
 
 	"intel/isecl/workload-service/repository"
 
@@ -17,6 +18,7 @@ import (
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(getFlavorByID(db))).Methods("GET")
 	r.HandleFunc("/{label}", errorHandler(getFlavorByLabel(db))).Methods("GET")
+	r.HandleFunc("", (errorHandler(getFlavors(db)))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(deleteFlavorByID(db))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId).Methods("DELETE")
 	r.HandleFunc("", errorHandler(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
@@ -59,6 +61,40 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		lblLog.Debug("Successfully fetched Flavor")
+		return nil
+	}
+}
+
+func getFlavors(db repository.WlsDatabase) endpointHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		filterCriteria := repository.FlavorFilter{}
+		flavorID, ok := r.URL.Query()["id"]
+		if ok && len(flavorID) >= 1 {
+			filterCriteria.FlavorID = flavorID[0]
+		}
+
+		label, ok := r.URL.Query()["label"]
+		if ok && len(label) >= 1 {
+			filterCriteria.Label = label[0]
+		}
+
+		filter, ok := r.URL.Query()["filter"]
+		if ok && len(filter) >= 1 {
+			filterCriteria.Filter, _ = strconv.ParseBool(filter[0])
+		}
+
+		flavors, err := db.FlavorRepository().RetrieveByFilterCriteria(filterCriteria)
+		if err != nil {
+			log.WithError(err).Info("Failed to retrieve flavors")
+			return err
+		}
+
+		if err := json.NewEncoder(w).Encode(flavors); err != nil {
+			log.WithError(err).Error("Unexpectedly failed to encode flavors to JSON")
+			return err
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
 		return nil
 	}
 }

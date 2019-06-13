@@ -6,9 +6,8 @@ import (
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
-	"github.com/jinzhu/gorm/dialects/postgres"
-
 	"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm/dialects/postgres"
 )
 
 type flavorRepo struct {
@@ -50,12 +49,46 @@ func (repo flavorRepo) Create(f *model.Flavor) error {
 	return tx.Commit().Error
 }
 func (repo flavorRepo) RetrieveByFilterCriteria(filter repository.FlavorFilter) ([]model.Flavor, error) {
-	var entities []flavorEntity
-	if err := repo.db.Find(&entities).Error; err != nil {
-		return nil, err
+	db := repo.db
+	var flavorEntities []flavorEntity
+
+	flavorID := ""
+	label := ""
+	filterQuery := true
+
+	if len(filter.FlavorID) > 0 {
+		flavorID = filter.FlavorID
 	}
-	flavors := make([]model.Flavor, len(entities))
-	for i, v := range entities {
+
+	if len(filter.Label) > 0 {
+		label = filter.Label
+	}
+
+	if !filter.Filter {
+		filterQuery = filter.Filter
+	}
+
+	if len(flavorID) > 0 {
+		db.Where("id = ?", flavorID).Find(&flavorEntities)
+		return getFlavorModels(flavorEntities)
+	}
+
+	if len(label) > 0 {
+		db.Where("label = ?", label).Find(&flavorEntities)
+		return getFlavorModels(flavorEntities)
+	}
+
+	// fetch all the flavors if filter=false
+	if !filterQuery {
+		db.Find(&flavorEntities)
+		return getFlavorModels(flavorEntities)
+	}
+	return nil, errors.New("invalid flavor filter criteria")
+}
+
+func getFlavorModels(flavorEntities []flavorEntity) ([]model.Flavor, error) {
+	flavors := make([]model.Flavor, len(flavorEntities))
+	for i, v := range flavorEntities {
 		flavors[i] = v.Flavor()
 	}
 	return flavors, nil

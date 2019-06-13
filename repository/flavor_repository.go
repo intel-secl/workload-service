@@ -6,13 +6,17 @@ import (
 )
 
 var (
-	ErrFlavorUUIDAlreadyExists  = errors.New("flavor already exists with UUID")
+	// ErrFlavorUUIDAlreadyExists error when flavor with same UUID already exists in the database
+	ErrFlavorUUIDAlreadyExists = errors.New("flavor already exists with UUID")
+	// ErrFlavorLabelAlreadyExists error when flavor with same label name already exists in the database
 	ErrFlavorLabelAlreadyExists = errors.New("flavor already exists with label")
 )
 
 // FlavorFilter defines filter criteria for searching
 type FlavorFilter struct {
-	Label string
+	FlavorID string `json:"id,omitempty"`
+	Label    string `json:"label,omitempty"`
+	Filter   bool   `json:"filter,omitempty"`
 }
 
 // FlavorRepository defines an interface that provides persistence operations for a Flavor.
@@ -23,7 +27,7 @@ type FlavorRepository interface {
 	// C
 	Create(f *model.Flavor) error
 	// R
-	RetrieveByFilterCriteria(locator FlavorFilter) ([]model.Flavor, error)
+	RetrieveByFilterCriteria(filter FlavorFilter) ([]model.Flavor, error)
 	RetrieveByUUID(uuid string) (*model.Flavor, error)
 	RetrieveByLabel(label string) (*model.Flavor, error)
 	// D
