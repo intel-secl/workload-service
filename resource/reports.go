@@ -24,46 +24,51 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 
 func getReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		filter := repository.ReportFilter{}
+		filterCriteria := repository.ReportFilter{}
 		vmID, ok := r.URL.Query()["vm_id"]
 		if ok && len(vmID) >= 1 {
-			filter.VMID = vmID[0]
+			filterCriteria.VMID = vmID[0]
 		}
 
 		reportID, ok := r.URL.Query()["report_id"]
 		if ok && len(reportID) >= 1 {
-			filter.ReportID = reportID[0]
+			filterCriteria.ReportID = reportID[0]
 		}
 
 		hardwareUUID, ok := r.URL.Query()["hardware_uuid"]
 		if ok && len(hardwareUUID) >= 1 {
-			filter.HardwareUUID = hardwareUUID[0]
+			filterCriteria.HardwareUUID = hardwareUUID[0]
 		}
 
 		fromDate, ok := r.URL.Query()["from_date"]
 		if ok && len(fromDate) >= 1 {
-			filter.FromDate = fromDate[0]
+			filterCriteria.FromDate = fromDate[0]
 		}
 
 		toDate, ok := r.URL.Query()["to_date"]
 		if ok && len(toDate) >= 1 {
-			filter.ToDate = toDate[0]
+			filterCriteria.ToDate = toDate[0]
 		}
 
 		latestPerVM, ok := r.URL.Query()["latest_per_vm"]
 		if ok && len(latestPerVM) >= 1 {
-			filter.LatestPerVM = latestPerVM[0]
+			filterCriteria.LatestPerVM = latestPerVM[0]
 		}
 
 		numOfDays, ok := r.URL.Query()["num_of_days"]
 		if ok && len(numOfDays) >= 1 {
 			nd, err := strconv.Atoi(numOfDays[0])
 			if err == nil {
-				filter.NumOfDays = nd
+				filterCriteria.NumOfDays = nd
 			}
 		}
 
-		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filter)
+		filter, ok := r.URL.Query()["filter"]
+		if ok && len(filter) >= 1 {
+			filterCriteria.Filter, _ = strconv.ParseBool(filter[0])
+		}
+
+		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
 		if err != nil {
 			log.WithError(err).Info("Failed to retrieve reports")
 			return err

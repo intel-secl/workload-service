@@ -17,6 +17,7 @@ type ReportRepository interface {
 	DeleteByReportID(uuid string) error
 }
 
+// ReportFilter struct defines all the filter criterias to query the reports table
 type ReportFilter struct {
 	VMID         string `json:"vm_id,omitempty"`
 	ReportID     string `json:"report_id,omitempty"`
@@ -25,4 +26,5 @@ type ReportFilter struct {
 	ToDate       string `json:"to_date,omitempty"`
 	FromDate     string `json:"from_date,omitempty"`
 	NumOfDays    int    `json:"no_of_days,omitempty"`
+	Filter       bool   `json:"filter,omitempty"`
 }

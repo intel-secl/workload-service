@@ -46,6 +46,7 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 	var toDate time.Time
 	var fromDate time.Time
 	latestPerVM := "true"
+	filterQuery := true
 
 	if len(filter.VMID) > 0 {
 		vmID = filter.VMID
@@ -76,14 +77,22 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 		latestPerVM = filter.LatestPerVM
 	}
 
+	if !filter.Filter {
+		filterQuery = filter.Filter
+	}
+
 	//Only fetch the report since reportid is unique across the table
 	if len(reportID) > 0 {
 		db.Where("id = ?", reportID).Find(&reportEntities)
 		return getReportModels(reportEntities)
 	}
-	fmt.Println("todate")
-	fmt.Println(toDate)
-	fmt.Println("todate")
+
+	// fetch all the reports if filter=false
+	if !filterQuery {
+		db.Find(&reportEntities)
+		return getReportModels(reportEntities)
+	}
+
 	if latestPerVM == "true" && toDate.IsZero() && fromDate.IsZero() {
 		return findLatestReports(vmID, reportID, hardwareUUID, db)
 	}
@@ -150,7 +159,6 @@ func findReports(vmID string, reportID string, hardwareUUID string, toDate time.
 		}
 
 		if len(hardwareUUID) > 0 {
-			fmt.Println("I am heere")
 			if latestPerVM == "true" {
 				db.Table("reports").Joins("LEFT JOIN reports as r2 ON reports.vm_id = r2.vm_id AND reports.created_at > r2.created_at").Where("r2.vm_id is null AND reports.trust_report->'vm_manifest'->'vm_info'->>'host_hardware_uuid' = ? AND created_at > ?", hardwareUUID, fromDate).Find(&reportEntities)
 				return getReportModels(reportEntities)
