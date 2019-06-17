@@ -89,7 +89,7 @@ func startServer() {
 		db, dbErr = gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 			config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
 		if dbErr != nil {
-			log.Warn(fmt.Sprintf("DB connection attempt %d of %d failed: %s", i, numAttempts, dbErr))
+			log.Warn(fmt.Sprintf("DB connection attempt %d of %d failed: %s", (i+1), numAttempts, dbErr))
 			fmt.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
 		} else {
 			break
