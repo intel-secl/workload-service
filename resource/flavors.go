@@ -121,6 +121,14 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Info("Failed to encode request body as Flavor")
 			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 		}
+
+		if(f.Image.Meta.Description.FlavorPart == "" || 
+		   (f.Image.Meta.Description.FlavorPart != "CONTAINER_IMAGE" && f.Image.Meta.Description.FlavorPart != "IMAGE")) {
+			msg := fmt.Sprintf("Invalid FlavorPart value: %s", f.Image.Meta.Description.FlavorPart)
+			log.Error(msg)
+			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
+		}
+
 		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, but at least it provides some validation of the input
 		fr := db.FlavorRepository()
 
