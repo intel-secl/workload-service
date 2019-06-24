@@ -180,7 +180,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Free standing falvor that wont be associated with any images
 	f2, err := flavor.GetImageFlavor("PretendSoftwareFlavor", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
-	f2.Image.Meta.Description.FlavorPart = "NOT-IMAGE"
+	f2.Image.Meta.Description.FlavorPart = "IMAGE"
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
 	checkErr(err)
