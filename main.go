@@ -125,16 +125,18 @@ func uninstall() {
 }
 
 func printUsage() {
-	fmt.Printf("Work Load Service\n")
-	fmt.Printf("===============\n\n")
-	fmt.Printf("usage : %s <command> [<args>]\n\n", os.Args[0])
-	fmt.Printf("Following are the list of commands\n")
-	fmt.Printf("\tsetup\n\n")
-	fmt.Printf("setup command is used to run setup tasks\n")
-	fmt.Printf("\tusage : %s setup [<tasklist>]\n", os.Args[0])
-	fmt.Printf("\t\t<tasklist>-space seperated list of tasks\n")
-	fmt.Printf("\t\t\t-Supported tasks - server database\n")
-	fmt.Printf("\tExample :-\n")
-	fmt.Printf("\t\t%s setup\n", os.Args[0])
-	fmt.Printf("\t\t%s setup database\n", os.Args[0])
-}
+	fmt.Printf("Usage:\n\n")
+	fmt.Printf("    %s <command>\n\n", os.Args[0])
+	fmt.Printf("Available Commands:\n")
+	fmt.Printf("    help|-help|--help   Show this help message\n")
+	fmt.Printf("    start               Start workload-service\n")
+	fmt.Printf("    stop                Stop workload-service\n")
+	fmt.Printf("    status              Determine if workload-service is running\n")
+	fmt.Printf("    setup               Setup workload-service for use\n\n")
+	fmt.Printf("Available tasks for setup:\n")
+	fmt.Printf("    server\n")
+	fmt.Printf("    database\n")
+	fmt.Printf("    hvsconnection\n")
+	fmt.Printf("    kmsconnection\n")
+	fmt.Printf("    logs\n")
+ }
