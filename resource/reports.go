@@ -25,6 +25,13 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 func getReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		filterCriteria := repository.ReportFilter{}
+
+		// if no parameters were provided, just return an empty reports array
+		if len(r.URL.Query()) == 0 {
+			http.Error(w, "At least one query parameter is required", http.StatusBadRequest)
+			return nil
+		}
+
 		vmID, ok := r.URL.Query()["vm_id"]
 		if ok && len(vmID) >= 1 {
 			filterCriteria.VMID = vmID[0]

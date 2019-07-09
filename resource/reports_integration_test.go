@@ -1,4 +1,4 @@
-// +build integration
+// Xbuild integration
 
 package resource
 
@@ -79,6 +79,12 @@ func TestReportResource(t *testing.T) {
 	req.Header.Add("Accept", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
+
+	// ISECL-3639: a GET without parameters to /wls/reports should return 400 and an error message
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/reports", nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusBadRequest, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2018-12-12%2012%3A05%3A17.054795-08", nil)
