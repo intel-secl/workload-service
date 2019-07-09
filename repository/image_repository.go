@@ -15,6 +15,8 @@ var (
 // ImageFilter specifies query filter criteria for retrieving images. Each Field may be empty
 type ImageFilter struct {
 	FlavorID string `json:"flavor_id,omitempty"`
+	ImageID string `json:"image_id,omitempty"`
+	Filter bool `json:"filter,omitempty"` 
 }
 
 // ImageRepository defines an interface that provides persistence operations for an Image-Flavor link.

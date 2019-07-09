@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -305,14 +306,43 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+
+// wls/images --> (w/o params) return 400 and error message
+// wls/images?filter=false --> all images in db, status ok
+// wls/images?flavor_id --> filter on flavor id, status ok
+// wls/images?image_id --> filter on image id, status ok
+// all other parameter options --> 400 with error message
 func queryImages(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		locator := repository.ImageFilter{}
+		locator.Filter = true	// default to 'filter' to true
+
+		if len(r.URL.Query()) == 0 {
+			http.Error(w, "At least one query parameter is required", http.StatusBadRequest)
+			return nil
+		}
+
+		filter, ok := r.URL.Query()["filter"]
+		if ok && len(filter) >= 1 {
+			locator.Filter, _ = strconv.ParseBool(filter[0])
+		}
+
 		flavorID, ok := r.URL.Query()["flavor_id"]
 		if ok && len(flavorID) >= 1 {
 			locator.FlavorID = flavorID[0]
 		}
-		cLog := log.WithField("flavorID", flavorID)
+
+		imageID, ok := r.URL.Query()["image_id"]
+		if ok && len(imageID) >= 1 {
+			locator.ImageID = imageID[0]
+		}
+
+		cLog := log.WithFields(log.Fields{
+			"image_id":  imageID,
+			"flavor_id": flavorID,
+			"filter" : filter,
+		})
+
 		images, err := db.ImageRepository().RetrieveByFilterCriteria(locator)
 		if err != nil {
 			cLog.Error("Failed to retrieve Images by filter criteria")

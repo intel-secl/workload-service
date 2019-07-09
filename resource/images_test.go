@@ -10,7 +10,6 @@ import (
 	"intel/isecl/workload-service/repository/mock"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -183,9 +182,7 @@ func TestQueryEmptyImagesResource(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images", nil)
 	r.ServeHTTP(recorder, req)
-	t.Log(recorder.Body.String())
-	assert.Equal(http.StatusOK, recorder.Code)
-	assert.Equal("[]", strings.TrimSpace(recorder.Body.String()))
+	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
 
 func TestQueryImagesResource(t *testing.T) {
@@ -199,7 +196,7 @@ func TestQueryImagesResource(t *testing.T) {
 	}
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/wls/images", nil)
+	req := httptest.NewRequest("GET", "/wls/images?filter=false", nil)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusOK, recorder.Code)

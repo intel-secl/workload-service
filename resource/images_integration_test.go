@@ -1,4 +1,4 @@
-// +build integration
+// Xbuild integration
 
 package resource
 
@@ -86,7 +86,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
-	// query all by flavorID and see if we can find boths
+	// query all by flavorID and see if we can find both
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/images?flavor_id="+f.Image.Meta.ID, nil)
 	r.ServeHTTP(recorder, req)
@@ -103,6 +103,36 @@ func TestImagesResourceIntegration(t *testing.T) {
 		ID:        newImage2.ID,
 		FlavorIDs: newImage2.FlavorIDs,
 	}
+	assert.ElementsMatch([]model.Image{i1, i2}, response)
+
+	// make sure we only get a single image when filtering by image_id (ISECL-3557)
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/images?image_id="+newImage.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	checkErr(err)
+	assert.NotEmpty(response)
+	assert.ElementsMatch([]model.Image{i1}, response)
+
+	// test using both image_id and flavor_id parameters
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/images?image_id="+newImage.ID+"&flavor_id="+f.Image.Meta.ID, nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	checkErr(err)
+	assert.NotEmpty(response)
+	assert.ElementsMatch([]model.Image{i1}, response)
+
+	// test 'wls/image?filter=false (should return all new images)
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/images?filter=false", nil)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	checkErr(err)
+	assert.NotEmpty(response)
 	assert.ElementsMatch([]model.Image{i1, i2}, response)
 
 	// Delete  the first one we created

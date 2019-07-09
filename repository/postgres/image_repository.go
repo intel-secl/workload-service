@@ -14,14 +14,32 @@ type imageRepo struct {
 
 func (repo imageRepo) RetrieveByFilterCriteria(filter repository.ImageFilter) ([]model.Image, error) {
 	db := repo.db
-	if len(filter.FlavorID) > 0 {
-		// find all images that at least contain FlavorID as one of the associations
-		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id)").Where("flavor_id = ?", filter.FlavorID)
+	var entities []imageEntity
+	var err error
+
+	// handling for options
+	// - neither image_id or flavor_id are provided-> no sql filter to return all records
+	// - only image_id is provided --> filter on image_id
+	// - only flavor_id is provided --> filter on flavor_id
+	// - both image_id and flavor_id are provided --> filter on both
+	//
+	// When image_id or flavor_id is provided, apply a single 'like' query to account for
+	// the last three possibilities (otherwise pass through to 'select *')
+	if (len(filter.ImageID) > 0 || len(filter.FlavorID) > 0) {
+
+		if(len(filter.ImageID) == 0) {
+			filter.ImageID = "%"
+		}
+
+		if(len(filter.FlavorID) == 0) {
+			filter.FlavorID = "%"
+		}
+
+		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id)").Where("flavor_id::text like ? and image_id::text like ?", filter.FlavorID, filter.ImageID)
 	}
 
-	var entities []imageEntity
-	err := db.Preload("Flavors").Find(&entities).Error
 
+	err = db.Preload("Flavors").Find(&entities).Error
 	if err != nil {
 		return nil, err
 	}
