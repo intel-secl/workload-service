@@ -81,7 +81,7 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
-	assert.Contains(recorder.Body.String(), "cannot be nil")
+	assert.Contains(recorder.Body.String(), "Invalid hardware uuid")
 }
 
 func TestFlavorKeyHVSDown(t *testing.T) {
