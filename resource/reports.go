@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
-
+	"intel/isecl/lib/common/validation"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -34,16 +33,28 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		vmID, ok := r.URL.Query()["vm_id"]
 		if ok && len(vmID) >= 1 {
+			if err := validation.ValidateUUIDv4(vmID[0]); err != nil {
+				log.Error("Invalid VM UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.VMID = vmID[0]
 		}
 
 		reportID, ok := r.URL.Query()["report_id"]
 		if ok && len(reportID) >= 1 {
+			if err := validation.ValidateUUIDv4(reportID[0]); err != nil {
+				log.Error("Invalid report UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.ReportID = reportID[0]
 		}
 
 		hardwareUUID, ok := r.URL.Query()["hardware_uuid"]
 		if ok && len(hardwareUUID) >= 1 {
+			if err := validation.ValidateHardwareUUID(hardwareUUID[0]); err != nil {
+				log.Error("Invalid hardware UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.HardwareUUID = hardwareUUID[0]
 		}
 
@@ -59,20 +70,32 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		latestPerVM, ok := r.URL.Query()["latest_per_vm"]
 		if ok && len(latestPerVM) >= 1 {
-			filterCriteria.LatestPerVM = latestPerVM[0]
+			boolValue, err := strconv.ParseBool(latestPerVM[0])
+			if err != nil {
+				log.Error("Invalid latest_per_vm boolean value, must be true or false")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
+			filterCriteria.LatestPerVM = boolValue
 		}
 
 		numOfDays, ok := r.URL.Query()["num_of_days"]
 		if ok && len(numOfDays) >= 1 {
 			nd, err := strconv.Atoi(numOfDays[0])
-			if err == nil {
-				filterCriteria.NumOfDays = nd
+			if err != nil {
+				log.Error("Invalid integer value for num_of_days query parameter")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 			}
+			filterCriteria.NumOfDays = nd
 		}
 
 		filter, ok := r.URL.Query()["filter"]
 		if ok && len(filter) >= 1 {
-			filterCriteria.Filter, _ = strconv.ParseBool(filter[0])
+			boolValue, err := strconv.ParseBool(filter[0])
+			if err != nil {
+				log.Error("Invalid filter boolean value, must be true or false")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
+			filterCriteria.Filter = boolValue
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
@@ -94,7 +117,9 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 func createReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var vtr model.Report
-		if err := json.NewDecoder(r.Body).Decode(&vtr.SignedData); err != nil {
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&vtr.SignedData); err != nil {
 			return &endpointError{
 				Message:    err.Error(),
 				StatusCode: http.StatusBadRequest,
@@ -145,6 +170,11 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 func deleteReportByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
+		// validate UUID
+		if err := validation.ValidateUUIDv4(uuid); err != nil {
+			log.Error("Invalid report UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithField("uuid", uuid)
 		if uuid == "" {
 			return &endpointError{

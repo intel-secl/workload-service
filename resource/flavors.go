@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"intel/isecl/workload-service/model"
+	"intel/isecl/lib/common/validation"
 	"net/http"
 	"strconv"
-
 	"intel/isecl/workload-service/repository"
-
 	"github.com/gorilla/mux"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,6 +25,11 @@ func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
+		// validate uuid format
+		if err := validation.ValidateUUIDv4(id); err != nil {
+			log.Error("Invalid UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		fr := db.FlavorRepository()
 		flavor, err := fr.RetrieveByUUID(id)
 		uuidLog := log.WithField("uuid", id)
@@ -48,6 +51,13 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		label := mux.Vars(r)["label"]
+		// validate label
+		labelArr := []string{label}
+		if validateInputErr := validation.ValidateStrings(labelArr); validateInputErr != nil {
+			log.Error("Invalid label string format")
+			return &endpointError{Message: validateInputErr.Error(), StatusCode: http.StatusBadRequest}
+		}
+
 		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		lblLog := log.WithField("label", label)
 		if err != nil {
@@ -70,17 +80,33 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		filterCriteria := repository.FlavorFilter{}
 		flavorID, ok := r.URL.Query()["id"]
 		if ok && len(flavorID) >= 1 {
+			// validate UUID
+			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
+				log.Error("Invalid UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.FlavorID = flavorID[0]
 		}
 
 		label, ok := r.URL.Query()["label"]
 		if ok && len(label) >= 1 {
+			// validate label string
+			labelArr := []string{label[0]}
+			if validateInputErr := validation.ValidateStrings(labelArr); validateInputErr != nil {
+				log.Error("Invalid label string format")
+				return &endpointError{Message: validateInputErr.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.Label = label[0]
 		}
 
 		filter, ok := r.URL.Query()["filter"]
 		if ok && len(filter) >= 1 {
-			filterCriteria.Filter, _ = strconv.ParseBool(filter[0])
+			boolValue, err := strconv.ParseBool(filter[0])
+			if err != nil {
+				log.Error("Invalid filter boolean value, must be true or false")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
+			filterCriteria.Filter = boolValue
 		}
 
 		flavors, err := db.FlavorRepository().RetrieveByFilterCriteria(filterCriteria)
@@ -102,6 +128,12 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
+		// validate uuid format
+		if err := validation.ValidateUUIDv4(id); err != nil {
+			log.Error("Invalid UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
+
 		fr := db.FlavorRepository()
 		uuidLog := log.WithField("uuid", id)
 		if err := fr.DeleteByUUID(id); err != nil {
@@ -117,7 +149,9 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 func createFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var f model.Flavor
-		if err := json.NewDecoder(r.Body).Decode(&f); err != nil {
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&f); err != nil {
 			log.WithError(err).Info("Failed to encode request body as Flavor")
 			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 		}
@@ -165,7 +199,11 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			return nil
 		default:
 			fLog.WithError(err).Error("Unexpected error when writing Flavor to Database")
-			return err
+			fLog.Info(msg)
+			return &endpointError{
+				Message:    err.Error(),
+				StatusCode: http.StatusBadRequest,
+			}
 		}
 	}
 }

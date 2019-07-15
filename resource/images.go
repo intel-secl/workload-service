@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
-
+	"intel/isecl/lib/common/validation"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -64,7 +64,17 @@ func missingQueryParameters(params ...string) http.HandlerFunc {
 func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
+		// validate UUID format
+		if err := validation.ValidateUUIDv4(id); err != nil {
+			log.Error("Invalid UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		hwid := mux.Vars(r)["hardware_uuid"]
+		// validate hardware UUID
+		if err := validation.ValidateHardwareUUID(hwid); err != nil {
+			log.Error("Invalid hardware UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithFields(log.Fields{
 			"imageUUID":    id,
 			"hardwareUUID": hwid,
@@ -194,7 +204,18 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		id := mux.Vars(r)["id"]
+		// validate UUID
+		if err := validation.ValidateUUIDv4(id); err != nil {
+			log.Error("Invalid UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		fp := mux.Vars(r)["flavor_part"]
+		// validate flavor part
+		fpArr := []string{fp}
+		if validateInputErr := validation.ValidateStrings(fpArr); validateInputErr != nil {
+			log.Error("Invalid flavor part string format")
+			return &endpointError{Message: validateInputErr.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithFields(log.Fields{
 			"imageUUID":  id,
 			"flavorPart": fp,
@@ -226,6 +247,11 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
+		// validate UUID format
+		if err := validation.ValidateUUIDv4(uuid); err != nil {
+			log.Error("Invalid UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithField("uuid", uuid)
 		flavors, err := db.ImageRepository().RetrieveAssociatedFlavors(uuid)
 		if err != nil {
@@ -249,7 +275,17 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageUUID := mux.Vars(r)["id"]
+		// validate image UUID
+		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
+			log.Error("Invalid image UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		flavorUUID := mux.Vars(r)["flavorID"]
+		// validate flavor UUID
+		if err := validation.ValidateUUIDv4(flavorUUID); err != nil {
+			log.Error("Invalid flavor UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithFields(log.Fields{
 			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
@@ -272,7 +308,17 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageUUID := mux.Vars(r)["id"]
+		// validate image UUID
+		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
+			log.Error("Invalid image UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		flavorUUID := mux.Vars(r)["flavorID"]
+		// validate flavor UUID
+		if err := validation.ValidateUUIDv4(flavorUUID); err != nil {
+			log.Error("Invalid flavor UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithFields(log.Fields{
 			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
@@ -290,7 +336,17 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageUUID := mux.Vars(r)["id"]
+		// validate image UUID
+		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
+			log.Error("Invalid image UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		flavorUUID := mux.Vars(r)["flavorID"]
+		// validate flavor UUID
+		if err := validation.ValidateUUIDv4(flavorUUID); err != nil {
+			log.Error("Invalid flavor UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithFields(log.Fields{
 			"imageUUID":  imageUUID,
 			"flavorUUID": flavorUUID,
@@ -324,16 +380,29 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 
 		filter, ok := r.URL.Query()["filter"]
 		if ok && len(filter) >= 1 {
-			locator.Filter, _ = strconv.ParseBool(filter[0])
+			boolValue, err := strconv.ParseBool(filter[0])
+			if err != nil {
+				log.Error("Invalid filter boolean value, must be true or false")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
+			locator.Filter = boolValue
 		}
 
 		flavorID, ok := r.URL.Query()["flavor_id"]
 		if ok && len(flavorID) >= 1 {
+			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
+				log.Error("Invalid flavor UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			locator.FlavorID = flavorID[0]
 		}
 
 		imageID, ok := r.URL.Query()["image_id"]
 		if ok && len(imageID) >= 1 {
+			if err := validation.ValidateUUIDv4(imageID[0]); err != nil {
+				log.Error("Invalid image UUID format")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			locator.ImageID = imageID[0]
 		}
 
@@ -367,6 +436,11 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 func getImageByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
+		// validate image UUID
+		if err := validation.ValidateUUIDv4(uuid); err != nil {
+			log.Error("Invalid image UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithField("uuid", uuid)
 		image, err := db.ImageRepository().RetrieveByUUID(uuid)
 		if err != nil {
@@ -388,6 +462,11 @@ func getImageByID(db repository.WlsDatabase) endpointHandler {
 func deleteImageByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		uuid := mux.Vars(r)["id"]
+		// validate image UUID
+		if err := validation.ValidateUUIDv4(uuid); err != nil {
+			log.Error("Invalid image UUID format")
+			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+		}
 		cLog := log.WithField("uuid", uuid)
 		if err := db.ImageRepository().DeleteByUUID(uuid); err != nil {
 			cLog.WithError(err).Info("Failed to delete Image by UUID")
@@ -402,7 +481,9 @@ func deleteImageByID(db repository.WlsDatabase) endpointHandler {
 func createImage(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var formBody model.Image
-		if err := json.NewDecoder(r.Body).Decode(&formBody); err != nil {
+		dec := json.NewDecoder(r.Body)
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&formBody); err != nil {
 			log.WithError(err).Info("Failed to encode request body as Image")
 			return &endpointError{
 				Message:    err.Error(),
