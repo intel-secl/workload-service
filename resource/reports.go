@@ -162,7 +162,10 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 			return nil
 		default:
 			cLog.WithError(err).Error("Unexpected error when creating report")
-			return err
+			return &endpointError{
+				Message:    "Unexpected error when creating report, check input format",
+				StatusCode: http.StatusBadRequest,
+			}
 		}
 	}
 }

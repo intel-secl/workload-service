@@ -200,7 +200,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		default:
 			fLog.WithError(err).Error("Unexpected error when writing Flavor to Database")
 			return &endpointError{
-				Message:    err.Error(),
+				Message:    "Unexpected error when writing Flavor to Database, check input format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}

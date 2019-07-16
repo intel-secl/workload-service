@@ -5,7 +5,6 @@ import (
 	"errors"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
-
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -27,10 +26,7 @@ func (repo flavorRepo) Create(f *model.Flavor) error {
 			return repository.ErrFlavorUUIDAlreadyExists
 		} else if fe.Label == f.Image.Meta.Description.Label {
 			return repository.ErrFlavorLabelAlreadyExists
-		} else {
-			// panic since this shoudln't be reached, indicates a critical error in the code/db logic
-			panic("This shouldn't be reached, logic error")
-		}
+		} 
 	}
 	flavorJSON, err := json.Marshal(f)
 	if err != nil {

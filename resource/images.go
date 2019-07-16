@@ -518,8 +518,11 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 					StatusCode: http.StatusConflict,
 				}
 			default:
-				cLog.WithError(err).Error("Unexpected error when creating Image")
-				return err
+				cLog.WithError(err).Error("Unexpected error when creating image")
+				return &endpointError{
+					Message:    "Unexpected error when creating image, check input format",
+					StatusCode: http.StatusBadRequest,
+				}
 			}
 		}
 		w.WriteHeader(http.StatusCreated)
