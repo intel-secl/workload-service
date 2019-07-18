@@ -89,7 +89,12 @@ func main() {
 	case "stop":
 		stopServer()
 	case "uninstall":
-		uninstall()
+		deleteFile("/usr/local/bin/workload-service")
+		deleteFile("/var/log/workload-service")
+		deleteFile("/opt/worklaod-service")
+		if len(args) > 1 && strings.ToLower(args[1]) == "--purge" {
+			deleteFile("/etc/workload-service")
+		}
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
@@ -125,8 +130,13 @@ func status() Status {
 	return Running
 }
 
-func uninstall() {
-	fmt.Println("Not yet supported")
+func deleteFile(path string) {
+	log.Info("Deleting : ", path)
+	// delete file
+	var err = os.RemoveAll(path)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func printUsage() {

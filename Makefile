@@ -12,7 +12,8 @@ installer: workload-service
 	mkdir -p out/wls
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
-	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh 
+	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh
+	cp dist/linux/install_pgdb.sh out/install_pgdb.sh && chmod +x out/install_pgdb.sh
 
 docker: installer
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh

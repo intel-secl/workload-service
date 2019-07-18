@@ -67,14 +67,20 @@ func start() error {
 		return err
 	}
 	// store pid
-	file, _ := os.Create(pidPath)
+	fmt.Printf("pid path is: %s\n", pidPath)
+	file, err := os.Create(pidPath)
+	if err != nil {
+		fmt.Println("Error while creating pid file")
+		return err
+	}
+	fmt.Printf("pid %s\n:", strconv.Itoa(cmd.Process.Pid))
 	file.WriteString(strconv.Itoa(cmd.Process.Pid))
 	cmd.Process.Release()
 	fmt.Println("Workload Service started")
 	return nil
 }
 
-func startServer() {
+func startServer() error {
 	var sslMode string
 	if config.Configuration.Postgres.SSLMode {
 		sslMode = "enable"
@@ -98,7 +104,8 @@ func startServer() {
 	}
 	defer db.Close()
 	if dbErr != nil {
-		log.Fatal("Failed to connect to db after many attempts: ", dbErr)
+		fmt.Printf("Failed to connect to db after many attempts: %s\n", dbErr.Error())
+		return dbErr
 	}
 	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
@@ -144,7 +151,9 @@ func startServer() {
 
 	if err := h.Shutdown(ctx); err != nil {
 		fmt.Printf("Failed to gracefully shutdown webserver: %v\n", err)
+		return err
 	} else {
 		fmt.Println("Workload Service stopped")
 	}
+	return nil
 }
