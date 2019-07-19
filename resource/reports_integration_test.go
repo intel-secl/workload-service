@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"intel/isecl/workload-service/repository/postgres"
-
 	"intel/isecl/lib/common/crypt"
 	"intel/isecl/lib/common/pkg/instance"
 	"intel/isecl/lib/flavor"
@@ -18,12 +17,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-
 	"github.com/jinzhu/gorm"
-
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -87,29 +83,29 @@ func TestReportResource(t *testing.T) {
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2018-12-12%2012%3A05%3A17.054795-08", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2018-12-15%2012%3A05%3A17.054795-08&&latest_per_vm=false", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017&&latest_per_vm=false", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	var rResponse []model.Report
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse))
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=2018-12-15%2012%3A05%3A17.054795-08", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=12-12-2019", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?to_date=2018-12-16%2012%3A05%3A17.054795-08", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?to_date=12-12-2019", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?from_date=2018-12-12%2012%3A05%3A17.054795-08", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?from_date=12-12-2017", nil)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
