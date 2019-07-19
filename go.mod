@@ -2,7 +2,7 @@ module intel/isecl/workload-service
 
 require (
 	github.com/gorilla/handlers v1.4.0
-	github.com/gorilla/mux v1.6.2
+	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/lib/pq v1.0.0 // indirect
@@ -18,7 +18,7 @@ require (
 
 replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git v0.0.0-20190711221753-3f97a7bca276
 
-replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git v0.0.0-20190703131550-1a5f8ada8938
+replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git v0.0.0-20190719000113-2827d8b1ff89
 
 replace intel/isecl/lib/verifier => gitlab.devtools.intel.com/sst/isecl/lib/verifier.git v0.0.0-20190315055327-7670c0cd0e1d
 

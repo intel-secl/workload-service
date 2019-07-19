@@ -9,14 +9,11 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-
+	"intel/isecl/lib/common/validation"
 	csetup "intel/isecl/lib/common/setup"
 	// Import Postgres driver
-
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-
 	stdlog "log"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +41,14 @@ func main() {
 		printUsage()
 		return
 	}
+
+	inputStringArr := os.Args[0:]
+	if err := validation.ValidateStrings(inputStringArr); err != nil {
+		fmt.Println("Invalid input")
+		printUsage()
+		os.Exit(0)
+	}
+
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {

@@ -60,11 +60,19 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		fromDate, ok := r.URL.Query()["from_date"]
 		if ok && len(fromDate) >= 1 {
+			if err := validation.ValidateDate(fromDate[0]); err != nil {
+				log.Error("Invalid from date format. Expected date format mm-dd-yyyy")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}	
 			filterCriteria.FromDate = fromDate[0]
 		}
 
 		toDate, ok := r.URL.Query()["to_date"]
 		if ok && len(toDate) >= 1 {
+			if err := validation.ValidateDate(toDate[0]); err != nil {
+				log.Error("Invalid from to format. Expected date format mm-dd-yyyy")
+				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			}
 			filterCriteria.ToDate = toDate[0]
 		}
 
@@ -119,7 +127,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		var vtr model.Report
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&vtr.SignedData); err != nil {
+		if err := dec.Decode(&vtr); err != nil {
 			return &endpointError{
 				Message:    err.Error(),
 				StatusCode: http.StatusBadRequest,
