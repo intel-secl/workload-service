@@ -70,7 +70,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		toDate, ok := r.URL.Query()["to_date"]
 		if ok && len(toDate) >= 1 {
 			if err := validation.ValidateDate(toDate[0]); err != nil {
-				log.Error("Invalid from to format. Expected date format mm-dd-yyyy")
+				log.Error("Invalid to date format. Expected date format mm-dd-yyyy")
 				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.ToDate = toDate[0]
