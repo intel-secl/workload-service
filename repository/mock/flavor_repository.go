@@ -2,11 +2,12 @@ package mock
 
 import (
 	"intel/isecl/workload-service/model"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/repository"
 )
 
 type MockFlavor struct {
-	CreateFn                   func(*model.Flavor) error
+	CreateFn                   func(*flavorUtil.SignedImageFlavor) error
 	RetrieveByFilterCriteriaFn func(repository.FlavorFilter) ([]model.Flavor, error)
 	RetrieveByUUIDFn           func(string) (*model.Flavor, error)
 	RetrieveByLabelFn          func(string) (*model.Flavor, error)
@@ -14,7 +15,7 @@ type MockFlavor struct {
 	DeleteByUUIDFn             func(string) error
 }
 
-func (m *MockFlavor) Create(f *model.Flavor) error {
+func (m *MockFlavor) Create(f *flavorUtil.SignedImageFlavor) error {
 	if m.CreateFn != nil {
 		return m.Create(f)
 	}

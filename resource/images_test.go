@@ -10,6 +10,7 @@ import (
 	"intel/isecl/workload-service/repository/mock"
 	"net/http"
 	"net/http/httptest"
+	//"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

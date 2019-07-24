@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/model"
 )
 
@@ -15,8 +16,8 @@ var (
 // ImageFilter specifies query filter criteria for retrieving images. Each Field may be empty
 type ImageFilter struct {
 	FlavorID string `json:"flavor_id,omitempty"`
-	ImageID string `json:"image_id,omitempty"`
-	Filter bool `json:"filter,omitempty"` 
+	ImageID  string `json:"image_id,omitempty"`
+	Filter   bool   `json:"filter,omitempty"`
 }
 
 // ImageRepository defines an interface that provides persistence operations for an Image-Flavor link.
@@ -28,9 +29,9 @@ type ImageRepository interface {
 	Create(image *model.Image) error
 	// R
 	RetrieveByUUID(uuid string) (*model.Image, error)
-	RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error)
+	RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error)
 	RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error)
-	RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error)
 	RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error)
 	RetrieveByFilterCriteria(locator ImageFilter) ([]model.Image, error)
 	// U

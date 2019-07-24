@@ -22,6 +22,8 @@ import (
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+		errorHandler(retrieveFlavorForImageID(db))).Methods("GET").Queries("flavor_part", "{flavor_part}")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
 		errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		errorHandler(getAssociatedFlavor(db))).Methods("GET")
@@ -37,8 +39,6 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 		(errorHandler(retrieveFlavorAndKeyForImageID(db)))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
 		(missingQueryParameters("hardware_uuid"))).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-		errorHandler(retrieveFlavorForImageID(db))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("",
 		(errorHandler(queryImages(db)))).Methods("GET")
 	r.HandleFunc("",
@@ -93,17 +93,19 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			cLog.Info("Failed to retrieve Flavor and Key for Image")
 			return err
+		} else {
+			cLog.Info(flavor)
 		}
 		// Check if flavor keyURL is not empty
-		if len(flavor.Image.Encryption.KeyURL) > 0 {
+		if len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
 			// we have key URL
 			// http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
 
 			// post HVS with hardwareUUID
 			// extract key_id from KeyURL
-			cLog = cLog.WithField("keyURL", flavor.Image.Encryption.KeyURL)
+			cLog = cLog.WithField("keyURL", flavor.ImageFlavor.Encryption.KeyURL)
 			cLog.Debug("KeyURL is present")
-			keyURL, err := url.Parse(flavor.Image.Encryption.KeyURL)
+			keyURL, err := url.Parse(flavor.ImageFlavor.Encryption.KeyURL)
 			if err != nil {
 				cLog.WithError(err).Error("Flavor KeyURL is malformed")
 				return err
@@ -177,8 +179,9 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				cLog.WithField("key", key).Debug("Successfully got key from KMS")
 				// got key data
 				flavorKey := model.FlavorKey{
-					Flavor: *flavor,
-					Key:    key,
+					Flavor:    flavor.ImageFlavor,
+					Signature: flavor.Signature,
+					Key:       key,
 				}
 				if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
 					// marshalling error 500
@@ -192,7 +195,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 		// just return the flavor
-		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: *flavor}); err != nil {
+		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: flavor.ImageFlavor, Signature: flavor.Signature}); err != nil {
 			// marshalling error 500
 			cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
 			return err
@@ -362,7 +365,6 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
-
 // wls/images --> (w/o params) return 400 and error message
 // wls/images?filter=false --> all images in db, status ok
 // wls/images?flavor_id --> filter on flavor id, status ok
@@ -371,7 +373,7 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 func queryImages(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		locator := repository.ImageFilter{}
-		locator.Filter = true	// default to 'filter' to true
+		locator.Filter = true // default to 'filter' to true
 
 		if len(r.URL.Query()) == 0 {
 			http.Error(w, "At least one query parameter is required", http.StatusBadRequest)
@@ -409,7 +411,7 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		cLog := log.WithFields(log.Fields{
 			"image_id":  imageID,
 			"flavor_id": flavorID,
-			"filter" : filter,
+			"filter":    filter,
 		})
 
 		images, err := db.ImageRepository().RetrieveByFilterCriteria(locator)

@@ -5,6 +5,7 @@ package resource
 import (
 	"bytes"
 	"encoding/json"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"net/http"
@@ -39,14 +40,16 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// Post a new Flavor
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Post second Flavor
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(f2JSON))
+	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
@@ -217,14 +220,16 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Post first Flavor
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Post Second Flavor
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(f2JSON))
+	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
@@ -331,11 +336,12 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	checkErr(err)
 
 	// Post first Flavor
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)

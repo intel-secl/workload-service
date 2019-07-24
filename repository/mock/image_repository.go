@@ -1,6 +1,7 @@
 package mock
 
 import (
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 )
@@ -8,10 +9,10 @@ import (
 type MockImage struct {
 	CreateFn                               func(*model.Image) error
 	RetrieveByUUIDFn                       func(string) (*model.Image, error)
-	RetrieveAssociatedImageFlavorFn        func(string) (*model.Flavor, error)
+	RetrieveAssociatedImageFlavorFn        func(string) (*flavorUtil.SignedImageFlavor, error)
 	RetrieveByFilterCriteriaFn             func(repository.ImageFilter) ([]model.Image, error)
 	RetrieveAssociatedFlavorFn             func(string, string) (*model.Flavor, error)
-	RetrieveAssociatedFlavorByFlavorPartFn func(string, string) (*model.Flavor, error)
+	RetrieveAssociatedFlavorByFlavorPartFn func(string, string) (*flavorUtil.SignedImageFlavor, error)
 	RetrieveAssociatedFlavorsFn            func(string) ([]model.Flavor, error)
 	UpdateFn                               func(*model.Image) error
 	AddAssociatedFlavorFn                  func(string, string) error
@@ -35,11 +36,11 @@ func (m *MockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
 	return &i, nil
 }
 
-func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
+func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error) {
 	if m.RetrieveAssociatedImageFlavorFn != nil {
 		return m.RetrieveAssociatedImageFlavorFn(imageUUID)
 	}
-	return &f, nil
+	return &signedFlavor, nil
 }
 
 func (m *MockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]model.Image, error) {
@@ -56,11 +57,11 @@ func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string
 	return &f, nil
 }
 
-func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error) {
+func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error) {
 	if m.RetrieveAssociatedFlavorFn != nil {
 		return m.RetrieveAssociatedFlavorByFlavorPartFn(imageUUID, flavorPart)
 	}
-	return &f, nil
+	return &signedFlavor, nil
 }
 
 func (m *MockImage) RetrieveAssociatedFlavors(imageUUID string) ([]model.Flavor, error) {

@@ -3,7 +3,7 @@ package postgres
 import (
 	"encoding/json"
 	"errors"
-	"intel/isecl/workload-service/model"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -20,6 +20,7 @@ type flavorEntity struct {
 	Label      string         `gorm:"unique;not null"`
 	FlavorPart string         `gorm:"not null"`
 	Content    postgres.Jsonb `gorm:"type:jsonb;not null"`
+	Signature  string
 	//Images  []imageEntity  `gorm:"many2many:image_flavors"`
 }
 
@@ -48,14 +49,15 @@ func (fe *flavorEntity) AfterFind(scope *gorm.Scope) error {
 	return nil
 }
 
-func (fe *flavorEntity) unmarshal() (*model.Flavor, error) {
-	var i model.Flavor
+func (fe *flavorEntity) unmarshal() (*flavorUtil.SignedImageFlavor, error) {
+	var i flavorUtil.SignedImageFlavor
 	// ignore error since we validate it on callbacks
-	err := json.Unmarshal(fe.Content.RawMessage, &i)
+	err := json.Unmarshal(fe.Content.RawMessage, &i.ImageFlavor)
+	i.Signature = fe.Signature
 	return &i, err
 }
 
-func (fe *flavorEntity) Flavor() model.Flavor {
+func (fe *flavorEntity) Flavor() flavorUtil.SignedImageFlavor {
 	i, _ := fe.unmarshal()
 	return *i
 }

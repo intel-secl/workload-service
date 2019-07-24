@@ -3,11 +3,13 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"intel/isecl/workload-service/model"
 	"intel/isecl/lib/common/validation"
+	flavorUtil "intel/isecl/lib/flavor/util"
+	"intel/isecl/workload-service/model"
+	"intel/isecl/workload-service/repository"
 	"net/http"
 	"strconv"
-	"intel/isecl/workload-service/repository"
+
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -148,7 +150,7 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 
 func createFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		var f model.Flavor
+		var f flavorUtil.SignedImageFlavor
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&f); err != nil {
@@ -156,9 +158,15 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 		}
 
-		if(f.Image.Meta.Description.FlavorPart == "" || 
-		   (f.Image.Meta.Description.FlavorPart != "CONTAINER_IMAGE" && f.Image.Meta.Description.FlavorPart != "IMAGE")) {
-			msg := fmt.Sprintf("Invalid FlavorPart value: %s", f.Image.Meta.Description.FlavorPart)
+		if f.ImageFlavor.Meta.Description.FlavorPart == "" ||
+			(f.ImageFlavor.Meta.Description.FlavorPart != "CONTAINER_IMAGE" && f.ImageFlavor.Meta.Description.FlavorPart != "IMAGE") {
+			msg := fmt.Sprintf("Invalid FlavorPart value: %s", f.ImageFlavor.Meta.Description.FlavorPart)
+			log.Error(msg)
+			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
+		}
+
+		if f.Signature == "" {
+			msg := fmt.Sprintf("Flavor signature not provided in input")
 			log.Error(msg)
 			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
 		}
@@ -176,14 +184,14 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		fLog := log.WithField("flavor", f)
 		switch err := fr.Create(&f); err {
 		case repository.ErrFlavorLabelAlreadyExists:
-			msg := fmt.Sprintf("Flavor with Label %s already exists", f.Image.Meta.Description.Label)
+			msg := fmt.Sprintf("Flavor with Label %s already exists", f.ImageFlavor.Meta.Description.Label)
 			fLog.Info(msg)
 			return &endpointError{
 				Message:    msg,
 				StatusCode: http.StatusConflict,
 			}
 		case repository.ErrFlavorUUIDAlreadyExists:
-			msg := fmt.Sprintf("Flavor with UUID %s already exists", f.Image.Meta.ID)
+			msg := fmt.Sprintf("Flavor with UUID %s already exists", f.ImageFlavor.Meta.ID)
 			fLog.Info(msg)
 			return &endpointError{
 				Message:    msg,
@@ -191,7 +199,9 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			}
 		case nil:
 			w.WriteHeader(http.StatusCreated)
-			if err := json.NewEncoder(w).Encode(f); err != nil {
+			var flavor model.Flavor
+			flavor.Image = f.ImageFlavor
+			if err := json.NewEncoder(w).Encode(flavor); err != nil {
 				fLog.Error("Unexpectedly failed to encode Flavor to JSON")
 				return err
 			}

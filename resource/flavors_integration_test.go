@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/repository/postgres"
 	"net/http"
@@ -78,7 +79,8 @@ func TestFlavorResource(t *testing.T) {
 	checkErr(err)
 
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
@@ -117,14 +119,15 @@ func TestDuplicate(t *testing.T) {
 
 	// Post it once
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Post it again
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusConflict, recorder.Code)
@@ -158,14 +161,16 @@ func TestFlavorDuplicateLabel(t *testing.T) {
 
 	// Post it once
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Post it again
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(f2JSON))
+	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
+	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusConflict, recorder.Code)
@@ -205,7 +210,8 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 
 	// Post it once
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
@@ -241,7 +247,8 @@ func TestGetByLabel(t *testing.T) {
 
 	// Post it once
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer(fJSON))
+	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
+	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)

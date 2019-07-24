@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"errors"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
@@ -98,7 +99,7 @@ func (repo imageRepo) Create(image *model.Image) error {
 	return nil
 }
 
-func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Flavor, error) {
+func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error) {
 	var flavorEntity flavorEntity
 	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND (flavor_part = ? OR flavor_part = ?)", imageUUID, "IMAGE", "CONTAINER_IMAGE").Error; err != nil {
 		return nil, err
@@ -109,14 +110,15 @@ func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*model.Fl
 
 func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
 	var flavorEntity flavorEntity
+	var flavor model.Flavor
 	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "id = ? AND image_id = ?", flavorUUID, imageUUID).Error; err != nil {
 		return nil, err
 	}
-	flavor := flavorEntity.Flavor()
+	flavor.Image = flavorEntity.Flavor().ImageFlavor
 	return &flavor, nil
 }
 
-func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*model.Flavor, error) {
+func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error) {
 	var flavorEntity flavorEntity
 	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND flavor_part = ?", imageUUID, flavorPart).Error; err != nil {
 		return nil, err
@@ -132,7 +134,7 @@ func (repo imageRepo) RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, er
 	}
 	flavors := make([]model.Flavor, len(image.Flavors))
 	for i, f := range image.Flavors {
-		flavors[i] = f.Flavor()
+		flavors[i].Image = f.Flavor().ImageFlavor
 	}
 	return flavors, nil
 }
