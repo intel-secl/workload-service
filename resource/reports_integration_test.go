@@ -2,7 +2,7 @@
 
 package resource
 
-/*import (
+import (
 	"bytes"
 	"crypto"
 	"encoding/json"
@@ -53,7 +53,7 @@ func TestReportResource(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(flavorJSON), "../repository/mock/flavor-signing-key.pem")
 	manifest := instance.Manifest{InstanceInfo: instance.Info{InstanceID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
 	json.Unmarshal([]byte(signedFlavorString), &signedFlavor)
-	report, err := verifier.Verify(&manifest, signedFlavor, "../repository/mock/flavor-signing-cert.pem")
+	report, err := verifier.Verify(&manifest, &signedFlavor, "../repository/mock/flavor-signing-cert.pem")
 	instanceReport, _ := report.(*verifier.InstanceTrustReport)
 
 	fJSON, err := json.Marshal(instanceReport)
@@ -78,7 +78,7 @@ func TestReportResource(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	r.ServeHTTP(recorder, req)
-	assert.Equal(http.StatusBadRequest, recorder.Code)
+	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// ISECL-3639: a GET without parameters to /wls/reports should return 400 and an error message
 	recorder = httptest.NewRecorder()
@@ -140,4 +140,4 @@ func TestReportResource(t *testing.T) {
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse1))
 	assert.Equal(0, len(rResponse1))
 
-}*/
+}
