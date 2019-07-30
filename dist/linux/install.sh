@@ -107,6 +107,12 @@ for directory in $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_BIN $WORKLOAD
   chmod 700 $directory
 done
 
+mkdir -p /etc/workload-service/cacerts
+chown wls:wls /etc/workload-service/cacerts
+
+mkdir -p /etc/workload-service/jwt
+chown wls:wls /etc/workload-service/jwt
+
 # Create PID file directory in /var/run
 mkdir -p /var/run/workload-service
 chown wls:wls /var/run/workload-service

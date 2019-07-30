@@ -3,6 +3,8 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+
+	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/lib/common/validation"
 	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/model"
@@ -16,16 +18,19 @@ import (
 
 // SetFlavorsEndpoints
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(getFlavorByID(db))).Methods("GET")
-	r.HandleFunc("/{label}", errorHandler(getFlavorByLabel(db))).Methods("GET")
-	r.HandleFunc("", (errorHandler(getFlavors(db)))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", errorHandler(deleteFlavorByID(db))).Methods("DELETE")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
+		errorHandler(requiresPermission(getFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("GET")
+	r.HandleFunc("/{label}", errorHandler(requiresPermission(getFlavorByLabel(db), []string{consts.AdministratorGroupName}))).Methods("GET")
+	r.HandleFunc("", (errorHandler(requiresPermission(getFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
+		errorHandler(requiresPermission(deleteFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId).Methods("DELETE")
-	r.HandleFunc("", errorHandler(createFlavor(db))).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("", errorHandler(requiresPermission(createFlavor(db), []string{consts.AdministratorGroupName}))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
 func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
+
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {
@@ -52,6 +57,7 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 
 func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
+
 		label := mux.Vars(r)["label"]
 		// validate label
 		labelArr := []string{label}
@@ -129,6 +135,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 
 func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
+
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {

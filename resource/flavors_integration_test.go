@@ -10,6 +10,7 @@ import (
 	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/repository/postgres"
+	"intel/isecl/lib/common/middleware"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -57,6 +58,7 @@ func setupFlavorServer(t *testing.T) *mux.Router {
 	checkErr(err)
 
 	r := mux.NewRouter()
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
@@ -82,6 +84,7 @@ func TestFlavorResource(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 	var postResponse model.Flavor
@@ -90,6 +93,7 @@ func TestFlavorResource(t *testing.T) {
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	var fResponse model.Flavor
@@ -98,6 +102,7 @@ func TestFlavorResource(t *testing.T) {
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 }
@@ -122,6 +127,7 @@ func TestDuplicate(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
@@ -129,12 +135,14 @@ func TestDuplicate(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusConflict, recorder.Code)
 
 	// Delete
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
@@ -164,6 +172,7 @@ func TestFlavorDuplicateLabel(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
@@ -172,12 +181,14 @@ func TestFlavorDuplicateLabel(t *testing.T) {
 	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusConflict, recorder.Code)
 
 	// Delete
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
@@ -189,6 +200,7 @@ func TestFlavorInvalidJson(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString("asdlkfjaksdlfjklsjfd"))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
@@ -213,12 +225,14 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Delete
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 	assert.Contains(recorder.Body.String(), "compliant")
@@ -226,6 +240,7 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 	// Actually Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 }
@@ -250,18 +265,21 @@ func TestGetByLabel(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Get
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/flavors/"+f.Image.Meta.Description.Label, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	// Actually Delete it
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 }

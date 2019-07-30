@@ -50,6 +50,9 @@ const HVS_PASSWORD = "HVS_PASSWORD"
 
 const WLS_LOGLEVEL = "WLS_LOGLEVEL"
 
+const AAS_URL = "AAS_URL"
+const AAS_BEARER_TOKEN = "AAS_BEARER_TOKEN"
+
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
 	Port     int
@@ -72,6 +75,8 @@ var Configuration struct {
 		User     string
 		Password string
 	}
+	AAS_URL string
+	
 	LogLevel log.Level
 }
 

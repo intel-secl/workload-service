@@ -14,6 +14,7 @@ import (
 	"intel/isecl/lib/flavor"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
+	"intel/isecl/lib/common/middleware"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -72,27 +73,32 @@ func TestReportResource(t *testing.T) {
 	checkErr(err)
 
 	r := mux.NewRouter()
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
 	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), wlsDB)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/reports", bytes.NewBuffer(signedJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// ISECL-3639: a GET without parameters to /wls/reports should return 400 and an error message
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017&&latest_per_vm=false", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	var rResponse []model.Report
@@ -100,41 +106,49 @@ func TestReportResource(t *testing.T) {
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=12-12-2019", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?to_date=12-12-2019", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?from_date=12-12-2017", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?num_of_days=3&&latest_per_vm=false", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?num_of_days=3", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	var rResponse1 []model.Report
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse1))

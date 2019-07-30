@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+
+
 func TestDeleteNonExistentFlavorID(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
@@ -21,6 +23,7 @@ func TestDeleteNonExistentFlavorID(t *testing.T) {
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("DELETE", "/wls/flavors/dddd021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 }
@@ -34,6 +37,7 @@ func TestInvalidFlavorID(t *testing.T) {
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("DELETE", "/wls/flavors/yaddablahblahblbahlbah", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 	assert.Contains(recorder.Body.String(), "is not uuidv4 compliant")
@@ -49,6 +53,7 @@ func TestFlavorPartValidation(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString(badFlavorPartJson))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
@@ -57,6 +62,7 @@ func TestFlavorPartValidation(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString(imageFlavorPartJson))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
@@ -65,6 +71,7 @@ func TestFlavorPartValidation(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString(containerImageFlavorPartJson))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
@@ -73,6 +80,7 @@ func TestFlavorPartValidation(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString(emptyImageFlavorPartJson))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
@@ -81,6 +89,7 @@ func TestFlavorPartValidation(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBufferString(omittedImageFlavorPartJson))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 

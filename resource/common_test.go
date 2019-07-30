@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/repository/postgres"
+	"intel/isecl/lib/common/middleware"
 	"net/http"
 	"os"
 	"testing"
@@ -12,6 +13,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 )
+
+var BearerToken = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjA3MzI4NGIxYTlkNjAxMTQ4YWM5NjIzMDNhZDFkMDcwMTg2YjlhNTkiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IldMUyIsIm5hbWUiOiJmbGF2b3JzX2ltYWdlX3JldHJpZXZhbCJ9LHsic2VydmljZSI6IldMUyIsIm5hbWUiOiJyZXBvcnRzX2NyZWF0ZSJ9LHsic2VydmljZSI6IldMUyIsIm5hbWUiOiJhbGwifSx7InNlcnZpY2UiOiJXTFMiLCJuYW1lIjoiRmxhdm9yc0ltYWdlUmV0cmlldmFsIn0seyJzZXJ2aWNlIjoiV0xTIiwibmFtZSI6IlJlcG9ydHNDcmVhdGUifSx7InNlcnZpY2UiOiJXTFMiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9XSwiZXhwIjoxNzIwNDM1ODM3LCJpYXQiOjE1NjI3NTU4MzcsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiV0xTVXNlcjYifQ.-bXX1mavkMX48Q0eeMvB5Jc1ZmNsBD9mja-kwB4eFywKvkkG8ZRrK_w_6z731jF5RItClvhDN_RKbkYCy9lTqQapldD3ivNPG27iP3VW5Ebo7wH3ZLMDkP1mQaN781mP"
 
 func setupServer(t *testing.T) *mux.Router {
 	_, ci := os.LookupEnv("CI")
@@ -26,6 +29,7 @@ func setupServer(t *testing.T) *mux.Router {
 		t.Fatal("could not open DB")
 	}
 	r := mux.NewRouter()
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
@@ -34,8 +38,13 @@ func setupServer(t *testing.T) *mux.Router {
 	return r
 }
 
+func mockRetrieveJWTSigningCerts() error{
+	return nil
+} 
+
 func setupMockServer(db repository.WlsDatabase) *mux.Router {
 	r := mux.NewRouter()
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
 	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), db)
 	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), db)

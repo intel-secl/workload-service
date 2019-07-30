@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"intel/isecl/lib/common/middleware"
 	"intel/isecl/workload-service/config"
+	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/workload-service/resource"
 	"io/ioutil"
@@ -16,11 +19,12 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-
-	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
-	log "github.com/sirupsen/logrus"
+	
 	stdlog "log"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 func stopServer() {
@@ -80,6 +84,12 @@ func start() error {
 	return nil
 }
 
+//To be implemented if JWT certificate is needed from any other services
+func fnGetJwtCerts() error{
+	
+	return nil
+}
+
 func startServer() error {
 	var sslMode string
 	if config.Configuration.Postgres.SSLMode {
@@ -95,7 +105,7 @@ func startServer() error {
 		db, dbErr = gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 			config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
 		if dbErr != nil {
-			log.Warn(fmt.Sprintf("DB connection attempt %d of %d failed: %s", (i+1), numAttempts, dbErr))
+			log.Warn(fmt.Sprintf("DB connection attempt %d of %d failed: %s", (i + 1), numAttempts, dbErr))
 			fmt.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
 		} else {
 			break
@@ -110,6 +120,7 @@ func startServer() error {
 	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
 	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
+	r.Use(middleware.NewTokenAuth(consts.TrustedJWTSigningCertsDir, consts.TrustedCaCertsDir, fnGetJwtCerts))
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), wlsDb)
 	// Setup Report Endpoints
@@ -129,17 +140,27 @@ func startServer() error {
 		defer httpLogFile.Close()
 		httpWriter = httpLogFile
 	}
+	tlsconfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256},
+	}
 	l := stdlog.New(httpWriter, "", 0)
 	h := &http.Server{
 		Addr:     fmt.Sprintf(":%d", config.Configuration.Port),
 		Handler:  handlers.RecoveryHandler(handlers.RecoveryLogger(l), handlers.PrintRecoveryStack(true))(handlers.CombinedLoggingHandler(httpWriter, r)),
 		ErrorLog: l,
+		TLSConfig: tlsconfig,
 	}
 	// dispatch http listener on separate go routine
 	fmt.Println("Starting Workload Service ...")
 	go func() {
+		tlsCert := consts.TLSCertPath
+		tlsKey := consts.TLSKeyPath
 		fmt.Println("Workload Service Started")
-		if err := h.ListenAndServe(); err != nil {
+		if err := h.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			log.Fatal(err)
 		}
 	}()

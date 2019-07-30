@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/lib/common/validation"
@@ -15,9 +17,10 @@ import (
 
 // SetReportEndpoints
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	r.HandleFunc("", (errorHandler(getReport(db)))).Methods("GET")
-	r.HandleFunc("", (errorHandler(createReport(db)))).Methods("POST").Headers("Content-Type", "application/json")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}", (errorHandler(deleteReportByID(db)))).Methods("DELETE")
+	r.HandleFunc("", (errorHandler(requiresPermission(getReport(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+	r.HandleFunc("", (errorHandler(requiresPermission(createReport(db), []string{consts.AdministratorGroupName, consts.ReportCreationGroupName})))).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
+		(errorHandler(requiresPermission(deleteReportByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId)
 }
 

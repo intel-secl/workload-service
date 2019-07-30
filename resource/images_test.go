@@ -35,6 +35,7 @@ func TestFlavorKey(t *testing.T) {
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 }
@@ -57,6 +58,7 @@ func TestFlavorKeyMissingHWUUID(t *testing.T) {
 	// Test Flavor-Key with no hardware_uuid
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 	assert.Equal("Missing query parameters: [hardware_uuid]\n", recorder.Body.String())
@@ -80,6 +82,7 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	// Test Flavor-Key with no hardware_uuid
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 	assert.Contains(recorder.Body.String(), "Invalid hardware uuid")
@@ -101,6 +104,7 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
@@ -124,6 +128,7 @@ func TestFlavorKyHVSBadRequest(t *testing.T) {
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusBadRequest, recorder.Code)
@@ -145,6 +150,7 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
@@ -168,6 +174,7 @@ func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	// Test Flavor-Key
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusBadRequest, recorder.Code)
@@ -182,6 +189,7 @@ func TestQueryEmptyImagesResource(t *testing.T) {
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
@@ -198,6 +206,7 @@ func TestQueryImagesResource(t *testing.T) {
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/wls/images?filter=false", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -214,6 +223,7 @@ func TestInvalidImageID(t *testing.T) {
 	r := setupMockServer(db)
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest("DELETE", "/wls/images/yaddablahblahblbahlbah", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 	assert.Contains(recorder.Body.String(), "is not uuidv4 compliant")
@@ -228,6 +238,7 @@ func TestCreateImageEmptyFlavors(t *testing.T) {
 	iJSON := `{"id": "ffff021e-9669-4e53-9224-8880fb4e4080", "flavor_ids":[]}`
 	req := httptest.NewRequest("POST", "/wls/images", bytes.NewBufferString(iJSON))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 }

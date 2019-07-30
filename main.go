@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/setup"
+	"intel/isecl/workload-service/constants"
 	"io"
 	"os"
 	"strconv"
@@ -48,16 +49,35 @@ func main() {
 		printUsage()
 		os.Exit(0)
 	}
-
+	
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
 			setupRunner := &csetup.Runner{
 				Tasks: []csetup.Task{
+					csetup.Download_Ca_Cert{
+						Flags:         args,
+						CaCertDirPath: constants.TrustedCaCertsDir,
+						ConsoleWriter: os.Stdout,
+					},
+					csetup.Download_Cert{
+						Flags:              args,
+						KeyFile:            constants.TLSKeyPath,
+						CertFile:           constants.TLSCertPath,
+						KeyAlgorithm:       constants.DefaultKeyAlgorithm,
+						KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
+						CommonName:         constants.DefaultWlsTlsCn,
+						SanList:            constants.DefaultWlsTlsSan,
+						CertType:           "TLS",
+						CaCertsDir:         constants.TrustedCaCertsDir,
+						BearerToken:        "",
+						ConsoleWriter:      os.Stdout,
+					},
 					new(setup.Server),
 					new(setup.Database),
 					new(setup.HVSConnection),
 					new(setup.KMSConnection),
+					new(setup.AASConnection),
 					new(setup.Logs),
 				},
 				AskInput: false,

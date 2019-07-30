@@ -7,6 +7,7 @@ import (
 	"fmt"
 	kms "intel/isecl/lib/kms-client"
 	"intel/isecl/workload-service/config"
+	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"io/ioutil"
@@ -22,27 +23,27 @@ import (
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-		errorHandler(retrieveFlavorForImageID(db))).Methods("GET").Queries("flavor_part", "{flavor_part}")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-		errorHandler(getAllAssociatedFlavors(db))).Methods("GET")
+		errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName}))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
-		errorHandler(getAssociatedFlavor(db))).Methods("GET")
+		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
-		(errorHandler(putAssociatedFlavor(db)))).Methods("PUT")
+		(errorHandler(requiresPermission(putAssociatedFlavor(db), []string{consts.AdministratorGroupName})))).Methods("PUT")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
-		errorHandler(deleteAssociatedFlavor(db))).Methods("DELETE")
+		errorHandler(requiresPermission(deleteAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
-		(errorHandler(getImageByID(db)))).Methods("GET")
+		(errorHandler(requiresPermission(getImageByID(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
-		(errorHandler(deleteImageByID(db)))).Methods("DELETE")
+		(errorHandler(requiresPermission(deleteImageByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
-		(errorHandler(retrieveFlavorAndKeyForImageID(db)))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
+		(errorHandler(requiresPermission(retrieveFlavorAndKeyForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
 		(missingQueryParameters("hardware_uuid"))).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+		errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName}))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("",
-		(errorHandler(queryImages(db)))).Methods("GET")
+		(errorHandler(requiresPermission(queryImages(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc("",
-		(errorHandler(createImage(db)))).Methods("POST").Headers("Content-Type", "application/json")
+		(errorHandler(requiresPermission(createImage(db), []string{consts.AdministratorGroupName})))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{badid}", badId)
 }
 
