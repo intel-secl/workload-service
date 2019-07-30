@@ -10,12 +10,14 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"os/exec"
 	"intel/isecl/lib/common/validation"
 	csetup "intel/isecl/lib/common/setup"
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	stdlog "log"
 	log "github.com/sirupsen/logrus"
+	e "intel/isecl/lib/common/exec"
 )
 
 func main() {
@@ -91,30 +93,30 @@ func main() {
 			fmt.Println("WLS_NOSETUP is set, skipping setup")
 			os.Exit(1)
 		}
+
 	case "start":
-		err := start() // this starts server detached
-		if err != nil {
-			fmt.Println("Failed to start server")
-			os.Exit(1)
-		}
+		start()
+
 	case "status":
-		if s := status(); s == Running {
-			fmt.Println("Workload Service is running")
-		} else {
-			fmt.Println("Workload Service is stopped")
-		}
+		status()
+
 	case "startserver":
 		// this runs in attached mode
 		startServer()
+
 	case "stop":
-		stopServer()
+		stop()
+
 	case "uninstall":
+		stop()
+		removeService()
+		deleteFile("/opt/workload-service/")
 		deleteFile("/usr/local/bin/workload-service")
-		deleteFile("/var/log/workload-service")
-		deleteFile("/opt/worklaod-service")
+		deleteFile("/var/log/workload-service/")
 		if len(args) > 1 && strings.ToLower(args[1]) == "--purge" {
-			deleteFile("/etc/workload-service")
-		}
+			deleteFile("/etc/workload-service/")
+		}		
+
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
@@ -124,38 +126,52 @@ func main() {
 	}
 }
 
-const pidPath = "/var/run/workload-service/wls.pid"
-
-// Status indicate the process status of WLS
-type Status bool
-
-const (
-	Stopped Status = false
-	Running Status = true
-)
-
-func status() Status {
-	pid, err := readPid()
+func start() error {
+	fmt.Println("Starting Workload Service")
+	systemctl, err := exec.LookPath("systemctl")
 	if err != nil {
-		os.Remove(pidPath)
-		return Stopped
+		fmt.Println("Error trying to look up for systemctl path")
+		os.Exit(1)
 	}
-	p, err := os.FindProcess(pid)
+	return syscall.Exec(systemctl, []string{"systemctl", "start", "workload-service"}, os.Environ())
+}
+
+func stop() error {
+	fmt.Println("Stopping Workload Service")
+	_, _, err := e.RunCommandWithTimeout("systemctl stop workload-service", 5)
 	if err != nil {
-		return Stopped
+		fmt.Println("Could not stop Workload-service")
+		fmt.Println("Error : ", err)
 	}
-	if err := p.Signal(syscall.Signal(0)); err != nil {
-		return Stopped
+	return err
+}
+
+func status() error {
+	fmt.Println("Forwarding to systemctl status workload-service")
+	systemctl, err := exec.LookPath("systemctl")
+	if err != nil {
+		fmt.Println("Error trying to look up for systemctl path")
+		os.Exit(1)
 	}
-	return Running
+	return syscall.Exec(systemctl, []string{"systemctl", "status", "workload-service"}, os.Environ())
+}
+
+func removeService() error {
+	fmt.Println("Removing Workload Service")
+	_, _, err := e.RunCommandWithTimeout("systemctl disable workload-service", 5)
+	if err != nil {
+		fmt.Println("Could not remove Workload-service")
+		fmt.Println("Error : ", err)
+	}
+	return err
 }
 
 func deleteFile(path string) {
-	log.Info("Deleting : ", path)
+	fmt.Println("Deleting : ", path)
 	// delete file
 	var err = os.RemoveAll(path)
 	if err != nil {
-		log.Error(err)
+		fmt.Println(err.Error())
 	}
 }
 

@@ -122,6 +122,9 @@ cp -f workload-service $WORKLOAD_SERVICE_BIN
 ln -sfT $WORKLOAD_SERVICE_BIN/workload-service /usr/local/bin/workload-service
 chown wls:wls /usr/local/bin/workload-service
 
+cp -f workload-service.service $WORKLOAD_SERVICE_HOME
+systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
+
 # exit workload-service setup if WORKLOAD_SERVICE_NOSETUP is set
 if [ -n "$WORKLOAD_SERVICE_NOSETUP" ]; then
   echo_info "WORKLOAD_SERVICE_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile
@@ -135,9 +138,10 @@ SETUP_RESULT=$?
 
 # start wls server
 if [ ${SETUP_RESULT} == 0 ]; then
-    workload-service startserver
-    exit 0
+    systemctl start workload-service
     if [ $? == 0 ]; then
-        echo_success "Installation completed." | tee -a $logfile
+      echo_success "Installation completed Successfully" | tee -a $logfile
+    else
+      echo_failure "Installation failed to complete successfully" | tee -a $logfile
     fi
 fi

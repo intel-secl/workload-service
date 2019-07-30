@@ -1,0 +1,14 @@
+[Unit]
+Description=Workload Service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/workload-service/bin/
+ExecStart=/opt/workload-service/bin/workload-service startserver
+TimeoutSec=300
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=60
+
+[Install]
+WantedBy=multi-user.target

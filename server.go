@@ -9,15 +9,11 @@ import (
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/workload-service/resource"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
-
 	"github.com/jinzhu/gorm"
 	
 	stdlog "log"
@@ -27,62 +23,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func stopServer() {
-	pid, err := readPid()
-	if err != nil {
-		log.WithError(err).Error("Failed to stop server")
-	}
-	if err := syscall.Kill(pid, syscall.SIGQUIT); err != nil {
-		log.WithError(err).Error("Failed to kill server")
-	}
-	fmt.Println("Workload Service Stopped")
-}
-
-func readPid() (int, error) {
-	pidData, err := ioutil.ReadFile(pidPath)
-	if err != nil {
-		log.WithError(err).Debug("Failed to read pidfile")
-		return 0, err
-	}
-	pid, err := strconv.Atoi(string(pidData))
-	if err != nil {
-		log.WithError(err).WithField("pid", pidData).Debug("Failed to convert pidData string to int")
-		return 0, err
-	}
-	return pid, nil
-}
-
-func start() error {
-	// first check to see if the pid specified in /var/run is already running
-	if status() == Running {
-		fmt.Println("Workload Service is already running")
-		return nil
-	}
-	// spawn another process
-	fmt.Println("Starting Workload Service ...")
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	cmd := exec.Command(os.Args[0], "startServer")
-	cmd.Dir = cwd
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-	// store pid
-	fmt.Printf("pid path is: %s\n", pidPath)
-	file, err := os.Create(pidPath)
-	if err != nil {
-		fmt.Println("Error while creating pid file")
-		return err
-	}
-	fmt.Printf("pid %s\n:", strconv.Itoa(cmd.Process.Pid))
-	file.WriteString(strconv.Itoa(cmd.Process.Pid))
-	cmd.Process.Release()
-	fmt.Println("Workload Service started")
-	return nil
-}
 
 //To be implemented if JWT certificate is needed from any other services
 func fnGetJwtCerts() error{
@@ -154,18 +94,22 @@ func startServer() error {
 		ErrorLog: l,
 		TLSConfig: tlsconfig,
 	}
-	// dispatch http listener on separate go routine
+
+	// dispatch web server go routine
 	fmt.Println("Starting Workload Service ...")
 	go func() {
 		tlsCert := consts.TLSCertPath
 		tlsKey := consts.TLSKeyPath
 		fmt.Println("Workload Service Started")
 		if err := h.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
-			log.Fatal(err)
+			log.WithError(err).Info("Failed to start HTTPS server")
+			stop <- syscall.SIGTERM
 		}
 	}()
-	// wait for a signal on the stop channel
-	<-stop // swallow the value, as we don't really care what it is
+
+	fmt.Println("Workload Service is running")
+	// TODO dispatch Service status checker goroutine
+	<-stop
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -173,8 +117,6 @@ func startServer() error {
 	if err := h.Shutdown(ctx); err != nil {
 		fmt.Printf("Failed to gracefully shutdown webserver: %v\n", err)
 		return err
-	} else {
-		fmt.Println("Workload Service stopped")
 	}
 	return nil
 }

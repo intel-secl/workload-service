@@ -10,6 +10,7 @@ workload-service:
 
 installer: workload-service
 	mkdir -p out/wls
+	cp dist/linux/workload-service.service out/wls/workload-service.service
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
 	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh
