@@ -27,4 +27,4 @@ replace intel/isecl/lib/kms-client => gitlab.devtools.intel.com/sst/isecl/lib/km
 
 replace intel/isecl/cms => gitlab.devtools.intel.com/sst/isecl/certificate-management-service.git v0.0.0-20190718144616-b20fd70163eb
 
-replace intel/isecl/lib/clients => gitlab.devtools.intel.com/sst/isecl/lib/clients.git v0.0.0-20190729050349-125329529849
+replace intel/isecl/lib/clients => gitlab.devtools.intel.com/sst/isecl/lib/clients.git v0.0.0-20190801010949-eded2c2c8405
