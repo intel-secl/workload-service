@@ -22,8 +22,12 @@ import (
 
 // SetImagesEndpoints sets endpoints for /image
 func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
+	//There is a ambiguity between api endpoints /<id>/flavors and /<id>/flavors?flavor_part=<flavor_part>
+	//Moved /<id>/flavors?flavor_part=<flavor_part> to top so this will be able to check for the filter flavor_part
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-		errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName}))).Methods("GET")
+                (errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
+	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+		(errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
 		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
@@ -38,8 +42,6 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 		(errorHandler(requiresPermission(retrieveFlavorAndKeyForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
 		(missingQueryParameters("hardware_uuid"))).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-		errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName}))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("",
 		(errorHandler(requiresPermission(queryImages(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc("",
