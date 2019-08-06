@@ -26,13 +26,13 @@ func (aas AASConnection) Run(c csetup.Context) error {
 	var aasURL string
 	var aasBearerToken string
 	var err error
-	if aasURL, err = c.GetenvString(config.AAS_URL, "AAS Server URL"); err != nil {
+	if aasURL, err = c.GetenvString(config.AAS_API_URL, "AAS Server URL"); err != nil {
 		return err
 	}
         if strings.HasSuffix(aasURL, "/") {
-                config.Configuration.AAS_URL = aasURL
+                config.Configuration.AAS_API_URL = aasURL
         } else {
-                config.Configuration.AAS_URL = aasURL + "/"
+                config.Configuration.AAS_API_URL = aasURL + "/"
         }
 
 	config.Save()
@@ -81,7 +81,7 @@ func (aas AASConnection) Validate(c csetup.Context) error {
 
 func fnGetJwtCerts() error {
 
-        url := config.Configuration.AAS_URL + "noauth/jwt-certificates"
+        url := config.Configuration.AAS_API_URL + "noauth/jwt-certificates"
 	req, _ := http.NewRequest("GET", url, nil)
         req.Header.Add("accept", "application/x-pem-file")
         rootCaCertPems, err := cos.GetDirFileContents(consts.TrustedCaCertsDir, "*.pem" )
