@@ -3,7 +3,7 @@ package postgres
 import (
 	"encoding/json"
 	"errors"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -11,17 +11,13 @@ import (
 )
 
 type flavorEntity struct {
-	// alias gorm.Model
-	ID        string `gorm:"type:uuid;primary_key;"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	// DeletedAt *time.Time
-	// Above 4 are Aliases
+	ID         string `gorm:"type:uuid;primary_key;"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 	Label      string         `gorm:"unique;not null"`
 	FlavorPart string         `gorm:"not null"`
 	Content    postgres.Jsonb `gorm:"type:jsonb;not null"`
 	Signature  string
-	//Images  []imageEntity  `gorm:"many2many:image_flavors"`
 }
 
 func (fe flavorEntity) TableName() string {
@@ -49,15 +45,15 @@ func (fe *flavorEntity) AfterFind(scope *gorm.Scope) error {
 	return nil
 }
 
-func (fe *flavorEntity) unmarshal() (*flavorUtil.SignedImageFlavor, error) {
-	var i flavorUtil.SignedImageFlavor
+func (fe *flavorEntity) unmarshal() (*flvr.SignedImageFlavor, error) {
+	var i flvr.SignedImageFlavor
 	// ignore error since we validate it on callbacks
 	err := json.Unmarshal(fe.Content.RawMessage, &i.ImageFlavor)
 	i.Signature = fe.Signature
 	return &i, err
 }
 
-func (fe *flavorEntity) Flavor() flavorUtil.SignedImageFlavor {
+func (fe *flavorEntity) Flavor() flvr.SignedImageFlavor {
 	i, _ := fe.unmarshal()
 	return *i
 }

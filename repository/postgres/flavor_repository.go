@@ -3,9 +3,10 @@ package postgres
 import (
 	"encoding/json"
 	"errors"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
+
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -14,7 +15,7 @@ type flavorRepo struct {
 	db *gorm.DB
 }
 
-func (repo flavorRepo) Create(f *flavorUtil.SignedImageFlavor) error {
+func (repo flavorRepo) Create(f *flvr.SignedImageFlavor) error {
 	if f == nil {
 		return errors.New("cannot create nil flavor")
 	}
@@ -27,7 +28,7 @@ func (repo flavorRepo) Create(f *flavorUtil.SignedImageFlavor) error {
 			return repository.ErrFlavorUUIDAlreadyExists
 		} else if fe.Label == f.ImageFlavor.Meta.Description.Label {
 			return repository.ErrFlavorLabelAlreadyExists
-		} 
+		}
 	}
 	flavorJSON, err := json.Marshal(f.ImageFlavor)
 	if err != nil {

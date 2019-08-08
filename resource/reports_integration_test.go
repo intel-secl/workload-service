@@ -27,7 +27,7 @@ import (
 )
 
 func TestReportResource(t *testing.T) {
-	var signedFlavor flavorUtil.SignedImageFlavor
+	var signedFlavor flavor.SignedImageFlavor
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -54,7 +54,7 @@ func TestReportResource(t *testing.T) {
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(flavorJSON), "../repository/mock/flavor-signing-key.pem")
 	manifest := instance.Manifest{InstanceInfo: instance.Info{InstanceID: "7B280921-83F7-4F44-9F8D-2DCF36E7AF33", HostHardwareUUID: "59EED8F0-28C5-4070-91FC-F5E2E5443F6B", ImageID: "670F263E-B34E-4E07-A520-40AC9A89F62D"}, ImageEncrypted: true}
 	json.Unmarshal([]byte(signedFlavorString), &signedFlavor)
-	report, err := verifier.Verify(&manifest, &signedFlavor, "../repository/mock/flavor-signing-cert.pem")
+	report, err := verifier.Verify(&manifest, &signedFlavor, "../repository/mock/flavor-signing-cert.pem", false)
 	instanceReport, _ := report.(*verifier.InstanceTrustReport)
 
 	fJSON, err := json.Marshal(instanceReport)

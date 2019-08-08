@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 )
 
@@ -26,7 +26,7 @@ type FlavorFilter struct {
 // Stronger typing rather than cast everything from an interface{}
 type FlavorRepository interface {
 	// C
-	Create(f *flavorUtil.SignedImageFlavor) error
+	Create(f *flvr.SignedImageFlavor) error
 	// R
 	RetrieveByFilterCriteria(filter FlavorFilter) ([]model.Flavor, error)
 	RetrieveByUUID(uuid string) (*model.Flavor, error)

@@ -6,7 +6,7 @@ import (
 
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/lib/common/validation"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"net/http"
@@ -157,7 +157,7 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 
 func createFlavor(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		var f flavorUtil.SignedImageFlavor
+		var f flvr.SignedImageFlavor
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&f); err != nil {

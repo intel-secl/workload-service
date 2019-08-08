@@ -1,7 +1,7 @@
 package mock
 
 import (
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 )
@@ -9,10 +9,10 @@ import (
 type MockImage struct {
 	CreateFn                               func(*model.Image) error
 	RetrieveByUUIDFn                       func(string) (*model.Image, error)
-	RetrieveAssociatedImageFlavorFn        func(string) (*flavorUtil.SignedImageFlavor, error)
+	RetrieveAssociatedImageFlavorFn        func(string) (*flvr.SignedImageFlavor, error)
 	RetrieveByFilterCriteriaFn             func(repository.ImageFilter) ([]model.Image, error)
 	RetrieveAssociatedFlavorFn             func(string, string) (*model.Flavor, error)
-	RetrieveAssociatedFlavorByFlavorPartFn func(string, string) (*flavorUtil.SignedImageFlavor, error)
+	RetrieveAssociatedFlavorByFlavorPartFn func(string, string) (*flvr.SignedImageFlavor, error)
 	RetrieveAssociatedFlavorsFn            func(string) ([]model.Flavor, error)
 	UpdateFn                               func(*model.Image) error
 	AddAssociatedFlavorFn                  func(string, string) error
@@ -36,7 +36,7 @@ func (m *MockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
 	return &i, nil
 }
 
-func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error) {
+func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*flvr.SignedImageFlavor, error) {
 	if m.RetrieveAssociatedImageFlavorFn != nil {
 		return m.RetrieveAssociatedImageFlavorFn(imageUUID)
 	}
@@ -57,7 +57,7 @@ func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string
 	return &f, nil
 }
 
-func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error) {
+func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flvr.SignedImageFlavor, error) {
 	if m.RetrieveAssociatedFlavorFn != nil {
 		return m.RetrieveAssociatedFlavorByFlavorPartFn(imageUUID, flavorPart)
 	}

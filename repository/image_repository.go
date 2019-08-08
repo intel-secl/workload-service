@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 )
 
@@ -29,9 +29,9 @@ type ImageRepository interface {
 	Create(image *model.Image) error
 	// R
 	RetrieveByUUID(uuid string) (*model.Image, error)
-	RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error)
+	RetrieveAssociatedImageFlavor(imageUUID string) (*flvr.SignedImageFlavor, error)
 	RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error)
-	RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error)
+	RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flvr.SignedImageFlavor, error)
 	RetrieveAssociatedFlavors(uuid string) ([]model.Flavor, error)
 	RetrieveByFilterCriteria(locator ImageFilter) ([]model.Image, error)
 	// U

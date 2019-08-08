@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"errors"
-	flavorUtil "intel/isecl/lib/flavor/util"
+	flvr "intel/isecl/lib/flavor"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 
@@ -99,7 +99,7 @@ func (repo imageRepo) Create(image *model.Image) error {
 	return nil
 }
 
-func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*flavorUtil.SignedImageFlavor, error) {
+func (repo imageRepo) RetrieveAssociatedImageFlavor(imageUUID string) (*flvr.SignedImageFlavor, error) {
 	var flavorEntity flavorEntity
 	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND (flavor_part = ? OR flavor_part = ?)", imageUUID, "IMAGE", "CONTAINER_IMAGE").Error; err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (repo imageRepo) RetrieveAssociatedFlavor(imageUUID string, flavorUUID stri
 	return &flavor, nil
 }
 
-func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flavorUtil.SignedImageFlavor, error) {
+func (repo imageRepo) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flvr.SignedImageFlavor, error) {
 	var flavorEntity flavorEntity
 	if err := repo.db.Joins("LEFT JOIN image_flavors ON image_flavors.flavor_id = flavors.id").First(&flavorEntity, "image_id = ? AND flavor_part = ?", imageUUID, flavorPart).Error; err != nil {
 		return nil, err

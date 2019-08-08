@@ -10,7 +10,7 @@ import (
 )
 
 var f model.Flavor
-var signedFlavor flavorUtil.SignedImageFlavor
+var signedFlavor flavor.SignedImageFlavor
 var f2, _ = flavor.GetImageFlavor("Cirros-enc", true, "http://localhost:1337/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 var flavorBytes, _ = json.Marshal(f2)
 var signedFlavorString, err = flavorUtil.GetSignedFlavor(string(flavorBytes), "../repository/mock/flavor-signing-key.pem")

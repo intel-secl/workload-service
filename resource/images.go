@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"intel/isecl/lib/common/validation"
 	kms "intel/isecl/lib/kms-client"
 	"intel/isecl/workload-service/config"
 	consts "intel/isecl/workload-service/constants"
@@ -15,7 +16,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
-	"intel/isecl/lib/common/validation"
+
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -96,8 +97,6 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			cLog.Info("Failed to retrieve Flavor and Key for Image")
 			return err
-		} else {
-			cLog.Info(flavor)
 		}
 		// Check if flavor keyURL is not empty
 		if len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
