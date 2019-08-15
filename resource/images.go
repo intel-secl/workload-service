@@ -145,8 +145,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				}
 				defer resp.Body.Close()
 				if resp.StatusCode != http.StatusOK {
-					text, _ := ioutil.ReadAll(resp.Body)
-					errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\nMessage: %s", resp.StatusCode, string(text))
+					errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\n", resp.StatusCode)
 					cLog.WithField("statusCode", resp.StatusCode).Info(errStr)
 					return &endpointError{
 						Message:    errStr,
@@ -155,8 +154,16 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				}
 				saml, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					cLog.WithError(err).Error("Faield to read HVS response body")
+					cLog.WithError(err).Error("Failed to read HVS response body")
 					return err
+				}
+
+				// validate the response from HVS
+				if err = validation.ValidateXMLString(string(saml)); err != nil {
+					return &endpointError{
+						Message:    "Invalid SAML report format received from HVS",
+						StatusCode: http.StatusInternalServerError,
+					} 
 				}
 				cLog.WithField("saml", string(saml)).Debug("Successfully got SAML report from HVS")
 				// create insecure client
