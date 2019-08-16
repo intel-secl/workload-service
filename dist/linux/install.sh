@@ -126,8 +126,8 @@ cp -f workload-service.service $WORKLOAD_SERVICE_HOME
 systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
 
 # exit workload-service setup if WORKLOAD_SERVICE_NOSETUP is set
-if [ -n "$WORKLOAD_SERVICE_NOSETUP" ]; then
-  echo_info "WORKLOAD_SERVICE_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile
+if [ -n "$WLS_NOSETUP" ]; then
+  echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile
   exit 0
 fi
 
