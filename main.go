@@ -177,7 +177,7 @@ func deleteFile(path string) {
 
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("    %s <command> <tasks>\n", os.Args[0])
+	fmt.Printf("    %s <command> <tasks>\n\n", os.Args[0])
 	fmt.Println("Available Commands:")
 	fmt.Println("    help|-help|--help   Show this help message")
 	fmt.Println("    start               Start workload-service")
