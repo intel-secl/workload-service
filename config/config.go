@@ -1,6 +1,8 @@
 package config
 
 import (
+	"intel/isecl/workload-service/constants"
+	"intel/isecl/lib/common/setup"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -51,7 +53,6 @@ const HVS_PASSWORD = "HVS_PASSWORD"
 const WLS_LOGLEVEL = "WLS_LOGLEVEL"
 
 const AAS_API_URL = "AAS_API_URL"
-const AAS_BEARER_TOKEN = "AAS_BEARER_TOKEN"
 
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
@@ -75,9 +76,65 @@ var Configuration struct {
 		User     string
 		Password string
 	}
+	CMS_BASE_URL string
 	AAS_API_URL string
-	
+	Subject    struct {
+		TLSCertCommonName string
+		Organization      string
+		Country           string
+		Province          string
+		Locality          string
+	}
 	LogLevel log.Level
+}
+
+func SaveConfiguration(c setup.Context) error {
+	var err error = nil
+
+	cmsBaseUrl, err := c.GetenvString(constants.CmsBaseUrlEnv, "CMS Base URL")
+	if err == nil && cmsBaseUrl != "" {
+		Configuration.CMS_BASE_URL = cmsBaseUrl
+	} else if Configuration.CMS_BASE_URL == "" {
+			log.Error("CMS_BASE_URL is not defined in environment or configuration file")
+	}
+
+	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")
+	if err == nil  && tlsCertCN != "" {
+		Configuration.Subject.TLSCertCommonName = tlsCertCN
+	} else if Configuration.Subject.TLSCertCommonName == "" {
+			Configuration.Subject.TLSCertCommonName = constants.DefaultWlsTlsCn
+	}
+
+	certOrg, err := c.GetenvString(constants.WlsCertOrgEnv, "WLS Certificate Organization")
+	if err == nil && certOrg != "" {
+		Configuration.Subject.Organization = certOrg
+	} else if Configuration.Subject.Organization == "" {
+			Configuration.Subject.Organization = constants.DefaultWlsCertOrganization
+	}
+
+	certCountry, err := c.GetenvString(constants.WlsCertCountryEnv, "WLS Certificate Country")
+	if err == nil && certCountry != "" {
+		Configuration.Subject.Country = certCountry
+	} else if Configuration.Subject.Country == "" {
+			Configuration.Subject.Country = constants.DefaultWlsCertCountry
+	}
+
+	certProvince, err := c.GetenvString(constants.WlsCertProvinceEnv, "WLS Certificate Province")
+	if err == nil && certProvince != "" {
+		Configuration.Subject.Province = certProvince
+	} else if Configuration.Subject.Province == "" {
+			Configuration.Subject.Province = constants.DefaultWlsCertProvince
+	}
+
+	certLocality, err := c.GetenvString(constants.WlsCertLocalityEnv, "WLS Certificate Locality")
+	if err == nil && certLocality != "" {
+		Configuration.Subject.Locality = certLocality
+	} else if Configuration.Subject.Locality == "" {
+			Configuration.Subject.Locality = constants.DefaultWlsCertLocality
+	}
+
+	return Save()
+
 }
 
 // Save the configuration struct into /etc/workload-service/config.ynml

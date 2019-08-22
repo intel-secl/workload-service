@@ -14,12 +14,22 @@ const (
 	CertApproverGroupName         = "CertApprover"
 	DefaultWlsTlsCn               = "WLS TLS Certificate"
 	DefaultWlsTlsSan              = "127.0.0.1,localhost"
+	DefaultWlsCertOrganization    = "INTEL"
+	DefaultWlsCertCountry         = "US"
+	DefaultWlsCertProvince        = "SF"
+	DefaultWlsCertLocality        = "SC"
 	DefaultKeyAlgorithm           = "rsa"
 	DefaultKeyAlgorithmLength     = 3072
 	FlavorImageRetrievalGroupName = "FlavorsImageRetrieval"
 	AdministratorGroupName        = "Administrator"
 	ReportCreationGroupName       = "ReportsCreate"
 	BearerToken                   = "BEARER_TOKEN"
+	CmsBaseUrlEnv                 = "CMS_BASE_URL"
+	WlsTLsCertCnEnv               = "WLS_TLS_CERT_CN"
+	WlsCertOrgEnv                 = "WLS_CERT_ORG"
+	WlsCertCountryEnv             = "WLS_CERT_COUNTRY"
+	WlsCertProvinceEnv            = "WLS_CERT_PROVINCE"
+	WlsCertLocalityEnv            = "WLS_CERT_LOCALITY"
 )
 
 // State represents whether or not a daemon is running or not

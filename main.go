@@ -1,26 +1,28 @@
 package main
 
 import (
+	"crypto/x509/pkix"
 	"fmt"
+	csetup "intel/isecl/lib/common/setup"
+	"intel/isecl/lib/common/validation"
 	"intel/isecl/workload-service/config"
-	"intel/isecl/workload-service/setup"
 	"intel/isecl/workload-service/constants"
+	"intel/isecl/workload-service/setup"
 	"io"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
-	"os/exec"
-	"intel/isecl/lib/common/validation"
-	csetup "intel/isecl/lib/common/setup"
 	// Import Postgres driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	stdlog "log"
 	log "github.com/sirupsen/logrus"
 	e "intel/isecl/lib/common/exec"
+	stdlog "log"
 )
 
 func main() {
+	var context csetup.Context
 	/* BEGIN LOG CONFIGURATION */
 	wlsLogFile, err := os.OpenFile("/var/log/workload-service/wls.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	defer wlsLogFile.Close()
@@ -49,9 +51,14 @@ func main() {
 	if err := validation.ValidateStrings(inputStringArr); err != nil {
 		fmt.Println("Invalid input")
 		printUsage()
-		os.Exit(0)
+		os.Exit(1)
 	}
-	
+
+	err = config.SaveConfiguration(context)
+	if err != nil {
+		fmt.Println("Error: Unable to save configuration in config.yml")
+		os.Exit(1)
+	}
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
@@ -59,6 +66,7 @@ func main() {
 				Tasks: []csetup.Task{
 					csetup.Download_Ca_Cert{
 						Flags:         args,
+						CmsBaseURL:    config.Configuration.CMS_BASE_URL,
 						CaCertDirPath: constants.TrustedCaCertsDir,
 						ConsoleWriter: os.Stdout,
 					},
@@ -68,7 +76,14 @@ func main() {
 						CertFile:           constants.TLSCertPath,
 						KeyAlgorithm:       constants.DefaultKeyAlgorithm,
 						KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
-						CommonName:         constants.DefaultWlsTlsCn,
+						CmsBaseURL:         config.Configuration.CMS_BASE_URL,
+						Subject:            pkix.Name{
+							Country:            []string{config.Configuration.Subject.Country},
+							Organization:       []string{config.Configuration.Subject.Organization},
+							Locality:           []string{config.Configuration.Subject.Locality},
+							Province:           []string{config.Configuration.Subject.Province},
+							CommonName:         config.Configuration.Subject.TLSCertCommonName,
+						},
 						SanList:            constants.DefaultWlsTlsSan,
 						CertType:           "TLS",
 						CaCertsDir:         constants.TrustedCaCertsDir,
