@@ -68,53 +68,49 @@ func main() {
 				flags = args[3:]
 			}
 		}
-		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
-			setupRunner := &csetup.Runner{
-				Tasks: []csetup.Task{
-					csetup.Download_Ca_Cert{
-						Flags:         flags,
-						CmsBaseURL:    config.Configuration.CMS_BASE_URL,
-						CaCertDirPath: constants.TrustedCaCertsDir,
-						ConsoleWriter: os.Stdout,
-					},
-					csetup.Download_Cert{
-						Flags:              flags,
-						KeyFile:            constants.TLSKeyPath,
-						CertFile:           constants.TLSCertPath,
-						KeyAlgorithm:       constants.DefaultKeyAlgorithm,
-						KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
-						CmsBaseURL:         config.Configuration.CMS_BASE_URL,
-						Subject:            pkix.Name{
-							Country:            []string{config.Configuration.Subject.Country},
-							Organization:       []string{config.Configuration.Subject.Organization},
-							Locality:           []string{config.Configuration.Subject.Locality},
-							Province:           []string{config.Configuration.Subject.Province},
-							CommonName:         config.Configuration.Subject.TLSCertCommonName,
-						},
-						SanList:            constants.DefaultWlsTlsSan,
-						CertType:           "TLS",
-						CaCertsDir:         constants.TrustedCaCertsDir,
-						BearerToken:        "",
-						ConsoleWriter:      os.Stdout,
-					},
-					new(setup.Server),
-					new(setup.Database),
-					new(setup.HVSConnection),
-					new(setup.KMSConnection),
-					new(setup.AASConnection),
-					new(setup.Logs),
+		setupRunner := &csetup.Runner{
+			Tasks: []csetup.Task{
+				csetup.Download_Ca_Cert{
+					Flags:         flags,
+					CmsBaseURL:    config.Configuration.CMS_BASE_URL,
+					CaCertDirPath: constants.TrustedCaCertsDir,
+					ConsoleWriter: os.Stdout,
 				},
-				AskInput: false,
-			}
-			err := setupRunner.RunTasks(args[1:]...)
-			if err != nil {
-				fmt.Println("Error running setup: ", err)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Println("WLS_NOSETUP is set, skipping setup")
+				csetup.Download_Cert{
+					Flags:              flags,
+					KeyFile:            constants.TLSKeyPath,
+					CertFile:           constants.TLSCertPath,
+					KeyAlgorithm:       constants.DefaultKeyAlgorithm,
+					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
+					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
+					Subject:            pkix.Name{
+						Country:            []string{config.Configuration.Subject.Country},
+						Organization:       []string{config.Configuration.Subject.Organization},
+						Locality:           []string{config.Configuration.Subject.Locality},
+						Province:           []string{config.Configuration.Subject.Province},
+						CommonName:         config.Configuration.Subject.TLSCertCommonName,
+					},
+					SanList:            constants.DefaultWlsTlsSan,
+					CertType:           "TLS",
+					CaCertsDir:         constants.TrustedCaCertsDir,
+					BearerToken:        "",
+					ConsoleWriter:      os.Stdout,
+				},
+				new(setup.Server),
+				new(setup.Database),
+				new(setup.HVSConnection),
+				new(setup.KMSConnection),
+				new(setup.AASConnection),
+				new(setup.Logs),
+			},
+			AskInput: false,
+		}
+		err := setupRunner.RunTasks(args[1:]...)
+		if err != nil {
+			fmt.Println("Error running setup: ", err)
 			os.Exit(1)
 		}
+	}
 
 	case "start":
 		start()
