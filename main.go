@@ -61,17 +61,24 @@ func main() {
 	}
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
+		flags := args
+		if len(args) > 1 {
+			flags = args[2:]
+			if args[1] == "download_cert" && len(args) > 2 {
+				flags = args[3:]
+			}
+		}
 		if nosetup, err := strconv.ParseBool(os.Getenv("WLS_NOSETUP")); err != nil && nosetup == false {
 			setupRunner := &csetup.Runner{
 				Tasks: []csetup.Task{
 					csetup.Download_Ca_Cert{
-						Flags:         args,
+						Flags:         flags,
 						CmsBaseURL:    config.Configuration.CMS_BASE_URL,
 						CaCertDirPath: constants.TrustedCaCertsDir,
 						ConsoleWriter: os.Stdout,
 					},
 					csetup.Download_Cert{
-						Flags:              args,
+						Flags:              flags,
 						KeyFile:            constants.TLSKeyPath,
 						CertFile:           constants.TLSCertPath,
 						KeyAlgorithm:       constants.DefaultKeyAlgorithm,
