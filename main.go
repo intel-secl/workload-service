@@ -11,7 +11,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 	// Import Postgres driver
@@ -110,7 +109,6 @@ func main() {
 			fmt.Println("Error running setup: ", err)
 			os.Exit(1)
 		}
-	}
 
 	case "start":
 		start()
