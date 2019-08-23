@@ -504,12 +504,12 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 		// valid input format
 		if err := validation.ValidateUUIDv4(formBody.ID); err != nil {
 			log.Error("Invalid image UUID format")
-			return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+			return &endpointError{Message: "Invalid image UUID format", StatusCode: http.StatusBadRequest}
 		}
 		for i, _ := range formBody.FlavorIDs {
 			if err := validation.ValidateUUIDv4(formBody.FlavorIDs[i]); err != nil {
 				log.Error("Invalid flavor UUID format")
-				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
+				return &endpointError{Message: "Invalid flavor UUID format", StatusCode: http.StatusBadRequest}
 			}
 		}
 		
