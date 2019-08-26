@@ -10,7 +10,7 @@ const (
 	TrustedJWTSigningCertsDir     = ConfigDir + "jwt/"
 	TrustedCaCertsDir             = ConfigDir + "cacerts/"
 	TLSCertPath                   = ConfigDir + "tls-cert.pem"
-	TLSKeyPath                    = ConfigDir + "tls-key.pem"
+	TLSKeyPath                    = ConfigDir + "tls.key"
 	CertApproverGroupName         = "CertApprover"
 	DefaultWlsTlsCn               = "WLS TLS Certificate"
 	DefaultWlsTlsSan              = "127.0.0.1,localhost"

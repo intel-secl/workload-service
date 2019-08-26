@@ -93,7 +93,7 @@ date >> $logfile
 echo_info "Installing workload service..." >> $logfile
 
 echo_info "Creating Workload Service User ..."
-id -u wls 2> /dev/null || useradd wls
+id -u wls 2> /dev/null || useradd --comment "Workload Service" --home $WORKLOAD_SERVICE_HOME --system --shell /bin/false wls
 
 # Create application directories (chown will be repeated near end of this script, after setup)
 for directory in $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_BIN $WORKLOAD_SERVICE_LOGS; do
