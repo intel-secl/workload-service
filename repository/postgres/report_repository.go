@@ -7,7 +7,6 @@ import (
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"time"
-	log "github.com/sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 )
