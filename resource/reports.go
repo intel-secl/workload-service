@@ -87,6 +87,8 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.LatestPerVM = boolValue
+		} else {
+			filterCriteria.LatestPerVM = false
 		}
 
 		numOfDays, ok := r.URL.Query()["num_of_days"]
@@ -107,6 +109,8 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.Filter = boolValue
+		} else {
+			filterCriteria.Filter = true
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
