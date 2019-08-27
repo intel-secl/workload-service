@@ -91,13 +91,13 @@ func TestReportResource(t *testing.T) {
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=12-12-2017&&latest_per_vm=false", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42&&latest_per_vm=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -105,19 +105,19 @@ func TestReportResource(t *testing.T) {
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse))
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=12-12-2019", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=2019-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?to_date=12-12-2019", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?to_date=2019-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?from_date=12-12-2017", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?from_date=2017-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
