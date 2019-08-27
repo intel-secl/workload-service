@@ -118,13 +118,11 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Info("Failed to retrieve reports")
 			return err
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(reports); err != nil {
 			log.WithError(err).Error("Unexpectedly failed to encode reports to JSON")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		return nil
 	}
 }

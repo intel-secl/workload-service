@@ -44,12 +44,11 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Info("Failed to retrieve flavor by UUID")
 			return err
 		}
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			uuidLog.WithField("flavor", flavor).WithError(err).Error("Failed to encode JSON Flavor document")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		uuidLog.Debug("Successfully fetched Flavor")
 		return nil
 	}
@@ -72,12 +71,11 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 			lblLog.WithError(err).Info("Failed to retrieve Flavor by Label")
 			return err
 		}
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			lblLog.WithField("flavor", flavor).WithError(err).Error("Failed to encode JSON Flavor document")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		lblLog.Debug("Successfully fetched Flavor")
 		return nil
 	}
@@ -122,13 +120,11 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Info("Failed to retrieve flavors")
 			return err
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavors); err != nil {
 			log.WithError(err).Error("Unexpectedly failed to encode flavors to JSON")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		return nil
 	}
 }
@@ -205,6 +201,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 				StatusCode: http.StatusConflict,
 			}
 		case nil:
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			var flavor model.Flavor
 			flavor.Image = f.ImageFlavor

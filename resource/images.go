@@ -192,18 +192,18 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					Signature: flavor.Signature,
 					Key:       key,
 				}
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
 					// marshalling error 500
 					cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
 					return err
 				}
-				w.WriteHeader(http.StatusOK)
-				w.Header().Set("Content-Type", "application/json")
 				cLog.WithField("flavorKey", flavorKey).Debug("Susccessfully retrieved FlavorKey")
 				return nil
 			}
 		}
 		// just return the flavor
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: flavor.ImageFlavor, Signature: flavor.Signature}); err != nil {
 			// marshalling error 500
 			cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
@@ -247,6 +247,7 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 		}
 
 		// just return the flavor
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(*flavor); err != nil {
 			// marshalling error 500
 			cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
@@ -275,6 +276,7 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 			}
 			return err
 		}
+		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavors); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode list of flavors to JSON")
 			return err
@@ -307,6 +309,7 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.Info("Failed to retrieve associated flavor for image")
 			return err
 		}
+		w.Header().Set("Content-Type", "application/json")
 		cLog = cLog.WithField("flavor", flavor)
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode Flavor to JSON")
@@ -432,13 +435,12 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 			// coerce to return empty list instead of null
 			images = []model.Image{}
 		}
+		w.Header().Set("Content-Type", "application/json")
 		cLog.WithField("images", images)
 		if err := json.NewEncoder(w).Encode(images); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode array of Images to JSON")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		cLog.Debug("Successfully queried Images by filter criteria")
 		return nil
 	}
@@ -458,13 +460,12 @@ func getImageByID(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Info("Failed to retrieve Image by UUID")
 			return err
 		}
+		w.Header().Set("Content-Type", "application/json")
 		cLog = cLog.WithField("image", image)
 		if err := json.NewEncoder(w).Encode(image); err != nil {
 			cLog.WithError(err).Error("Unexpectedly failed to encode Image to JSON")
 			return err
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		cLog.Debug("Successfully retrieved Image by UUID")
 		return nil
 	}
@@ -548,6 +549,7 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 				}
 			}
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		err := json.NewEncoder(w).Encode(formBody)
 		if err != nil {
