@@ -17,14 +17,16 @@ require (
 	intel/isecl/lib/verifier v0.0.0
 )
 
-replace intel/isecl/lib/flavor => github.com/intel-secl/flavor v1.6-beta
+replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git v0.0.0-20190808115139-3baf114b27c1
 
-replace intel/isecl/lib/common => github.com/intel-secl/common v1.6-beta
+replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git v0.0.0-20191002050459-0d1ddc529604
 
-replace intel/isecl/lib/verifier => github.com/intel-secl/verifier v1.6-beta
+replace intel/isecl/lib/verifier => gitlab.devtools.intel.com/sst/isecl/lib/verifier.git v0.0.0-20190808120945-5b72300e1f91
 
-replace intel/isecl/lib/kms-client => github.com/intel-secl/kms-client v1.6-beta
+replace intel/isecl/lib/kms-client => gitlab.devtools.intel.com/sst/isecl/lib/kms-client.git v0.0.0-20190809105422-fcfcc7190c02
 
-replace intel/isecl/cms => github.com/intel-secl/certificate-management-service v1.6-beta
+replace intel/isecl/cms => gitlab.devtools.intel.com/sst/isecl/certificate-management-service.git v0.0.0-20190718144616-b20fd70163eb
 
-replace intel/isecl/lib/clients => github.com/intel-secl/clients v1.6-beta
+replace intel/isecl/lib/clients => gitlab.devtools.intel.com/sst/isecl/lib/clients.git v0.0.0-20190801010949-eded2c2c8405
+
+replace intel/isecl/lib/mtwilson-client => gitlab.devtools.intel.com/sst/isecl/lib/mtwilson-client.git v0.0.0-20190812082213-434ccb72dcc0

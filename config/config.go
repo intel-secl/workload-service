@@ -5,8 +5,8 @@
 package config
 
 import (
-	"intel/isecl/workload-service/constants"
 	"intel/isecl/lib/common/setup"
+	"intel/isecl/workload-service/constants"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -48,11 +48,11 @@ const KMS_PASSWORD = "KMS_PASSWORD"
 // HVS_URL is a string environment variable for specifying the url pointing to the hvs, such as https://host-verification:8443/mtwilson/v2
 const HVS_URL = "HVS_URL"
 
-// HVS_USER is a string environment variable for specifying the username to connect to the HVS
-const HVS_USER = "HVS_USER"
+// WLS_USER is a string environment variable for specifying  user to get token from AAS
+const WLS_USER = "WLS_USER"
 
-// HVS_PASSWORD is a string environment variable for specifying the password to connect to the HVS
-const HVS_PASSWORD = "HVS_PASSWORD"
+// WLS_PASSWORD is a string environment variable for specifying the password get token from AAS
+const WLS_PASSWORD = "WLS_PASSWORD"
 
 const WLS_LOGLEVEL = "WLS_LOGLEVEL"
 
@@ -70,24 +70,24 @@ var Configuration struct {
 		Port     int
 		SSLMode  bool
 	}
-	HVS struct {
-		URL      string
-		User     string
-		Password string
-	}
 	KMS struct {
 		URL      string
 		User     string
 		Password string
 	}
+	HVS_API_URL string
 	CMS_BASE_URL string
-	AAS_API_URL string
-	Subject    struct {
+	AAS_API_URL  string
+	Subject      struct {
 		TLSCertCommonName string
 		Organization      string
 		Country           string
 		Province          string
 		Locality          string
+	}
+	WLS struct {
+		User     string
+		Password string
 	}
 	LogLevel log.Level
 }
@@ -99,42 +99,42 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && cmsBaseUrl != "" {
 		Configuration.CMS_BASE_URL = cmsBaseUrl
 	} else if Configuration.CMS_BASE_URL == "" {
-			log.Error("CMS_BASE_URL is not defined in environment or configuration file")
+		log.Error("CMS_BASE_URL is not defined in environment or configuration file")
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")
-	if err == nil  && tlsCertCN != "" {
+	if err == nil && tlsCertCN != "" {
 		Configuration.Subject.TLSCertCommonName = tlsCertCN
 	} else if Configuration.Subject.TLSCertCommonName == "" {
-			Configuration.Subject.TLSCertCommonName = constants.DefaultWlsTlsCn
+		Configuration.Subject.TLSCertCommonName = constants.DefaultWlsTlsCn
 	}
 
 	certOrg, err := c.GetenvString(constants.WlsCertOrgEnv, "WLS Certificate Organization")
 	if err == nil && certOrg != "" {
 		Configuration.Subject.Organization = certOrg
 	} else if Configuration.Subject.Organization == "" {
-			Configuration.Subject.Organization = constants.DefaultWlsCertOrganization
+		Configuration.Subject.Organization = constants.DefaultWlsCertOrganization
 	}
 
 	certCountry, err := c.GetenvString(constants.WlsCertCountryEnv, "WLS Certificate Country")
 	if err == nil && certCountry != "" {
 		Configuration.Subject.Country = certCountry
 	} else if Configuration.Subject.Country == "" {
-			Configuration.Subject.Country = constants.DefaultWlsCertCountry
+		Configuration.Subject.Country = constants.DefaultWlsCertCountry
 	}
 
 	certProvince, err := c.GetenvString(constants.WlsCertProvinceEnv, "WLS Certificate Province")
 	if err == nil && certProvince != "" {
 		Configuration.Subject.Province = certProvince
 	} else if Configuration.Subject.Province == "" {
-			Configuration.Subject.Province = constants.DefaultWlsCertProvince
+		Configuration.Subject.Province = constants.DefaultWlsCertProvince
 	}
 
 	certLocality, err := c.GetenvString(constants.WlsCertLocalityEnv, "WLS Certificate Locality")
 	if err == nil && certLocality != "" {
 		Configuration.Subject.Locality = certLocality
 	} else if Configuration.Subject.Locality == "" {
-			Configuration.Subject.Locality = constants.DefaultWlsCertLocality
+		Configuration.Subject.Locality = constants.DefaultWlsCertLocality
 	}
 
 	return Save()

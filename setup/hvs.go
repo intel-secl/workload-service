@@ -21,37 +21,24 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 		fmt.Println("HVS connection already setup, skipping ...")
 		return nil
 	}
-	fmt.Println("Setting up HVS connection ...")
+	fmt.Println("Setting up HVS configuration ...")
 	var err error
 	var hvsURL string
-	if hvsURL, err = c.GetenvString(config.HVS_URL, "Key Management Server URL"); err != nil {
+	if hvsURL, err = c.GetenvString(config.HVS_URL, "Host Verification Service URL"); err != nil {
 		return err
 	}
 	if strings.HasSuffix(hvsURL, "/") {
-		config.Configuration.HVS.URL = hvsURL
+		config.Configuration.HVS_API_URL = hvsURL
 	} else {
-		config.Configuration.HVS.URL = hvsURL + "/"
-	}
-	if config.Configuration.HVS.User, err = c.GetenvString(config.HVS_USER, "Key Management Server User"); err != nil {
-		return err
-	}
-	if config.Configuration.HVS.Password, err = c.GetenvSecret(config.HVS_PASSWORD, "Key Management Server Password"); err != nil {
-		return err
+		config.Configuration.HVS_API_URL = hvsURL + "/"
 	}
 	return config.Save()
 }
 
 // Validate checks whether or not the HVS Connection setup task was completed successfully
 func (hvs HVSConnection) Validate(c csetup.Context) error {
-	h := &config.Configuration.HVS
-	if h.URL == "" {
+	if config.Configuration.HVS_API_URL == "" {
 		return errors.New("HVS Connection: URL is not set")
-	}
-	if h.User == "" {
-		return errors.New("HVS Connection: User is not set")
-	}
-	if h.Password == "" {
-		return errors.New("HVS Connection: Password is not set ")
 	}
 	return nil
 }

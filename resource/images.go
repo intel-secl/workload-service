@@ -5,7 +5,6 @@
 package resource
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,7 @@ import (
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
-	"io/ioutil"
+	"intel/isecl/workload-service/vsclient"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -30,7 +29,7 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	//There is a ambiguity between api endpoints /<id>/flavors and /<id>/flavors?flavor_part=<flavor_part>
 	//Moved /<id>/flavors?flavor_part=<flavor_part> to top so this will be able to check for the filter flavor_part
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-                (errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
+		(errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
 		(errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
@@ -119,44 +118,8 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
 			keyID := re.FindString(keyURL.Path)
 			if !kidPresent || (kidPresent && kid[0] != keyID) {
-				criteriaJSON := []byte(fmt.Sprintf(`{"hardware_uuid":"%s"}`, hwid))
-				url, err := url.Parse(config.Configuration.HVS.URL)
-				if err != nil {
-					cLog.WithError(err).Error("Configured HVS URL is malformed: ", err)
-					return err
-				}
-				reports, _ := url.Parse("reports")
-				endpoint := url.ResolveReference(reports)
-				req, err := http.NewRequest("POST", endpoint.String(), bytes.NewBuffer(criteriaJSON))
-				req.SetBasicAuth(config.Configuration.HVS.User, config.Configuration.HVS.Password)
-				if err != nil {
-					cLog.WithError(err).Error("Failed to instantiate http request to HVS")
-					return err
-				}
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("Accept", "application/samlassertion+xml")
-				client := &http.Client{
-					Transport: &http.Transport{
-						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: true,
-						},
-					},
-				}
-				resp, err := client.Do(req)
-				if err != nil {
-					cLog.WithError(err).Error("Failed to perform HTTP request to HVS")
-					return err
-				}
-				defer resp.Body.Close()
-				if resp.StatusCode != http.StatusOK {
-					errStr := fmt.Sprintf("HVS request failed to retrieve host report (HTTP Status Code: %d)\n", resp.StatusCode)
-					cLog.WithField("statusCode", resp.StatusCode).Info(errStr)
-					return &endpointError{
-						Message:    errStr,
-						StatusCode: http.StatusBadRequest,
-					}
-				}
-				saml, err := ioutil.ReadAll(resp.Body)
+
+				saml, err := vsclient.CreateSAMLReport(hwid)
 				if err != nil {
 					cLog.WithError(err).Error("Failed to read HVS response body")
 					return err
@@ -167,10 +130,18 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					return &endpointError{
 						Message:    "Invalid SAML report format received from HVS",
 						StatusCode: http.StatusInternalServerError,
-					} 
+					}
 				}
 				cLog.WithField("saml", string(saml)).Debug("Successfully got SAML report from HVS")
 				// create insecure client
+				client := &http.Client{
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
+				}
+
 				kc := &kms.Client{
 					BaseURL:    config.Configuration.KMS.URL,
 					Username:   config.Configuration.KMS.User,
@@ -517,7 +488,7 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Invalid flavor UUID format", StatusCode: http.StatusBadRequest}
 			}
 		}
-		
+
 		cLog := log.WithField("image", formBody)
 		if err := db.ImageRepository().Create(&formBody); err != nil {
 			switch err {
