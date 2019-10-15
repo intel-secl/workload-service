@@ -8,7 +8,7 @@ import (
 	"intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/constants"
 	"os"
-
+    "strconv"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -58,6 +58,7 @@ const WLS_LOGLEVEL = "WLS_LOGLEVEL"
 
 const AAS_API_URL = "AAS_API_URL"
 
+const KEY_CACHE_SECONDS = "KEY_CACHE_SECONDS"
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
 	Port     int
@@ -90,6 +91,8 @@ var Configuration struct {
 		Password string
 	}
 	LogLevel log.Level
+    KEY_CACHE_SECONDS int
+
 }
 
 func SaveConfiguration(c setup.Context) error {
@@ -135,6 +138,13 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.Subject.Locality = certLocality
 	} else if Configuration.Subject.Locality == "" {
 		Configuration.Subject.Locality = constants.DefaultWlsCertLocality
+	}
+
+	keyCacheSeconds, err := c.GetenvString(constants.KeyCacheSeconds, "Key Cache Seconds")
+	if err == nil && keyCacheSeconds != "" {
+		Configuration.KEY_CACHE_SECONDS, _ = strconv.Atoi(keyCacheSeconds)
+	} else if Configuration.KEY_CACHE_SECONDS <= 0 {
+		Configuration.KEY_CACHE_SECONDS = constants.DefaultKeyCacheSeconds
 	}
 
 	return Save()

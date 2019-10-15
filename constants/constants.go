@@ -30,6 +30,8 @@ const (
 	WlsCertCountryEnv             = "WLS_CERT_COUNTRY"
 	WlsCertProvinceEnv            = "WLS_CERT_PROVINCE"
 	WlsCertLocalityEnv            = "WLS_CERT_LOCALITY"
+	DefaultKeyCacheSeconds        = 300
+	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
 )
 
 // State represents whether or not a daemon is running or not
