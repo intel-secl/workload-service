@@ -17,7 +17,7 @@ require (
 	intel/isecl/lib/verifier v0.0.0
 )
 
-replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git v0.0.0-20190808115139-3baf114b27c1
+replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git v0.0.0-20190915015315-7d9923b58ff3
 
 replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git v0.0.0-20191002050459-0d1ddc529604
 
