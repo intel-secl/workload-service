@@ -36,15 +36,6 @@ const WLS_DB_PORT = "WLS_DB_PORT"
 // WLS_DB_HOSTNAME is a string environment variable for specifying the database hostname to connect to
 const WLS_DB_HOSTNAME = "WLS_DB_HOSTNAME"
 
-// KMS_URL is a string environment variable for specifying the url pointing to the kms, such as https://kms:443/v1/...
-const KMS_URL = "KMS_URL"
-
-// KMS_USER is a string environment variable for specifying the username to connect to the KMS
-const KMS_USER = "KMS_USER"
-
-// KMS_PASSWORD is a string environment variable for specifying the password to connect to the KMS
-const KMS_PASSWORD = "KMS_PASSWORD"
-
 // HVS_URL is a string environment variable for specifying the url pointing to the hvs, such as https://host-verification:8443/mtwilson/v2
 const HVS_URL = "HVS_URL"
 
@@ -70,11 +61,6 @@ var Configuration struct {
 		Hostname string
 		Port     int
 		SSLMode  bool
-	}
-	KMS struct {
-		URL      string
-		User     string
-		Password string
 	}
 	HVS_API_URL string
 	CMS_BASE_URL string

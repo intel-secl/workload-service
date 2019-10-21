@@ -66,7 +66,6 @@ func main() {
 			args[1] != "server" &&
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
-			args[1] != "kmsconnection" &&
 			args[1] != "aasconnection" &&
 			args[1] != "logs"{
 			printUsage()
@@ -118,7 +117,6 @@ func main() {
 				new(setup.Server),
 				new(setup.Database),
 				new(setup.HVSConnection),
-				new(setup.KMSConnection),
 				new(setup.AASConnection),
 				new(setup.Logs),
 			},
@@ -251,10 +249,6 @@ func printUsage() {
 	fmt.Println("                        - HVS_URL      : HVS URL")
 	fmt.Println("                        - HVS_USER     : HVS API user name")
 	fmt.Printf("                        - HVS_PASSWORD : HVS API password\n\n")
-	fmt.Println("    kmsconnection       Setup task for setting up the connection to the key management service(KMS)")
-	fmt.Println("                        - KMS_URL      : KMS URL")
-	fmt.Println("                        - KMS_USER     : KMS API user name")
-	fmt.Printf("                        - KMS_PASSWORD : KMS API password\n\n")
 	fmt.Println("    aasconnection       Setup to create workload service user roles in AAS")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token")

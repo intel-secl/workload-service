@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"intel/isecl/lib/common/validation"
 	kms "intel/isecl/lib/kms-client"
-	"intel/isecl/workload-service/config"
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
@@ -46,7 +45,7 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	//There is a ambiguity between api endpoints /<id>/flavors and /<id>/flavors?flavor_part=<flavor_part>
 	//Moved /<id>/flavors?flavor_part=<flavor_part> to top so this will be able to check for the filter flavor_part
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
-                (errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
+		(errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
 		(errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
@@ -135,20 +134,20 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			// retrieve host SAML report from HVS
 
 				saml, err := vsclient.CreateSAMLReport(hwid)
-			if err != nil {
-				cLog.WithError(err).Error("Failed to read HVS response body")
-				return err
-			}
+				if err != nil {
+					cLog.WithError(err).Error("Failed to read HVS response body")
+					return err
+				}
 
-			// validate the response from HVS
-			if err = validation.ValidateXMLString(string(saml)); err != nil {
-				return &endpointError{
-					Message:    "Invalid SAML report format received from HVS",
-					StatusCode: http.StatusInternalServerError,
-				} 
-			}
+				// validate the response from HVS
+				if err = validation.ValidateXMLString(string(saml)); err != nil {
+					return &endpointError{
+						Message:    "Invalid SAML report format received from HVS",
+						StatusCode: http.StatusInternalServerError,
+					}
+				}
 			var samlStruct Saml
-			cLog.WithField("saml", string(saml)).Debug("Successfully got SAML report from HVS")
+				cLog.WithField("saml", string(saml)).Debug("Successfully got SAML report from HVS")
 			err = xml.Unmarshal(saml, &samlStruct)
 			if err != nil {
 				cLog.WithError(err).Error("Failed to unmarshal host saml report")
@@ -172,54 +171,51 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					if(cachedKeyID != "" && cachedKeyID == keyID) {
 						key = cachedKey.Bytes
 					} else {
-						// create insecure client
-						client := &http.Client{
-							Transport: &http.Transport{
-								TLSClientConfig: &tls.Config{
-									InsecureSkipVerify: true,
-								},
-							},
-						}
-
-						kc := &kms.Client{
-							BaseURL:    config.Configuration.KMS.URL,
-							Username:   config.Configuration.KMS.User,
-							Password:   config.Configuration.KMS.Password,
-							HTTPClient: client,
-						}
-						// post to KBS client with saml
+				// create insecure client
+				client := &http.Client{
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
+				}
+				kc := &kms.Client{
+					BaseURL:    keyURL.String(),
+					HTTPClient: client,
+				}
+				// post to KBS client with saml
 						key, err = kc.Key(keyID).Transfer(saml)
-						if err != nil {
-							cLog.WithError(err).Info("Failed to retrieve key from KMS")
-							if kmsErr, ok := err.(*kms.Error); ok {
-								return &endpointError{
-									Message:    kmsErr.Message,
-									StatusCode: kmsErr.StatusCode,
-								}
-							}
-							return err
+				if err != nil {
+					cLog.WithError(err).Info("Failed to retrieve key from KMS")
+					if kmsErr, ok := err.(*kms.Error); ok {
+						return &endpointError{
+							Message:    kmsErr.Message,
+							StatusCode: kmsErr.StatusCode,
 						}
-						cLog.WithField("key", key).Debug("Successfully got key from KMS")
+					}
+					return err
+				}
+				cLog.WithField("key", key).Debug("Successfully got key from KMS")
 						cacheKeyInMemory(id, keyID, key)
 					}
 				}
 			}
 
-			// got key data
-			flavorKey := model.FlavorKey{
-				Flavor:    flavor.ImageFlavor,
-				Signature: flavor.Signature,
-				Key:       key,
+				// got key data
+				flavorKey := model.FlavorKey{
+					Flavor:    flavor.ImageFlavor,
+					Signature: flavor.Signature,
+					Key:       key,
+				}
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
+					// marshalling error 500
+					cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
+					return err
+				}
+				cLog.WithField("flavorKey", flavorKey).Debug("Susccessfully retrieved FlavorKey")
+				return nil
 			}
-			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(flavorKey); err != nil {
-				// marshalling error 500
-				cLog.WithError(err).Error("Unexpectedly failed to encode FlavorKey to JSON")
-				return err
-			}
-			cLog.WithField("flavorKey", flavorKey).Debug("Susccessfully retrieved FlavorKey")
-			return nil
-		}
 		// just return the flavor
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(model.FlavorKey{Flavor: flavor.ImageFlavor, Signature: flavor.Signature}); err != nil {
@@ -531,7 +527,7 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Invalid flavor UUID format", StatusCode: http.StatusBadRequest}
 			}
 		}
-		
+
 		cLog := log.WithField("image", formBody)
 		if err := db.ImageRepository().Create(&formBody); err != nil {
 			switch err {
