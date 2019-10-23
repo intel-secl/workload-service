@@ -24,6 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"errors"
 	"time"
+	"intel/isecl/workload-service/config"
 )
 
 
@@ -439,6 +440,11 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 			"flavor_id": flavorID,
 			"filter":    filter,
 		})
+
+		if (locator.FlavorID == "" && locator.ImageID == "" && locator.Filter) {
+			log.Error("Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false\n")
+			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter", StatusCode: http.StatusBadRequest}
+		}
 
 		images, err := db.ImageRepository().RetrieveByFilterCriteria(locator)
 		if err != nil {

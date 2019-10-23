@@ -31,6 +31,7 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 func getReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		filterCriteria := repository.ReportFilter{}
+		filterCriteria.Filter = true
 
 		// if no parameters were provided, just return an empty reports array
 		if len(r.URL.Query()) == 0 {
@@ -113,8 +114,11 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: err.Error(), StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.Filter = boolValue
-		} else {
-			filterCriteria.Filter = true
+		}
+
+		if (filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.VMID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter) {
+			log.Error("Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false\n")
+			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)

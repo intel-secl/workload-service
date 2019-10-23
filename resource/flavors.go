@@ -119,6 +119,11 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 			filterCriteria.Filter = boolValue
 		}
 
+		if (filterCriteria.Label == "" && filterCriteria.FlavorID == "" && filterCriteria.Filter) {
+			log.Error("Invalid filter criteria. Allowed filter critierias are id, label and filter = false\n")
+			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are id, label and filter = false", StatusCode: http.StatusBadRequest}
+		}
+
 		flavors, err := db.FlavorRepository().RetrieveByFilterCriteria(filterCriteria)
 		if err != nil {
 			log.WithError(err).Info("Failed to retrieve flavors")
