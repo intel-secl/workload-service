@@ -12,6 +12,7 @@ import (
 	kms "intel/isecl/lib/kms-client"
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
+	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/keycache"
 	"intel/isecl/workload-service/vsclient"
