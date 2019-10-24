@@ -25,7 +25,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"errors"
 	"time"
-	"intel/isecl/workload-service/config"
 )
 
 
