@@ -7,20 +7,26 @@ package resource
 import (
 	"encoding/base64"
 	"fmt"
+	"intel/isecl/lib/common/middleware"
+	"intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/repository/postgres"
-	"intel/isecl/lib/common/middleware"
 	"net/http"
 	"os"
 	"testing"
+
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 )
 
 var BearerToken = "eyJhbGciOiJFUzM4NCIsImtpZCI6IjA3MzI4NGIxYTlkNjAxMTQ4YWM5NjIzMDNhZDFkMDcwMTg2YjlhNTkiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IldMUyIsIm5hbWUiOiJmbGF2b3JzX2ltYWdlX3JldHJpZXZhbCJ9LHsic2VydmljZSI6IldMUyIsIm5hbWUiOiJyZXBvcnRzX2NyZWF0ZSJ9LHsic2VydmljZSI6IldMUyIsIm5hbWUiOiJhbGwifSx7InNlcnZpY2UiOiJXTFMiLCJuYW1lIjoiRmxhdm9yc0ltYWdlUmV0cmlldmFsIn0seyJzZXJ2aWNlIjoiV0xTIiwibmFtZSI6IlJlcG9ydHNDcmVhdGUifSx7InNlcnZpY2UiOiJXTFMiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9XSwiZXhwIjoxNzIwNDM1ODM3LCJpYXQiOjE1NjI3NTU4MzcsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiV0xTVXNlcjYifQ.-bXX1mavkMX48Q0eeMvB5Jc1ZmNsBD9mja-kwB4eFywKvkkG8ZRrK_w_6z731jF5RItClvhDN_RKbkYCy9lTqQapldD3ivNPG27iP3VW5Ebo7wH3ZLMDkP1mQaN781mP"
+var cacheTime, _ = time.ParseDuration(constants.JWTCertsCacheTime)
 
 func setupServer(t *testing.T) *mux.Router {
+	log.Trace("resource/common_test:setupServer() Entering")
+	defer log.Trace("resource/common_test:setupServer() Leaving")
 	_, ci := os.LookupEnv("CI")
 	var host string
 	if ci {
@@ -33,7 +39,7 @@ func setupServer(t *testing.T) *mux.Router {
 		t.Fatal("could not open DB")
 	}
 	r := mux.NewRouter()
-	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
@@ -42,13 +48,17 @@ func setupServer(t *testing.T) *mux.Router {
 	return r
 }
 
-func mockRetrieveJWTSigningCerts() error{
+func mockRetrieveJWTSigningCerts() error {
+	log.Trace("resource/common_test:mockRetrieveJWTSigningCerts() Entering")
+	defer log.Trace("resource/common_test:mockRetrieveJWTSigningCerts() Leaving")
 	return nil
-} 
+}
 
 func setupMockServer(db repository.WlsDatabase) *mux.Router {
+	log.Trace("resource/common_test:setupMockServer() Entering")
+	defer log.Trace("resource/common_test:setupMockServer() Leaving")
 	r := mux.NewRouter()
-	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
 	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), db)
 	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), db)
@@ -56,10 +66,12 @@ func setupMockServer(db repository.WlsDatabase) *mux.Router {
 }
 
 func mockHVS(addr string) *http.Server {
+	log.Trace("resource/common_test:mockHVS() Entering")
+	defer log.Trace("resource/common_test:mockHVS() Leaving")
 	r := mux.NewRouter()
 	r.HandleFunc("/mtwilson/v2/reports", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/samlassertion+xml")
-		w.Write([]byte(Saml))
+		w.Write([]byte(saml))
 	}).Methods("POST")
 	h := &http.Server{
 		Addr:    addr,
@@ -70,6 +82,8 @@ func mockHVS(addr string) *http.Server {
 }
 
 func mockKMS(addr string) *http.Server {
+	log.Trace("resource/common_test:mockKMS() Entering")
+	defer log.Trace("resource/common_test:mockKMS() Leaving")
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -98,6 +112,8 @@ func mockKMS(addr string) *http.Server {
 }
 
 func badKMS(addr string) *http.Server {
+	log.Trace("resource/common_test:badKMS() Entering")
+	defer log.Trace("resource/common_test:badKMS() Leaving")
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
@@ -112,6 +128,8 @@ func badKMS(addr string) *http.Server {
 }
 
 func badHVS(addr string) *http.Server {
+	log.Trace("resource/common_test:badHVS() Entering")
+	defer log.Trace("resource/common_test:badHVS() Leaving")
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
@@ -125,7 +143,7 @@ func badHVS(addr string) *http.Server {
 	return h
 }
 
-var Saml = `<?xml version="1.0" encoding="UTF-8"?>
+var saml = `<?xml version="1.0" encoding="UTF-8"?>
 <saml2:Assertion ID="MapAssertion" IssueInstant="2019-08-13T20:35:04.312Z" Version="2.0" 
     xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
     <saml2:Issuer>https://10.105.168.102:8443</saml2:Issuer>

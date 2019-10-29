@@ -7,6 +7,10 @@ package constants
 const (
 	ServiceName                   = "WLS"
 	ConfigDir                     = "/etc/workload-service/"
+	ConfigFile                    = ConfigDir + "config.yml"
+	LogDir                        = "/var/log/workload-service/"
+	LogFile                       = LogDir + "wls.log"
+	SecurityLogFile               = LogDir + "wls-security.log"
 	TrustedJWTSigningCertsDir     = ConfigDir + "jwt/"
 	TrustedCaCertsDir             = ConfigDir + "cacerts/"
 	TLSCertPath                   = ConfigDir + "tls-cert.pem"
@@ -32,6 +36,8 @@ const (
 	WlsCertLocalityEnv            = "WLS_CERT_LOCALITY"
 	DefaultKeyCacheSeconds        = 300
 	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
+	JWTCertsCacheTime             = "1m"
+	HttpLogFile                   = "/var/log/workload-service/http.log"
 )
 
 // State represents whether or not a daemon is running or not

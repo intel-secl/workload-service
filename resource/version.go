@@ -15,11 +15,16 @@ import (
 
 // SetVersionEndpoints installs route handler for GET /version
 func SetVersionEndpoints(r *mux.Router, db repository.WlsDatabase) {
-	r.HandleFunc("/version", getVersion)
+	log.Trace("Entered resource/version:SetVersionEndpoints()")
+	defer log.Trace("Exited resource/version:SetVersionEndpoints()")
+	r.HandleFunc("", getVersion).Methods("GET")
 }
 
 // GetVersion handles GET /version
 func getVersion(w http.ResponseWriter, r *http.Request) {
+	log.Trace("resource/version:getVersion() Entering")
+	defer log.Trace("resource/version:getVersion() Leaving")
 	w.WriteHeader(http.StatusOK)
+	log.Debugf("resource/version:getVersion() WLS Version: %s CommitHash: %s", version.Version, version.GitHash)
 	w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
 }

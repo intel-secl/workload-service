@@ -6,10 +6,10 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	commLog "intel/isecl/lib/common/log"
 	"intel/isecl/lib/flavor"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type FlavorKeyInfo struct {
@@ -18,7 +18,11 @@ type FlavorKeyInfo struct {
 	Key       []byte       `json:"key"`
 }
 
+var log = commLog.GetDefaultLogger()
+
 func TestFlavorKeyDeserialize(t *testing.T) {
+	log.Trace("model/flavor_key_test:TestFlavorKeyDeserialize() Entering")
+	defer log.Trace("model/flavor_key_test:TestFlavorKeyDeserialize() Leaving")
 	raw := `{
 		"flavor": {
 		  "meta": {

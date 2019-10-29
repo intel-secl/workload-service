@@ -4,13 +4,18 @@
  */
 package keycache
 
-import "sync"
-import "time"
+import (
+	commLog "intel/isecl/lib/common/log"
+	"sync"
+	"time"
+)
+
+var log = commLog.GetDefaultLogger()
 
 // Key
 type Key struct {
-	ID    string
-	Bytes []byte
+	ID      string
+	Bytes   []byte
 	Created time.Time
 	Expired time.Time
 }
@@ -25,6 +30,8 @@ type Cache struct {
 // NewCache creates a new instance of a key cache
 // It returns a pointer to the Cache struct
 func NewCache() *Cache {
+	log.Trace("keycache/keycache:NewCache() Entering")
+	defer log.Trace("keycache/keycache:NewCache() Leaving")
 	return &Cache{
 		keys: make(map[string]Key),
 		mtx:  &sync.Mutex{},
@@ -35,6 +42,8 @@ func NewCache() *Cache {
 // It returns a byte slice containing the key data, as well as a bool that indicates
 // if the key exists in the cache
 func (c *Cache) Get(imageUUID string) (key Key, exists bool) {
+	log.Trace("keycache/keycache:Get() Entering")
+	defer log.Trace("keycache/keycache:Get() Leaving")
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	key, exists = c.keys[imageUUID]
@@ -43,6 +52,8 @@ func (c *Cache) Get(imageUUID string) (key Key, exists bool) {
 
 // Store persists a key in the cache by its keyID
 func (c *Cache) Store(imageID string, key Key) {
+	log.Trace("keycache/keycache:Store() Entering")
+	defer log.Trace("keycache/keycache:Store() Leaving")
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	c.keys[imageID] = key
@@ -51,15 +62,21 @@ func (c *Cache) Store(imageID string, key Key) {
 var global *Cache
 
 func init() {
+	log.Trace("keycache/keycache:init() Entering")
+	defer log.Trace("keycache/keycache:init() Leaving")
 	global = NewCache()
 }
 
 // Get retrieves a key by its imageID from the default global keycache
 func Get(imageID string) (key Key, exists bool) {
+	log.Trace("keycache/keycache:Get() Entering")
+	defer log.Trace("keycache/keycache:Get() Leaving")
 	return global.Get(imageID)
 }
 
 // Store persists a key by its keyID from the default global keycache
 func Store(imageID string, key Key) {
+	log.Trace("keycache/keycache:Store() Entering")
+	defer log.Trace("keycache/keycache:Store() Leaving")
 	global.Store(imageID, key)
 }

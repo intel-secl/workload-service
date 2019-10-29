@@ -26,7 +26,7 @@ type ReportFilter struct {
 	VMID         string `json:"vm_id,omitempty"`
 	ReportID     string `json:"report_id,omitempty"`
 	HardwareUUID string `json:"hardware_uuid,omitempty"`
-	LatestPerVM  bool `json:"latest_per_vm,omitempty"`
+	LatestPerVM  bool   `json:"latest_per_vm,omitempty"`
 	ToDate       string `json:"to_date,omitempty"`
 	FromDate     string `json:"from_date,omitempty"`
 	NumOfDays    int    `json:"no_of_days,omitempty"`

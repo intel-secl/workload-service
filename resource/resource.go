@@ -6,8 +6,10 @@ package resource
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"intel/isecl/lib/common/auth"
 	"intel/isecl/lib/common/context"
+	commLog "intel/isecl/lib/common/log"
 	ct "intel/isecl/lib/common/types/aas"
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository"
@@ -18,6 +20,9 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+var log = commLog.GetDefaultLogger()
+var seclog = commLog.GetSecurityLogger()
 
 const uuidv4 = "(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})"
 
@@ -37,31 +42,40 @@ type privilegeError struct {
 }
 
 func (e privilegeError) Error() string {
+	log.Trace("resource/resource:Error() Entering")
+	defer log.Trace("resource/resource:Error() Leaving")
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
 func (e endpointError) Error() string {
+	log.Trace("resource/resource:Error() Entering")
+	defer log.Trace("resource/resource:Error() Leaving")
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
 func requiresPermission(eh endpointHandler, roleNames []string) endpointHandler {
+	log.Trace("resource/resource:requiresPermission() Entering")
+	defer log.Trace("resource/resource:requiresPermission() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
 		privileges, err := context.GetUserRoles(r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Could not get user roles from http context"))
-			return err
+			seclog.Debugf("resource/resource:requiresPermission() Roles: %v | Context: %v", roleNames, r.Context())
+			return errors.Wrap(err, "resource/resource:requiresPermission() Could not get user roles from http context")
 		}
 		reqRoles := make([]ct.RoleInfo, len(roleNames))
 		for i, role := range roleNames {
 			reqRoles[i] = ct.RoleInfo{Service: consts.ServiceName, Name: role}
 		}
 
+		seclog.Debugf("resource/resource:requiresPermission() Req Roles: %v", reqRoles)
 		_, foundRole := auth.ValidatePermissionAndGetRoleContext(privileges, reqRoles,
 			true)
 		if !foundRole {
 			w.WriteHeader(http.StatusUnauthorized)
-			return &privilegeError{Message: "", StatusCode: http.StatusUnauthorized}
+			seclog.Errorf("resource/resource:requiresPermission() Insufficient privileges to access %s", r.RequestURI)
+			return &privilegeError{Message: "Insufficient privileges to access " + r.RequestURI, StatusCode: http.StatusUnauthorized}
 		}
 		return eh(w, r)
 	}
@@ -72,6 +86,8 @@ func requiresPermission(eh endpointHandler, roleNames []string) endpointHandler 
 type endpointHandler func(w http.ResponseWriter, r *http.Request) error
 
 func errorHandler(eh endpointHandler) http.HandlerFunc {
+	log.Trace("resource/resource:errorHandler() Entering")
+	defer log.Trace("resource/resource:errorHandler() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := eh(w, r); err != nil {
 			if gorm.IsRecordNotFoundError(err) {

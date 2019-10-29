@@ -7,41 +7,32 @@ package main
 import (
 	"crypto/x509/pkix"
 	"fmt"
+	commLog "intel/isecl/lib/common/log"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/lib/common/validation"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/setup"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+
 	// Import Postgres driver
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	log "github.com/sirupsen/logrus"
 	e "intel/isecl/lib/common/exec"
-	stdlog "log"
+
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-func main() {
-	var context csetup.Context
-	/* BEGIN LOG CONFIGURATION */
-	wlsLogFile, err := os.OpenFile("/var/log/workload-service/wls.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	defer wlsLogFile.Close()
-	if err != nil {
-		log.WithError(err).Info("Failed to open log file, using stderr")
-		log.SetOutput(os.Stderr)
-	} else {
-		log.SetOutput(io.MultiWriter(os.Stderr, wlsLogFile))
-	}
-	log.SetLevel(config.Configuration.LogLevel)
-	// override standard golang log
-	w := log.StandardLogger().WriterLevel(config.Configuration.LogLevel)
-	defer w.Close()
-	stdlog.SetOutput(w)
-	/* END LOG CONFIGURATION */
+var log = commLog.GetDefaultLogger()
+var secLog = commLog.GetSecurityLogger()
 
+func main() {
+	log.Trace("main:main() Entering")
+	defer log.Trace("main:main() Leaving")
+
+	var context csetup.Context
+	config.LogConfiguration(false, true)
 	/* PARSE COMMAND LINE OPTIONS */
 	args := os.Args[1:]
 	if len(args) <= 0 {
@@ -52,7 +43,9 @@ func main() {
 
 	inputStringArr := os.Args[0:]
 	if err := validation.ValidateStrings(inputStringArr); err != nil {
-		fmt.Println("Invalid input")
+		secLog.WithError(err).Error("main:main() Invalid Input")
+		log.Tracef("%+v", err)
+		fmt.Fprintln(os.Stderr, "Invalid input")
 		printUsage()
 		os.Exit(1)
 	}
@@ -67,12 +60,12 @@ func main() {
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
 			args[1] != "aasconnection" &&
-			args[1] != "logs"{
+			args[1] != "logs" {
 			printUsage()
 			os.Exit(1)
 		}
 
-
+		config.LogConfiguration(false, true)
 		if len(args) > 1 {
 			flags = args[2:]
 			if args[1] == "download_cert" && len(args) > 2 {
@@ -80,9 +73,11 @@ func main() {
 			}
 		}
 
-		err = config.SaveConfiguration(context)
+		err := config.SaveConfiguration(context)
 		if err != nil {
-			fmt.Println("Error: Unable to save configuration in config.yml")
+			log.WithError(err).Error("main:main() Unable to save configuration in config.yml")
+			log.Tracef("%+v", err)
+			fmt.Fprintln(os.Stderr, "Error: Unable to save configuration in config.yml")
 			os.Exit(1)
 		}
 
@@ -101,18 +96,18 @@ func main() {
 					KeyAlgorithm:       constants.DefaultKeyAlgorithm,
 					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
 					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
-					Subject:            pkix.Name{
+					Subject: pkix.Name{
 						Country:      []string{config.Configuration.Subject.Country},
 						Organization: []string{config.Configuration.Subject.Organization},
 						Locality:     []string{config.Configuration.Subject.Locality},
 						Province:     []string{config.Configuration.Subject.Province},
 						CommonName:   config.Configuration.Subject.TLSCertCommonName,
 					},
-					SanList:            constants.DefaultWlsTlsSan,
-					CertType:           "TLS",
-					CaCertsDir:         constants.TrustedCaCertsDir,
-					BearerToken:        "",
-					ConsoleWriter:      os.Stdout,
+					SanList:       constants.DefaultWlsTlsSan,
+					CertType:      "TLS",
+					CaCertsDir:    constants.TrustedCaCertsDir,
+					BearerToken:   "",
+					ConsoleWriter: os.Stdout,
 				},
 				new(setup.Server),
 				new(setup.Database),
@@ -123,9 +118,11 @@ func main() {
 			AskInput: false,
 		}
 
-		err := setupRunner.RunTasks(args[1:]...)
+		err = setupRunner.RunTasks(args[1:]...)
 		if err != nil {
-			fmt.Println("Error running setup: ", err)
+			log.WithError(err).Error("main:main() Error in running setup tasks")
+			log.Tracef("%+v", err)
+			fmt.Fprintln(os.Stderr, "Error running setup: ", err)
 			os.Exit(1)
 		}
 
@@ -136,6 +133,7 @@ func main() {
 		status()
 
 	case "startserver":
+		config.LogConfiguration(true, true)
 		// this runs in attached mode
 		startServer()
 
@@ -143,6 +141,7 @@ func main() {
 		stop()
 
 	case "uninstall":
+		log.Info("main:main() Uninstalling workload-service...")
 		stop()
 		removeService()
 		deleteFile("/opt/workload-service/")
@@ -150,7 +149,8 @@ func main() {
 		deleteFile("/var/log/workload-service/")
 		if len(args) > 1 && strings.ToLower(args[1]) == "--purge" {
 			deleteFile("/etc/workload-service/")
-		}		
+		}
+		log.Info("main:main() workload-service successfully uninstalled")
 
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
@@ -162,9 +162,15 @@ func main() {
 }
 
 func start() error {
+	log.Trace("main:start() Entering")
+	defer log.Trace("main:start() Leaving")
+
 	fmt.Println("Starting Workload Service")
+	log.Info("main:start() Starting Workload Service")
 	systemctl, err := exec.LookPath("systemctl")
 	if err != nil {
+		log.WithError(err).Error("main:start() Error trying to look up for systemctl path")
+		log.Tracef("%+v", err)
 		fmt.Println("Error trying to look up for systemctl path")
 		os.Exit(1)
 	}
@@ -172,45 +178,72 @@ func start() error {
 }
 
 func stop() error {
+	log.Trace("main:stop() Entering")
+	defer log.Trace("main:stop() Leaving")
+
 	fmt.Println("Stopping Workload Service")
+	log.Info("main:stop() Stopping Workload Service")
 	_, _, err := e.RunCommandWithTimeout("systemctl stop workload-service", 5)
 	if err != nil {
 		fmt.Println("Could not stop Workload-service")
 		fmt.Println("Error : ", err)
+		log.WithError(err).Error("main:stop() Could not stop Workload-service")
+		log.Tracef("%+v", err)
 	}
 	return err
 }
 
 func status() error {
+	log.Trace("main:status() Entering")
+	defer log.Trace("main:status() Leaving")
+
 	fmt.Println("Forwarding to systemctl status workload-service")
+	log.Info("main:status() Workload-service status")
 	systemctl, err := exec.LookPath("systemctl")
 	if err != nil {
 		fmt.Println("Error trying to look up for systemctl path")
+		log.WithError(err).Error("main:status() Error trying to look up for systemctl path")
+		log.Tracef("%+v", err)
 		os.Exit(1)
 	}
 	return syscall.Exec(systemctl, []string{"systemctl", "status", "workload-service"}, os.Environ())
 }
 
 func removeService() error {
+	log.Trace("main:removeService() Entering")
+	defer log.Trace("main:removeService() Leaving")
+
 	fmt.Println("Removing Workload Service")
+	log.Info("main:removeService() Removing Workload Service")
 	_, _, err := e.RunCommandWithTimeout("systemctl disable workload-service", 5)
 	if err != nil {
 		fmt.Println("Could not remove Workload-service")
 		fmt.Println("Error : ", err)
+		log.WithError(err).Error("main:removeService() Could not remove Workload-service")
+		log.Tracef("%+v", err)
 	}
 	return err
 }
 
 func deleteFile(path string) {
+	log.Trace("main:deleteFile() Entering")
+	defer log.Trace("main:deleteFile() Leaving")
+
 	fmt.Println("Deleting : ", path)
+	log.Infof("main:deleteFile() Deleting : %s", path)
 	// delete file
 	var err = os.RemoveAll(path)
 	if err != nil {
 		fmt.Println(err.Error())
+		log.WithError(err).Error("main:deleteFile() Error in deleting file")
+		log.Tracef("%+v", err)
 	}
 }
 
 func printUsage() {
+	log.Trace("main:printUsage() Entering")
+	defer log.Trace("main:printUsage() Leaving")
+
 	fmt.Println("Usage:")
 	fmt.Printf("    %s <command>\n\n", os.Args[0])
 	fmt.Println("Available Commands:")
@@ -255,4 +288,4 @@ func printUsage() {
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token")
 	fmt.Println("    logs                Setup workload-service log level")
 	fmt.Printf("                        - Environment variable WLS_LOG_LEVEL=<log level> should be set\n\n")
- }
+}

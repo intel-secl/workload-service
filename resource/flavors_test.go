@@ -5,20 +5,20 @@
 package resource
 
 import (
+	"bytes"
 	"intel/isecl/workload-service/repository/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"bytes"
 
 	"github.com/jinzhu/gorm"
 
 	"github.com/stretchr/testify/assert"
 )
 
-
-
 func TestDeleteNonExistentFlavorID(t *testing.T) {
+	log.Trace("resource/flavors_test:TestDeleteNonExistentFlavorID() Entering")
+	defer log.Trace("resource/flavors_test:TestDeleteNonExistentFlavorID() Leaving")
 	assert := assert.New(t)
 	db := new(mock.Database)
 	db.MockFlavor.DeleteByUUIDFn = func(uuid string) error {
@@ -33,6 +33,8 @@ func TestDeleteNonExistentFlavorID(t *testing.T) {
 }
 
 func TestInvalidFlavorID(t *testing.T) {
+	log.Trace("resource/flavors_test:TestInvalidFlavorID() Entering")
+	defer log.Trace("resource/flavors_test:TestInvalidFlavorID() Leaving")
 	assert := assert.New(t)
 	db := new(mock.Database)
 	db.MockFlavor.DeleteByUUIDFn = func(uuid string) error {
@@ -48,6 +50,8 @@ func TestInvalidFlavorID(t *testing.T) {
 }
 
 func TestFlavorPartValidation(t *testing.T) {
+	log.Trace("resource/flavors_test:TestFlavorPartValidation() Entering")
+	defer log.Trace("resource/flavors_test:TestFlavorPartValidation() Leaving")
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)

@@ -125,6 +125,68 @@ chown wls:wls /usr/local/bin/workload-service
 cp -f workload-service.service $WORKLOAD_SERVICE_HOME
 systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
 
+#Install log rotation
+auto_install() {
+  local component=${1}
+  local cprefix=${2}
+  local yum_packages=$(eval "echo \$${cprefix}_YUM_PACKAGES")
+  # detect available package management tools. start with the less likely ones to differentiate.
+  yum -y install $yum_packages
+}
+
+
+# SCRIPT EXECUTION
+logRotate_clear() {
+  logrotate=""
+}
+
+logRotate_detect() {
+  local logrotaterc=`ls -1 /etc/logrotate.conf 2>/dev/null | tail -n 1`
+  logrotate=`which logrotate 2>/dev/null`
+  if [ -z "$logrotate" ] && [ -f "/usr/sbin/logrotate" ]; then
+    logrotate="/usr/sbin/logrotate"
+  fi
+}
+
+logRotate_install() {
+  LOGROTATE_YUM_PACKAGES="logrotate"
+  if [ "$(whoami)" == "root" ]; then
+    auto_install "Log Rotate" "LOGROTATE"
+    if [ $? -ne 0 ]; then echo_failure "Failed to install logrotate"; exit -1; fi
+  fi
+  logRotate_clear; logRotate_detect;
+    if [ -z "$logrotate" ]; then
+      echo_failure "logrotate is not installed"
+    else
+      echo  "logrotate installed in $logrotate"
+    fi
+}
+
+logRotate_install
+
+export LOG_ROTATION_PERIOD=${LOG_ROTATION_PERIOD:-hourly}
+export LOG_COMPRESS=${LOG_COMPRESS:-compress}
+export LOG_DELAYCOMPRESS=${LOG_DELAYCOMPRESS:-delaycompress}
+export LOG_COPYTRUNCATE=${LOG_COPYTRUNCATE:-copytruncate}
+export LOG_SIZE=${LOG_SIZE:-1K}
+export LOG_OLD=${LOG_OLD:-12}
+
+mkdir -p /etc/logrotate.d
+
+if [ ! -a /etc/logrotate.d/wls ]; then
+ echo "/var/log/workload-service/* {
+    missingok
+        notifempty
+        rotate $LOG_OLD
+        maxsize $LOG_SIZE
+    nodateext
+        $LOG_ROTATION_PERIOD
+        $LOG_COMPRESS
+        $LOG_DELAYCOMPRESS
+        $LOG_COPYTRUNCATE
+}" > /etc/logrotate.d/wls
+fi
+
 # exit workload-service setup if WORKLOAD_SERVICE_NOSETUP is set
 if [ $WLS_NOSETUP == "true" ]; then
   echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile

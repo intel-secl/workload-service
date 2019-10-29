@@ -1,16 +1,17 @@
+// +build integration
+
 /*
  * Copyright (C) 2019 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-// Xbuild integration
 
 package resource
 
 import (
 	"bytes"
 	"encoding/json"
-	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/lib/flavor"
+	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/workload-service/model"
 	"net/http"
 	"net/http/httptest"
@@ -21,6 +22,8 @@ import (
 )
 
 func TestImagesResourceIntegration(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestImagesResourceIntegration() Entering")
+	defer log.Trace("resource/images_integration_test:TestImagesResourceIntegration() Leaving")
 
 	assert := assert.New(t)
 	checkErr := func(e error) {
@@ -122,7 +125,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	// make sure we only get a single image when filtering by image_id (ISECL-3557)
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/images?image_id="+newImage.ID, nil)
-        req.Header.Add("Authorization", "Bearer "+BearerToken)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 	err = json.Unmarshal(recorder.Body.Bytes(), &response)
@@ -188,6 +191,8 @@ func TestImagesResourceIntegration(t *testing.T) {
 }
 
 func TestImageDuplicate(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestImageDuplicate() Entering")
+	defer log.Trace("resource/images_integration_test:TestImageDuplicate() Leaving")
 	assert := assert.New(t)
 	r := setupServer(t)
 
@@ -219,6 +224,8 @@ func TestImageDuplicate(t *testing.T) {
 }
 
 func TestImageAssociatedFlavors(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestImageAssociatedFlavors() Entering")
+	defer log.Trace("resource/images_integration_test:TestImageAssociatedFlavors() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -344,6 +351,8 @@ func TestImageAssociatedFlavors(t *testing.T) {
 }
 
 func TestImageBadFlavorID(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestImageBadFlavorID() Entering")
+	defer log.Trace("resource/images_integration_test:TestImageBadFlavorID() Leaving")
 	assert := assert.New(t)
 	r := setupServer(t)
 	// Post a new Image association with Invalid ID
@@ -359,6 +368,8 @@ func TestImageBadFlavorID(t *testing.T) {
 }
 
 func TestImageDuplicateFlavorIDs(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestImageDuplicateFlavorIDs() Entering")
+	defer log.Trace("resource/images_integration_test:TestImageDuplicateFlavorIDs() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -426,6 +437,8 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 }
 
 func TestCreateImageEmptyFlavorsIntegration(t *testing.T) {
+	log.Trace("resource/images_integration_test:TestCreateImageEmptyFlavorsIntegration() Entering")
+	defer log.Trace("resource/images_integration_test:TestCreateImageEmptyFlavorsIntegration() Leaving")
 	assert := assert.New(t)
 	r := setupServer(t)
 

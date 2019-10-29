@@ -18,10 +18,15 @@ type imageEntity struct {
 }
 
 func (ie imageEntity) TableName() string {
+	log.Trace("repository/postgres/image_entity:TableName() Entering")
+	defer log.Trace("repository/postgres/image_entity:TableName() Leaving")
 	return "images"
 }
 
 func (ie *imageEntity) Image() model.Image {
+	log.Trace("repository/postgres/image_entity:Image() Entering")
+	defer log.Trace("repository/postgres/image_entity:Image() Leaving")
+
 	flavorIDs := make([]string, len(ie.Flavors))
 	for i, fe := range ie.Flavors {
 		flavorIDs[i] = fe.ID

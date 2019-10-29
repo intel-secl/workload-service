@@ -25,6 +25,9 @@ type MockImage struct {
 }
 
 func (m *MockImage) Create(image *model.Image) error {
+	log.Trace("repository/mock/image_repository:Create() Entering")
+	defer log.Trace("repository/mock/image_repository:Create() Leaving")
+	log.Debug("repository/mock/image_repository:Create() Create mock image")
 	if m.CreateFn != nil {
 		return m.CreateFn(image)
 	}
@@ -32,6 +35,9 @@ func (m *MockImage) Create(image *model.Image) error {
 }
 
 func (m *MockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
+	log.Trace("repository/mock/image_repository:RetrieveByUUID() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveByUUID() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveByUUID() Retrieve mock image by UUID")
 	if m.RetrieveByUUIDFn != nil {
 		return m.RetrieveByUUIDFn(uuid)
 	}
@@ -41,6 +47,9 @@ func (m *MockImage) RetrieveByUUID(uuid string) (*model.Image, error) {
 }
 
 func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*flvr.SignedImageFlavor, error) {
+	log.Trace("repository/mock/image_repository:RetrieveAssociatedImageFlavor() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveAssociatedImageFlavor() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveAssociatedImageFlavor() Retrieve associated mock image flavor by image UUID")
 	if m.RetrieveAssociatedImageFlavorFn != nil {
 		return m.RetrieveAssociatedImageFlavorFn(imageUUID)
 	}
@@ -48,6 +57,9 @@ func (m *MockImage) RetrieveAssociatedImageFlavor(imageUUID string) (*flvr.Signe
 }
 
 func (m *MockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]model.Image, error) {
+	log.Trace("repository/mock/image_repository:RetrieveByFilterCriteria() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveByFilterCriteria() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveByFilterCriteria() Retrieve mock image by filter criteria")
 	if m.RetrieveByFilterCriteriaFn != nil {
 		return m.RetrieveByFilterCriteriaFn(locator)
 	}
@@ -55,6 +67,9 @@ func (m *MockImage) RetrieveByFilterCriteria(locator repository.ImageFilter) ([]
 }
 
 func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string) (*model.Flavor, error) {
+	log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavor() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavor() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveAssociatedFlavor() Retrieve associated mock image flavor by image UUID and flavor UUID")
 	if m.RetrieveAssociatedFlavorFn != nil {
 		return m.RetrieveAssociatedFlavorFn(imageUUID, flavorUUID)
 	}
@@ -62,6 +77,9 @@ func (m *MockImage) RetrieveAssociatedFlavor(imageUUID string, flavorUUID string
 }
 
 func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavorPart string) (*flvr.SignedImageFlavor, error) {
+	log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavorByFlavorPart() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavorByFlavorPart() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveAssociatedFlavorByFlavorPart() Retrieve associated mock image flavor by flavor part")
 	if m.RetrieveAssociatedFlavorFn != nil {
 		return m.RetrieveAssociatedFlavorByFlavorPartFn(imageUUID, flavorPart)
 	}
@@ -69,6 +87,9 @@ func (m *MockImage) RetrieveAssociatedFlavorByFlavorPart(imageUUID string, flavo
 }
 
 func (m *MockImage) RetrieveAssociatedFlavors(imageUUID string) ([]model.Flavor, error) {
+	log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavors() Entering")
+	defer log.Trace("repository/mock/image_repository:RetrieveAssociatedFlavors() Leaving")
+	log.Debug("repository/mock/image_repository:RetrieveAssociatedFlavors() Retrieve associated mock image flavors by image UUID")
 	if m.RetrieveAssociatedFlavorsFn != nil {
 		return m.RetrieveAssociatedFlavorsFn(imageUUID)
 	}
@@ -76,6 +97,9 @@ func (m *MockImage) RetrieveAssociatedFlavors(imageUUID string) ([]model.Flavor,
 }
 
 func (m *MockImage) Update(image *model.Image) error {
+	log.Trace("repository/mock/image_repository:Update() Entering")
+	defer log.Trace("repository/mock/image_repository:Update() Leaving")
+	log.Debug("repository/mock/image_repository:Update() Update mock image")
 	if m.UpdateFn != nil {
 		return m.UpdateFn(image)
 	}
@@ -83,6 +107,9 @@ func (m *MockImage) Update(image *model.Image) error {
 }
 
 func (m *MockImage) AddAssociatedFlavor(imageID string, flavorID string) error {
+	log.Trace("repository/mock/image_repository:AddAssociatedFlavor() Entering")
+	defer log.Trace("repository/mock/image_repository:AddAssociatedFlavor() Leaving")
+	log.Debug("repository/mock/image_repository:AddAssociatedFlavor() Associate flavor with mock image ")
 	if m.AddAssociatedFlavorFn != nil {
 		return m.AddAssociatedFlavorFn(imageID, flavorID)
 	}
@@ -90,6 +117,9 @@ func (m *MockImage) AddAssociatedFlavor(imageID string, flavorID string) error {
 }
 
 func (m *MockImage) DeleteByUUID(imageID string) error {
+	log.Trace("repository/mock/image_repository:DeleteByUUID() Entering")
+	defer log.Trace("repository/mock/image_repository:DeleteByUUID() Leaving")
+	log.Debug("repository/mock/image_repository:DeleteByUUID() Delete mock image by UUID")
 	if m.DeleteByUUIDFn != nil {
 		return m.DeleteByUUIDFn(imageID)
 	}
@@ -97,6 +127,9 @@ func (m *MockImage) DeleteByUUID(imageID string) error {
 }
 
 func (m *MockImage) DeleteAssociatedFlavor(imageID string, flavorID string) error {
+	log.Trace("repository/mock/image_repository:DeleteAssociatedFlavor() Entering")
+	defer log.Trace("repository/mock/image_repository:DeleteAssociatedFlavor() Leaving")
+	log.Debug("repository/mock/image_repository:DeleteAssociatedFlavor() Delete associated mock image flavor")
 	if m.DeleteAssociatedFlavorFn != nil {
 		return m.DeleteAssociatedFlavorFn(imageID, flavorID)
 	}

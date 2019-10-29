@@ -6,12 +6,15 @@ package mock
 
 import (
 	"encoding/json"
+	commLog "intel/isecl/lib/common/log"
 	"intel/isecl/lib/common/pkg/instance"
 	"intel/isecl/lib/flavor"
 	flavorUtil "intel/isecl/lib/flavor/util"
 	"intel/isecl/lib/verifier"
 	"intel/isecl/workload-service/model"
 )
+
+var log = commLog.GetDefaultLogger()
 
 var f model.Flavor
 var signedFlavor flavor.SignedImageFlavor
@@ -37,7 +40,11 @@ var r = model.Report{
 }
 
 func init() {
+	log.Trace("repository/mock/init:init() Entering")
+	defer log.Trace("repository/mock/init:init() Leaving")
+
 	f = model.Flavor(*f2)
+	log.Info("repository/mock/init:init() Unmarshal the signed flavor")
 	json.Unmarshal([]byte(signedFlavorString), &signedFlavor)
 	f2.Image.Meta.ID = "ecee021e-9669-4e53-9224-8880fb4e4080"
 	i.ID = "dddd021e-9669-4e53-9224-8880fb4e4080"

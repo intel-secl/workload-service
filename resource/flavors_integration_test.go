@@ -1,20 +1,21 @@
+// +build integration
+
 /*
  * Copyright (C) 2019 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-// +build integration
 
 package resource
 
 import (
-	"intel/isecl/workload-service/model"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	flavorUtil "intel/isecl/lib/flavor/util"
-	"intel/isecl/lib/flavor"
-	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/lib/common/middleware"
+	"intel/isecl/lib/flavor"
+	flavorUtil "intel/isecl/lib/flavor/util"
+	"intel/isecl/workload-service/model"
+	"intel/isecl/workload-service/repository/postgres"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -45,6 +46,8 @@ import (
 //   }
 
 func setupFlavorServer(t *testing.T) *mux.Router {
+	log.Trace("resource/flavors_integration_test:setupFlavorServer() Entering")
+	defer log.Trace("resource/flavors_integration_test:setupFlavorServer() Leaving")
 	checkErr := func(e error) {
 		assert.NoError(t, e)
 		if e != nil {
@@ -62,7 +65,7 @@ func setupFlavorServer(t *testing.T) *mux.Router {
 	checkErr(err)
 
 	r := mux.NewRouter()
-	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts))
+	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
 	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
@@ -70,6 +73,8 @@ func setupFlavorServer(t *testing.T) *mux.Router {
 }
 
 func TestFlavorResource(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestFlavorResource() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestFlavorResource() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -112,6 +117,8 @@ func TestFlavorResource(t *testing.T) {
 }
 
 func TestDuplicate(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestDuplicate() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestDuplicate() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -153,6 +160,8 @@ func TestDuplicate(t *testing.T) {
 }
 
 func TestFlavorDuplicateLabel(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestFlavorDuplicateLabel() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestFlavorDuplicateLabel() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -199,6 +208,8 @@ func TestFlavorDuplicateLabel(t *testing.T) {
 }
 
 func TestFlavorInvalidJson(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestFlavorInvalidJson() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestFlavorInvalidJson() Leaving")
 	assert := assert.New(t)
 	r := setupFlavorServer(t)
 	recorder := httptest.NewRecorder()
@@ -210,6 +221,8 @@ func TestFlavorInvalidJson(t *testing.T) {
 }
 
 func TestFlavorDeleteByLabel(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestFlavorDeleteByLabel() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestFlavorDeleteByLabel() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
@@ -250,6 +263,8 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 }
 
 func TestGetByLabel(t *testing.T) {
+	log.Trace("resource/flavors_integration_test:TestGetByLabel() Entering")
+	defer log.Trace("resource/flavors_integration_test:TestGetByLabel() Leaving")
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)

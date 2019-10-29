@@ -13,6 +13,8 @@ import (
 )
 
 func TestGetVersion(t *testing.T) {
+	log.Trace("resource/version_test:TestGetVersion() Entering")
+	defer log.Trace("resource/version_test:TestGetVersion() Leaving")
 	assert := assert.New(t)
 	req, err := http.NewRequest("GET", "/version", nil)
 	if err != nil {
