@@ -6,7 +6,6 @@ package vsclient
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
 	"intel/isecl/lib/clients"
 	"intel/isecl/lib/clients/aas"
 	commLog "intel/isecl/lib/common/log"
@@ -14,6 +13,8 @@ import (
 	config "intel/isecl/workload-service/config"
 	consts "intel/isecl/workload-service/constants"
 	"io/ioutil"
+
+	"github.com/pkg/errors"
 
 	"fmt"
 	"net/http"

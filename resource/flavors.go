@@ -36,7 +36,6 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:getFlavorByID() Entering")
 	defer log.Trace("resource/flavors:getFlavorByID() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
-
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {
@@ -94,11 +93,13 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 }
 
 func getFlavors(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/flavors:getFlavors() Entering")
-	defer log.Trace("resource/flavors:getFlavors() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/flavors:getFlavors() Entering")
+		defer log.Trace("resource/flavors:getFlavors() Leaving")
+		var fLog = log
 		filterCriteria := repository.FlavorFilter{}
 		flavorID, ok := r.URL.Query()["id"]
+
 		if ok && len(flavorID) >= 1 {
 			// validate UUID
 			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
@@ -107,9 +108,8 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Unable to retrieve flavor - Invalid flavor UUID format", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.FlavorID = flavorID[0]
+			fLog = log.WithField("flavorid", flavorID[0])
 		}
-
-		fLog := log.WithField("flavorid", flavorID[0])
 
 		label, ok := r.URL.Query()["label"]
 		if ok && len(label) >= 1 {
@@ -120,9 +120,8 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Unable to retrieve flavor - Invalid label string", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.Label = label[0]
+			fLog = fLog.WithField("label", label[0])
 		}
-
-		fLog = fLog.WithField("label", label[0])
 
 		filter, ok := r.URL.Query()["filter"]
 		if ok && len(filter) >= 1 {
@@ -135,7 +134,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 			filterCriteria.Filter = boolValue
 		}
 
-		if (filterCriteria.Label == "" && filterCriteria.FlavorID == "" && filterCriteria.Filter) {
+		if filterCriteria.Label == "" && filterCriteria.FlavorID == "" && filterCriteria.Filter {
 			log.Error("Invalid filter criteria. Allowed filter critierias are id, label and filter = false\n")
 			return &endpointError{Message: "Unable to retrieve flavor - Invalid filter criteria - Allowed filter critierias are id, label and filter = false", StatusCode: http.StatusBadRequest}
 		}
@@ -161,7 +160,6 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:deleteFlavorByID() Entering")
 	defer log.Trace("resource/flavors:deleteFlavorByID() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
-
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {

@@ -5,13 +5,11 @@
 package setup
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
+	"intel/isecl/lib/clients"
 	aasClient "intel/isecl/lib/clients/aas"
 	"intel/isecl/lib/common/crypt"
 	commLog "intel/isecl/lib/common/log"
-	cos "intel/isecl/lib/common/os"
 	csetup "intel/isecl/lib/common/setup"
 	aasTypes "intel/isecl/lib/common/types/aas"
 	"intel/isecl/workload-service/config"
@@ -53,9 +51,15 @@ func (aas AASConnection) Run(c csetup.Context) error {
 		return errors.Wrap(err, "setup/aas:Run AAS bearer token not set in environment")
 	}
 
+	hc, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
+	if err != nil {
+		return errors.Wrapf(err, "setup/aas:Run() Error setting up HTTP client: %s", err.Error())
+	}
+
 	ac := &aasClient.Client{
-		BaseURL:  aasURL,
-		JWTToken: []byte(aasBearerToken),
+		BaseURL:    aasURL,
+		JWTToken:   []byte(aasBearerToken),
+		HTTPClient: hc,
 	}
 
 	roles := [3]string{consts.FlavorImageRetrievalGroupName, consts.ReportCreationGroupName, consts.AdministratorGroupName}
@@ -91,7 +95,7 @@ func (aas AASConnection) Run(c csetup.Context) error {
 	return nil
 }
 
-// Validate checks whether or not the KMS Connection setup task was completed successfully
+// Validate checks whether or not the AAS Connection setup task was completed successfully
 func (aas AASConnection) Validate(c csetup.Context) error {
 	log.Trace("setup/aas:Validate() Entering")
 	defer log.Trace("setup/aas:Validate() Leaving")
@@ -105,31 +109,13 @@ func fnGetJwtCerts() error {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("accept", "application/x-pem-file")
 	seclog.Debugf("setup/aas:fnGetJwtCerts() Connecting to AAS Endpoint %s", url)
-	rootCaCertPems, err := cos.GetDirFileContents(consts.TrustedCaCertsDir, "*.pem")
+
+	hc, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
 	if err != nil {
-		return errors.Wrapf(err, "setup/aas:fnGetJwtCerts() Error reading Root CA certificates from %s", consts.TrustedCaCertsDir)
+		return errors.Wrapf(err, "setup/aas:fnGetJwtCerts() Error setting up HTTP client: %s", err.Error())
 	}
 
-	// Get the SystemCertPool, continue with an empty pool on error
-	rootCAs, _ := x509.SystemCertPool()
-	if rootCAs == nil {
-		rootCAs = x509.NewCertPool()
-	}
-	for _, rootCACert := range rootCaCertPems {
-		if ok := rootCAs.AppendCertsFromPEM(rootCACert); !ok {
-			return errors.Wrap(err, "setup/aas:fnGetJwtCerts() Unable to validate certificate chain")
-		}
-	}
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: false,
-				RootCAs:            rootCAs,
-			},
-		},
-	}
-
-	res, err := httpClient.Do(req)
+	res, err := hc.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "setup/aas:fnGetJwtCerts() Could not retrieve jwt certificate")
 	}

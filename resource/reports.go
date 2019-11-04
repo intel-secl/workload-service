@@ -32,9 +32,11 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 }
 
 func getReport(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/reports:getReport() Entering")
-	defer log.Trace("resource/reports:getReport() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/reports:getReport() Entering")
+		defer log.Trace("resource/reports:getReport() Leaving")
+
+		var cLog = log
 		filterCriteria := repository.ReportFilter{}
 		filterCriteria.Filter = true
 
@@ -52,6 +54,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.VMID = vmID[0]
+			cLog = log.WithField("VMUUID", vmID[0])
 		}
 
 		reportID, ok := r.URL.Query()["report_id"]
@@ -62,6 +65,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.ReportID = reportID[0]
+			cLog = cLog.WithField("ReportID", reportID[0])
 		}
 
 		hardwareUUID, ok := r.URL.Query()["hardware_uuid"]
@@ -72,6 +76,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.HardwareUUID = hardwareUUID[0]
+			cLog = cLog.WithField("HardwareUUID", hardwareUUID[0])
 		}
 
 		fromDate, ok := r.URL.Query()["from_date"]
@@ -82,23 +87,25 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.FromDate = fromDate[0]
+			cLog = cLog.WithField("fromDate", fromDate[0])
 		}
 
 		toDate, ok := r.URL.Query()["to_date"]
 		if ok && len(toDate) >= 1 {
 			if err := validation.ValidateDate(toDate[0]); err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid to date format. Expected date format mm-dd-yyyy")
+				cLog.WithError(err).Error("resource/reports:getReport() Invalid to date format. Expected date format mm-dd-yyyy")
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.ToDate = toDate[0]
+			cLog = cLog.WithField("toDate", toDate[0])
 		}
 
 		latestPerVM, ok := r.URL.Query()["latest_per_vm"]
 		if ok && len(latestPerVM) >= 1 {
 			boolValue, err := strconv.ParseBool(latestPerVM[0])
 			if err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid latest_per_vm boolean value, must be true or false")
+				cLog.WithError(err).Error("resource/reports:getReport() Invalid latest_per_vm boolean value, must be true or false")
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -111,7 +118,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		if ok && len(numOfDays) >= 1 {
 			nd, err := strconv.Atoi(numOfDays[0])
 			if err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid integer value for num_of_days query parameter")
+				cLog.WithError(err).Error("resource/reports:getReport() Invalid integer value for num_of_days query parameter")
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -122,40 +129,40 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		if ok && len(filter) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid filter boolean value, must be true or false")
+				cLog.WithError(err).Error("resource/reports:getReport() Invalid filter boolean value, must be true or false")
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.Filter = boolValue
 		}
 
-		if (filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.VMID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter) {
-			log.Error("Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false\n")
+		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.VMID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
+			cLog.Error("Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false\n")
 			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
 		if err != nil {
-			log.WithError(err).Error("resource/reports:getReport() Failed to retrieve reports")
+			cLog.WithError(err).Error("resource/reports:getReport() Failed to retrieve reports")
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve reports", StatusCode: http.StatusInternalServerError}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(reports); err != nil {
-			log.WithError(err).Error("resource/reports:getReport() Unexpectedly failed to encode reports to JSON")
+			cLog.WithError(err).Error("resource/reports:getReport() Unexpectedly failed to encode reports to JSON")
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve reports - JSON encode failed", StatusCode: http.StatusInternalServerError}
 		}
-		log.Debug("resource/reports:getReport() Successfully retrieved report")
+		cLog.Debug("resource/reports:getReport() Successfully retrieved report")
 		return nil
 	}
 }
 
 func createReport(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/reports:createReport() Entering")
-	defer log.Trace("resource/reports:createReport() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/reports:createReport() Entering")
+		defer log.Trace("resource/reports:createReport() Leaving")
+
 		var vtr model.Report
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
@@ -216,10 +223,10 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 }
 
 func deleteReportByID(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/reports:deleteReportByID() Entering")
-	defer log.Trace("resource/reports:deleteReportByID() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/reports:deleteReportByID() Entering")
+		defer log.Trace("resource/reports:deleteReportByID() Leaving")
+
 		uuid := mux.Vars(r)["id"]
 		// validate UUID
 		if err := validation.ValidateUUIDv4(uuid); err != nil {

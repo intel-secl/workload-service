@@ -82,9 +82,9 @@ func badId(w http.ResponseWriter, r *http.Request) {
 }
 
 func missingQueryParameters(params ...string) http.HandlerFunc {
-	log.Trace("resource/images:missingQueryParameters() Entering")
-	defer log.Trace("resource/images:missingQueryParameters() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Trace("resource/images:missingQueryParameters() Entering")
+		defer log.Trace("resource/images:missingQueryParameters() Leaving")
 		errStr := fmt.Sprintf("Missing query parameters: %v", params)
 		log.Errorf("resource/images:missingQueryParameters() %s", errStr)
 		http.Error(w, errStr, http.StatusBadRequest)
@@ -92,17 +92,17 @@ func missingQueryParameters(params ...string) http.HandlerFunc {
 }
 
 func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:retrieveFlavorAndKeyForImageID() Entering")
-	defer log.Trace("resource/images:retrieveFlavorAndKeyForImageID() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:retrieveFlavorAndKeyForImageID() Entering")
+		defer log.Trace("resource/images:retrieveFlavorAndKeyForImageID() Leaving")
+
 		id := mux.Vars(r)["id"]
 		// validate UUID format
 		if err := validation.ValidateUUIDv4(id); err != nil {
 			log.Error("resource/images:retrieveFlavorAndKeyForImageID() Invalid UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve Flavor/Key - Invalid UUID",
+				Message:    "Failed to retrieve Flavor/Key - Invalid UUID",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -112,7 +112,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			log.Error("resource/images:retrieveFlavorAndKeyForImageID() Invalid hardware UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve Flavor/Key - Invalid hardware uuid",
+				Message:    "Failed to retrieve Flavor/Key - Invalid hardware uuid",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -221,7 +221,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 							cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() Failed to retrieve key from KMS")
 							if kmsErr, ok := err.(*kms.Error); ok {
 								return &endpointError{
-									Message:    "Failed to retrieve key - " +  kmsErr.Message,
+									Message:    "Failed to retrieve key - " + kmsErr.Message,
 									StatusCode: kmsErr.StatusCode,
 								}
 							}
@@ -272,10 +272,9 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 }
 
 func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:retrieveFlavorForImageID() Entering")
-	defer log.Trace("resource/images:retrieveFlavorForImageID() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:retrieveFlavorForImageID() Entering")
+		defer log.Trace("resource/images:retrieveFlavorForImageID() Leaving")
 		id := mux.Vars(r)["id"]
 		// validate UUID
 		if err := validation.ValidateUUIDv4(id); err != nil {
@@ -291,7 +290,7 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 		if validateInputErr := validation.ValidateStrings(fpArr); validateInputErr != nil {
 			log.WithError(validateInputErr).Error("resource/images:retrieveFlavorForImageID() Invalid flavor part string format")
 			return &endpointError{
-				Message: "Failed to retrieve flavor - Invalid flavor part string format",
+				Message:    "Failed to retrieve flavor - Invalid flavor part string format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -331,17 +330,17 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 }
 
 func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:getAllAssociatedFlavors() Entering")
-	defer log.Trace("resource/images:getAllAssociatedFlavors() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:getAllAssociatedFlavors() Entering")
+		defer log.Trace("resource/images:getAllAssociatedFlavors() Leaving")
+
 		uuid := mux.Vars(r)["id"]
 		// validate UUID format
 		if err := validation.ValidateUUIDv4(uuid); err != nil {
 			log.WithError(err).Error("resource/images:getAllAssociatedFlavors() Invalid UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve associated flavors - Invalid UUID format", 
+				Message:    "Failed to retrieve associated flavors - Invalid UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -357,7 +356,7 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 				cLog.WithError(err).Error("resource/images:getAllAssociatedFlavors() Failed to retrieve associated flavors for image defg")
 				log.Tracef("%+v", err)
 				return &endpointError{
-					Message: "Failed to retrieve associated flavors - backend error",
+					Message:    "Failed to retrieve associated flavors - backend error",
 					StatusCode: http.StatusInternalServerError,
 				}
 			}
@@ -367,7 +366,7 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Error("resource/images:getAllAssociatedFlavors() Unexpectedly failed to encode list of flavors to JSON")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve associated flavors - JSON marshal response failure",
+				Message:    "Failed to retrieve associated flavors - JSON marshal response failure",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -377,16 +376,17 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 }
 
 func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:getAssociatedFlavor() Entering")
-	defer log.Trace("resource/images:getAssociatedFlavor() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:getAssociatedFlavor() Entering")
+		defer log.Trace("resource/images:getAssociatedFlavor() Leaving")
+
 		imageUUID := mux.Vars(r)["id"]
 		// validate image UUID
 		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
 			log.WithError(err).Error("resource/images:getAssociatedFlavor() Invalid image UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve flavor - invalid image UUID format", 
+				Message:    "Failed to retrieve flavor - invalid image UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -396,8 +396,8 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Error("resource/images:getAssociatedFlavor() Invalid flavor UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve associated flavor for image - Invalid image UUID format",
-				 StatusCode: http.StatusBadRequest,
+				Message:    "Failed to retrieve associated flavor for image - Invalid image UUID format",
+				StatusCode: http.StatusBadRequest,
 			}
 		}
 		cLog := log.WithField("imageUUID", imageUUID).WithField("flavorUUID", flavorUUID)
@@ -407,7 +407,7 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Error("resource/images:getAssociatedFlavor() Failed to retrieve associated flavor for image")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "No flavor associated with given image UUID",
+				Message:    "No flavor associated with given image UUID",
 				StatusCode: http.StatusNotFound,
 			}
 		}
@@ -416,7 +416,7 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			cLog.WithError(err).Error("resource/images:getAssociatedFlavor() Unexpectedly failed to encode Flavor to JSON")
 			return &endpointError{
-				Message: "Failed to retrieve associated flavor for image - JSON response encode marshal failure",
+				Message:    "Failed to retrieve associated flavor for image - JSON response encode marshal failure",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -426,17 +426,17 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 }
 
 func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:putAssociatedFlavor() Entering")
-	defer log.Trace("resource/images:putAssociatedFlavor() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:putAssociatedFlavor() Entering")
+		defer log.Trace("resource/images:putAssociatedFlavor() Leaving")
+
 		imageUUID := mux.Vars(r)["id"]
 		// validate image UUID
 		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
 			log.WithError(err).Error("resource/images:putAssociatedFlavor() Invalid image UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to create image/flavor association - invalid image UUID format",
+				Message:    "Failed to create image/flavor association - invalid image UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -446,7 +446,7 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Error("resource/images:putAssociatedFlavor() Invalid flavor UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to create image/flavor association - invalid flavor UUID format",
+				Message:    "Failed to create image/flavor association - invalid flavor UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -456,7 +456,7 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Error("resource/images:putAssociatedFlavor() Failed to add new Flavor association")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to create image/flavor association - invalid image UUID format - Backend error",
+				Message:    "Failed to create image/flavor association - invalid image UUID format - Backend error",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -467,17 +467,17 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 }
 
 func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:deleteAssociatedFlavor() Entering")
-	defer log.Trace("resource/images:deleteAssociatedFlavor() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:deleteAssociatedFlavor() Entering")
+		defer log.Trace("resource/images:deleteAssociatedFlavor() Leaving")
+
 		imageUUID := mux.Vars(r)["id"]
 		// validate image UUID
 		if err := validation.ValidateUUIDv4(imageUUID); err != nil {
 			log.WithError(err).Error("resource/images:deleteAssociatedFlavor() Invalid image UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to delete image/flavor association - invalid image UUID format",
+				Message:    "Failed to delete image/flavor association - invalid image UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -487,7 +487,7 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			log.WithError(err).Error("resource/images:deleteAssociatedFlavor() Invalid flavor UUID format")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to delete image/flavor association - invalid flavor UUID format",
+				Message:    "Failed to delete image/flavor association - invalid flavor UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -497,7 +497,7 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Error("resource/images:deleteAssociatedFlavor() Failed to remove Flavor association for Image")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to delete image/flavor association - Backend error",
+				Message:    "Failed to delete image/flavor association - Backend error",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -513,10 +513,11 @@ func deleteAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 // wls/images?image_id --> filter on image id, status ok
 // all other parameter options --> 400 with error message
 func queryImages(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:queryImages() Entering")
-	defer log.Trace("resource/images:queryImages() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:queryImages() Entering")
+		defer log.Trace("resource/images:queryImages() Leaving")
+		var cLog = log
+
 		locator := repository.ImageFilter{}
 		locator.Filter = true // default to 'filter' to true
 
@@ -530,44 +531,48 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
 				log.WithError(err).Error("resource/images:queryImages() Invalid filter boolean value, must be true or false")
+				log.Tracef("%+v", err)
 				return &endpointError{
-					Message: "Failed to retrieve image - Invalid filter boolean value, must be true or false",
+					Message:    "Failed to retrieve image - Invalid filter boolean value, must be true or false",
 					StatusCode: http.StatusBadRequest,
 				}
 			}
 			locator.Filter = boolValue
+			cLog = cLog.WithField("Filter", boolValue)
 		}
 
 		flavorID, ok := r.URL.Query()["flavor_id"]
 		if ok && len(flavorID) >= 1 {
 			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
-				log.WithError(err).Error("resource/images:queryImages() Invalid flavor UUID format")
+				cLog.WithError(err).Error("resource/images:queryImages() Invalid flavor UUID format")
+				log.Tracef("%+v", err)
 				return &endpointError{
-					Message:  "Failed to retrieve image - Invalid flavor UUID format",
+					Message:    "Failed to retrieve image - Invalid flavor UUID format",
 					StatusCode: http.StatusBadRequest,
 				}
 			}
 			locator.FlavorID = flavorID[0]
+			cLog = cLog.WithField("FlavorID", flavorID[0])
 		}
 
 		imageID, ok := r.URL.Query()["image_id"]
 		if ok && len(imageID) >= 1 {
 			if err := validation.ValidateUUIDv4(imageID[0]); err != nil {
-				log.WithError(err).Error("resource/images:queryImages() Invalid image UUID format")
+				cLog.WithError(err).Error("resource/images:queryImages() Invalid image UUID format")
+				log.Tracef("%+v", err)
 				return &endpointError{
-					Message: "Failed to retrieve image - Invalid image UUID format",
+					Message:    "Failed to retrieve image - Invalid image UUID format",
 					StatusCode: http.StatusBadRequest,
 				}
 			}
 			locator.ImageID = imageID[0]
+			cLog = cLog.WithField("id", imageID[0])
 		}
 
-		cLog := log.WithField("image_id", imageID).WithField("flavor_id", flavorID).WithField("filter", filter)
-
 		if locator.FlavorID == "" && locator.ImageID == "" && locator.Filter {
-			log.Error("Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false\n")
+			cLog.Error("Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false\n")
 			return &endpointError{
-				Message: "Failed to retrieve image - Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter",
+				Message:    "Failed to retrieve image - Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
@@ -575,8 +580,9 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		images, err := db.ImageRepository().RetrieveByFilterCriteria(locator)
 		if err != nil {
 			cLog.WithError(err).Error("resource/images:queryImages() Failed to retrieve Images by filter criteria")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve image - Failed to retrieve Images by filter criteria",
+				Message:    "Failed to retrieve image - Failed to retrieve Images by filter criteria",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -585,11 +591,11 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 			images = []model.Image{}
 		}
 		w.Header().Set("Content-Type", "application/json")
-		cLog.WithField("images", images)
 		if err := json.NewEncoder(w).Encode(images); err != nil {
 			cLog.WithError(err).Error("resource/images:queryImages() Unexpectedly failed to encode array of Images to JSON")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve image - JSON response encode marshal failure",
+				Message:    "Failed to retrieve image - JSON response encode marshal failure",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -599,24 +605,26 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 }
 
 func getImageByID(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:getImageByID() Entering")
-	defer log.Trace("resource/images:getImageByID() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:getImageByID() Entering")
+		defer log.Trace("resource/images:getImageByID() Leaving")
+
 		uuid := mux.Vars(r)["id"]
 		// validate image UUID
 		if err := validation.ValidateUUIDv4(uuid); err != nil {
 			log.WithError(err).Error("resource/images:getImageByID() Invalid image UUID format")
+			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve image - Invalid image UUID format",
-				 StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusBadRequest,
 			}
 		}
 		cLog := log.WithField("uuid", uuid)
 		image, err := db.ImageRepository().RetrieveByUUID(uuid)
 		if err != nil {
 			cLog.WithError(err).Error("resource/images:getImageByID() Failed to retrieve Image by UUID")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "No image found for given UUID",
+				Message:    "No image found for given UUID",
 				StatusCode: http.StatusNotFound,
 			}
 		}
@@ -624,8 +632,9 @@ func getImageByID(db repository.WlsDatabase) endpointHandler {
 		cLog = cLog.WithField("image", image)
 		if err := json.NewEncoder(w).Encode(image); err != nil {
 			cLog.WithError(err).Error("resource/images:getImageByID() Unexpectedly failed to encode Image to JSON")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to retrieve image - JSON response encode marshal failure",
+				Message:    "Failed to retrieve image - JSON response encode marshal failure",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -635,24 +644,26 @@ func getImageByID(db repository.WlsDatabase) endpointHandler {
 }
 
 func deleteImageByID(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:deleteImageByID() Entering")
-	defer log.Trace("resource/images:deleteImageByID() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:deleteImageByID() Entering")
+		defer log.Trace("resource/images:deleteImageByID() Leaving")
+
 		uuid := mux.Vars(r)["id"]
 		// validate image UUID
 		if err := validation.ValidateUUIDv4(uuid); err != nil {
 			log.WithError(err).Error("resource/images:deleteImageByID() Invalid image UUID format")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to delete image - invalid image UUID", 
-			StatusCode: http.StatusBadRequest,
-		}
+				Message:    "Failed to delete image - invalid image UUID",
+				StatusCode: http.StatusBadRequest,
+			}
 		}
 		cLog := log.WithField("uuid", uuid)
 		if err := db.ImageRepository().DeleteByUUID(uuid); err != nil {
 			cLog.WithError(err).Error("resource/images:deleteImageByID() Failed to delete Image by UUID")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Failed to delete image - backend error",
+				Message:    "Failed to delete image - backend error",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}
@@ -663,15 +674,16 @@ func deleteImageByID(db repository.WlsDatabase) endpointHandler {
 }
 
 func createImage(db repository.WlsDatabase) endpointHandler {
-	log.Trace("resource/images:createImage() Entering")
-	defer log.Trace("resource/images:createImage() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Trace("resource/images:createImage() Entering")
+		defer log.Trace("resource/images:createImage() Leaving")
+		
 		var formBody model.Image
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&formBody); err != nil {
 			log.WithError(err).Error("resource/images:createImage() Failed to encode request body as Image")
+			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Failed to create image - JSON marshal error",
 				StatusCode: http.StatusBadRequest,
@@ -680,16 +692,18 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 		// validate input format
 		if err := validation.ValidateUUIDv4(formBody.ID); err != nil {
 			log.WithError(err).Error("resource/images:createImage() Invalid image UUID format")
+			log.Tracef("%+v", err)
 			return &endpointError{
-				Message: "Invalid image UUID format",
+				Message:    "Invalid image UUID format",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
 		for i, _ := range formBody.FlavorIDs {
 			if err := validation.ValidateUUIDv4(formBody.FlavorIDs[i]); err != nil {
 				log.Error("resource/images:createImage() Invalid flavor UUID format")
+				log.Tracef("%+v", err)
 				return &endpointError{
-					Message: "Invalid flavor UUID format",
+					Message:    "Invalid flavor UUID format",
 					StatusCode: http.StatusBadRequest,
 				}
 			}
@@ -700,30 +714,35 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 			switch err {
 			case repository.ErrImageAssociationAlreadyExists:
 				cLog.WithError(err).Error("resource/images:createImage() Image with UUID already exists")
+				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    fmt.Sprintf("image with UUID %s is already registered", formBody.ID),
 					StatusCode: http.StatusConflict,
 				}
 			case repository.ErrImageAssociationDuplicateFlavor:
 				cLog.WithError(err).Error("resource/images:createImage() One or more flavor IDs is already associated with this image")
+				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    fmt.Sprintf("one or more flavor ids in %v is already associated with image %s", formBody.FlavorIDs, formBody.ID),
 					StatusCode: http.StatusConflict,
 				}
 			case repository.ErrImageAssociationFlavorDoesNotExist:
 				cLog.WithError(err).Error("resource/images:createImage() One or more flavor IDs does not exist")
+				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    fmt.Sprintf("one or more flavor ids in %v does not point to a registered flavor", formBody.FlavorIDs),
 					StatusCode: http.StatusBadRequest,
 				}
 			case repository.ErrImageAssociationDuplicateImageFlavor:
 				cLog.WithError(err).Error("resource/images:createImage() Image can only be associated with a single ImageFlavor")
+				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    "image can only be associated with one flavor that has FlavorPart = IMAGE",
 					StatusCode: http.StatusConflict,
 				}
 			default:
 				cLog.WithError(err).Error("resource/images:createImage() Unexpected error when creating image")
+				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    "Unexpected error when creating image, check input format",
 					StatusCode: http.StatusBadRequest,
@@ -735,6 +754,7 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 		err := json.NewEncoder(w).Encode(formBody)
 		if err != nil {
 			cLog.WithError(err).Error("resource/images:createImage() Unexpected error when encoding request back to JSON")
+			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Unexpected error when encoding request back to JSON",
 				StatusCode: http.StatusInternalServerError,

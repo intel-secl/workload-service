@@ -100,5 +100,86 @@ func TestFlavorPartValidation(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
+}
 
+//TestGetAllFlavors checks if all flavors are returned without filter
+func TestGetFlavorNoFilter(t *testing.T) {
+	log.Trace("resource/flavors_test:TestGetFlavorNoFilter() Entering")
+	defer log.Trace("resource/flavors_test:TestGetFlavorNoFilter() Leaving")
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/flavors", nil)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	// check we got a good response
+	assert.Equal(http.StatusOK, recorder.Code)
+}
+
+//TestGetAllFlavorsFilter checks if all flavors are returned without filter
+func TestGetFlavorsFilterByLabel(t *testing.T) {
+	log.Trace("resource/flavors_test:TestGetFlavorsFilterByLabel() Entering")
+	defer log.Trace("resource/flavors_test:TestGetFlavorsFilterByLabel() Leaving")
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/flavors?label=label_image-test-3", nil)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	// check we got a good response
+	assert.Equal(http.StatusOK, recorder.Code)
+}
+
+func TestGetFlavorsFilterByUUID(t *testing.T) {
+	log.Trace("resource/flavors_test:TestGetFlavorsFilterByUUID() Entering")
+	defer log.Trace("resource/flavors_test:TestGetFlavorsFilterByUUID() Leaving")
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/flavors?id=d6129610-4c8f-4ac4-8823-df4e925688c3", nil)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	// check we got a good response
+	assert.Equal(http.StatusOK, recorder.Code)
+}
+
+func TestGetFlavorsFilterWithTrue(t *testing.T) {
+	log.Trace("resource/flavors_test:TestGetFlavorsFilterWithTrue() Entering")
+	defer log.Trace("resource/flavors_test:TestGetFlavorsFilterWithTrue() Leaving")
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/flavors?id=d6129610-4c8f-4ac4-8823-df4e925688c3&filter=true", nil)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	// check we got a good response
+	assert.Equal(http.StatusOK, recorder.Code)
+}
+
+func TestGetFlavorsNegFilterTrue(t *testing.T) {
+	log.Trace("resource/flavors_test:TestGetFlavorsNegFilterTrue() Entering")
+	defer log.Trace("resource/flavors_test:TestGetFlavorsNegFilterTrue() Leaving")
+	assert := assert.New(t)
+	db := new(mock.Database)
+	r := setupMockServer(db)
+
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/wls/flavors?filter=true", nil)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	// check we got a good response
+	assert.Equal(http.StatusBadRequest, recorder.Code)
 }

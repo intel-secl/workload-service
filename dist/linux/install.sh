@@ -41,7 +41,6 @@ echo_warning() {
   return 1
 }
 
-
 echo_info() {
   if [ "$TERM_DISPLAY_MODE" = "color" ]; then echo -en "${TERM_COLOR_CYAN}"; fi
   echo ${@:-"[INFO]"}
@@ -52,13 +51,13 @@ echo_info() {
 ############################################################################################################
 
 # Product installation is only allowed if we are running as root
-if [ $EUID -ne 0 ];  then
+if [ $EUID -ne 0 ]; then
   echo_failure "Workload service installation has to run as root. Exiting"
   exit 1
 fi
 
 # Make sure that we are running in the same directory as the install script
-cd "$( dirname "$0" )"
+cd "$(dirname "$0")"
 
 # load installer environment file, if present
 if [ -f ~/workload-service.env ]; then
@@ -74,11 +73,11 @@ export LOG_LEVEL=${LOG_LEVEL:-"info"}
 
 # Load local configurations
 directory_layout() {
-export WORKLOAD_SERVICE_CONFIGURATION=/etc/workload-service
-export WORKLOAD_SERVICE_LOGS=/var/log/workload-service
-export WORKLOAD_SERVICE_HOME=/opt/workload-service
-export WORKLOAD_SERVICE_BIN=$WORKLOAD_SERVICE_HOME/bin
-export INSTALL_LOG_FILE=$WORKLOAD_SERVICE_LOGS/install.log
+  export WORKLOAD_SERVICE_CONFIGURATION=/etc/workload-service
+  export WORKLOAD_SERVICE_LOGS=/var/log/workload-service
+  export WORKLOAD_SERVICE_HOME=/opt/workload-service
+  export WORKLOAD_SERVICE_BIN=$WORKLOAD_SERVICE_HOME/bin
+  export INSTALL_LOG_FILE=$WORKLOAD_SERVICE_LOGS/install.log
 }
 directory_layout
 
@@ -88,17 +87,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 logfile=$INSTALL_LOG_FILE
-date >> $logfile
+date >>$logfile
 
-echo_info "Installing workload service..." >> $logfile
+echo_info "Installing workload service..." >>$logfile
 
 echo_info "Creating Workload Service User ..."
-id -u wls 2> /dev/null || useradd --comment "Workload Service" --home $WORKLOAD_SERVICE_HOME --system --shell /bin/false wls
+id -u wls 2>/dev/null || useradd --comment "Workload Service" --home $WORKLOAD_SERVICE_HOME --system --shell /bin/false wls
 
 # Create application directories (chown will be repeated near end of this script, after setup)
 for directory in $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_BIN $WORKLOAD_SERVICE_LOGS; do
   # mkdir -p will return 0 if directory exists or is a symlink to an existing directory or directory and parents can be created
-  mkdir -p $directory 
+  mkdir -p $directory
   if [ $? -ne 0 ]; then
     echo_failure "Cannot create directory: $directory" | tee -a $logfile
     exit 1
@@ -134,15 +133,14 @@ auto_install() {
   yum -y install $yum_packages
 }
 
-
 # SCRIPT EXECUTION
 logRotate_clear() {
   logrotate=""
 }
 
 logRotate_detect() {
-  local logrotaterc=`ls -1 /etc/logrotate.conf 2>/dev/null | tail -n 1`
-  logrotate=`which logrotate 2>/dev/null`
+  local logrotaterc=$(ls -1 /etc/logrotate.conf 2>/dev/null | tail -n 1)
+  logrotate=$(which logrotate 2>/dev/null)
   if [ -z "$logrotate" ] && [ -f "/usr/sbin/logrotate" ]; then
     logrotate="/usr/sbin/logrotate"
   fi
@@ -152,14 +150,18 @@ logRotate_install() {
   LOGROTATE_YUM_PACKAGES="logrotate"
   if [ "$(whoami)" == "root" ]; then
     auto_install "Log Rotate" "LOGROTATE"
-    if [ $? -ne 0 ]; then echo_failure "Failed to install logrotate"; exit -1; fi
-  fi
-  logRotate_clear; logRotate_detect;
-    if [ -z "$logrotate" ]; then
-      echo_failure "logrotate is not installed"
-    else
-      echo  "logrotate installed in $logrotate"
+    if [ $? -ne 0 ]; then
+      echo_failure "Failed to install logrotate"
+      exit -1
     fi
+  fi
+  logRotate_clear
+  logRotate_detect
+  if [ -z "$logrotate" ]; then
+    echo_failure "logrotate is not installed"
+  else
+    echo "logrotate installed in $logrotate"
+  fi
 }
 
 logRotate_install
@@ -174,7 +176,7 @@ export LOG_OLD=${LOG_OLD:-12}
 mkdir -p /etc/logrotate.d
 
 if [ ! -a /etc/logrotate.d/wls ]; then
- echo "/var/log/workload-service/* {
+  echo "/var/log/workload-service/* {
     missingok
         notifempty
         rotate $LOG_OLD
@@ -184,7 +186,7 @@ if [ ! -a /etc/logrotate.d/wls ]; then
         $LOG_COMPRESS
         $LOG_DELAYCOMPRESS
         $LOG_COPYTRUNCATE
-}" > /etc/logrotate.d/wls
+}" >/etc/logrotate.d/wls
 fi
 
 # exit workload-service setup if WORKLOAD_SERVICE_NOSETUP is set
@@ -193,17 +195,79 @@ if [ $WLS_NOSETUP == "true" ]; then
   exit 0
 fi
 
-# run setup tasks
-echo_info "Running setup tasks ..."
-workload-service setup
-SETUP_RESULT=$?
+# a global value to indicate if all the needed environment variables are present
+# this is initially set to true. The check_env_var_present function would set this
+# to false if and of the conditions are not met. This will be used to later decide
+# whether to proceed with the setup
+all_env_vars_present=1
+
+# check_env_var_present is used to check if an environment variable that we expect
+# is present. It prints a warning to the console if it does not exist
+# Also, sets the the all_env_vars_present to false
+# Arguments
+#      $1 - var_name - the environment variable name that we are checking
+#      $2 - empty_okay - (Optional) - empty_okay implies that environment variable needs
+#           to be present - but it is acceptable for it to be empty
+#           For most variables that we use, we won't pass it meaning that empty
+#           strings are not acceptable
+# Return
+#      0 - function succeeds
+#      1 - function fauls
+check_env_var_present() {
+  # check if we were passed in an empty string
+  if [[ -z $1 ]]; then return 1; fi
+
+  if [[ $# > 1 ]] && [[ $2 == "true" || $2 == "1" ]]; then
+    if [ "${!1:-}" ]; then
+      return 0
+    else
+      echo_warning "$1 must be set and exported (empty value is okay)" | tee -a $logfile
+      all_env_vars_present=0
+      return 1
+    fi
+  fi
+
+  if [ "${!1:-}" ]; then
+    return 0
+  else
+    echo_warning "$1 must be set and exported" | tee -a $logfile
+    all_env_vars_present=0
+    return 1
+  fi
+}
+
+# Validate the required environment variables for the setup. We are validating this in the
+# binary. However, for someone to figure out what are the ones that need to be set, they can
+# check here
+
+# start with all_env_vars_present=1 and let the the check_env_vars_present() method override
+# to false if any of the required vars are not set
+
+all_env_vars_present=1
+
+required_vars="CMS_BASE_URL HVS_URL AAS_API_URL WLS_USERNAME WLS_PASSWORD WLS_LOGLEVEL"
+for env_var in $required_vars; do
+  check_env_var_present $env_var
+done
+
+# Call workload-agent setup if all the required env variables are set
+if [[ $all_env_vars_present -eq 1 ]]; then
+  # run setup tasks
+  echo_info "Running setup tasks ..."
+  workload setup | tee -a $logfile
+  SETUP_RESULT=$?
+else
+  echo_failure "One or more environment variables are not present. Setup cannot proceed. Aborting..." | tee -a $logfile
+  echo_failure "Please export the missing environment variables and run setup again" | tee -a $logfile
+  exit 1
+fi
 
 # start wls server
 if [ ${SETUP_RESULT} == 0 ]; then
-    systemctl start workload-service
-    if [ $? == 0 ]; then
-      echo_success "Installation completed Successfully" | tee -a $logfile
-    else
-      echo_failure "Installation failed to complete successfully" | tee -a $logfile
-    fi
+  systemctl start workload-service
+  if [ $? == 0 ]; then
+    echo_success "Installation completed Successfully" | tee -a $logfile
+  else
+    echo_failure "Installation failed to complete successfully" | tee -a $logfile
+  fi
 fi

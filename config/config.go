@@ -5,6 +5,7 @@
 package config
 
 import (
+	"fmt"
 	commLog "intel/isecl/lib/common/log"
 	commLogInt "intel/isecl/lib/common/log/setup"
 	"intel/isecl/lib/common/setup"
@@ -89,6 +90,10 @@ var Configuration struct {
 var log = commLog.GetDefaultLogger()
 var secLog = commLog.GetSecurityLogger()
 
+var (
+	LogWriter io.Writer
+)
+
 func SaveConfiguration(c setup.Context) error {
 	log.Trace("config/config:SaveConfiguration() Entering")
 	defer log.Trace("config/config:SaveConfiguration() Leaving")
@@ -98,7 +103,45 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && cmsBaseUrl != "" {
 		Configuration.CMS_BASE_URL = cmsBaseUrl
 	} else if Configuration.CMS_BASE_URL == "" {
+		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", constants.CmsBaseUrlEnv)
+		fmt.Fprintf(os.Stderr, "%s is required parameter", constants.CmsBaseUrlEnv)
 		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_BASE_URL is not defined in environment or configuration file")
+	}
+
+	aasAPIUrl, err := c.GetenvString(AAS_API_URL, "AAS API URL")
+	if err == nil && aasAPIUrl != "" {
+		Configuration.AAS_API_URL = aasAPIUrl
+	} else if Configuration.AAS_API_URL == "" {
+		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", AAS_API_URL)
+		fmt.Fprintf(os.Stderr, "%s is required parameter", AAS_API_URL)
+		return errors.Wrap(err, "config/config:SaveConfiguration() AAS_API_URL is not defined in environment or configuration file")
+	}
+
+	hvsAPIURL, err := c.GetenvString(HVS_URL, "Verification Service URL")
+	if err == nil && hvsAPIURL != "" {
+		Configuration.HVS_API_URL = hvsAPIURL
+	} else if Configuration.HVS_API_URL == "" {
+		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", HVS_URL)
+		fmt.Fprintf(os.Stderr, "%s is required parameter", HVS_URL)
+		return errors.Wrap(err, "config/config:SaveConfiguration() HVS_URL is not defined in environment or configuration file")
+	}
+
+	wlsAASUser, err := c.GetenvString(WLS_USER, "WLS AAS User")
+	if err == nil && wlsAASUser != "" {
+		Configuration.WLS.User = wlsAASUser
+	} else if Configuration.WLS.User == "" {
+		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", WLS_USER)
+		fmt.Fprintf(os.Stderr, "%s is required parameter", WLS_USER)
+		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_USER is not defined in environment or configuration file")
+	}
+
+	wlsAASPassword, err := c.GetenvString(WLS_PASSWORD, "WLS AAS Password")
+	if err == nil && wlsAASPassword != "" {
+		Configuration.WLS.User = wlsAASPassword
+	} else if Configuration.WLS.Password == "" {
+		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", WLS_PASSWORD)
+		fmt.Fprintf(os.Stderr, "%s is required parameter", WLS_PASSWORD)
+		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_PASSWORD is not defined in environment or configuration file")
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")
@@ -148,9 +191,21 @@ func SaveConfiguration(c setup.Context) error {
 		log.Info("config/config:SaveConfiguration() Key Cache Seconds not defined, using default value")
 		Configuration.KEY_CACHE_SECONDS = constants.DefaultKeyCacheSeconds
 	}
-	log.Debug("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
-	return Save()
 
+	ll, err := c.GetenvString(WLS_LOGLEVEL, "Logging Level")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "No logging level specified, using default logging level: Error")
+		Configuration.LogLevel = logrus.ErrorLevel
+	}
+	Configuration.LogLevel, err = logrus.ParseLevel(ll)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Invalid logging level specified, using default logging level: Error")
+		Configuration.LogLevel = logrus.ErrorLevel
+	}
+
+	fmt.Println("Configuration Loaded")
+	log.Info("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
+	return Save()
 }
 
 // Save the configuration struct into /etc/workload-service/config.ynml
@@ -187,6 +242,7 @@ func init() {
 		defer file.Close()
 		yaml.NewDecoder(file).Decode(&Configuration)
 	}
+	LogWriter = os.Stdout
 }
 
 func LogConfiguration(stdOut, logFile bool) {
