@@ -18,7 +18,7 @@ require (
 
 replace intel/isecl/lib/flavor => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git v1.0/develop
 
-replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git v1.0/develop
+replace intel/isecl/lib/common => gitlab.devtools.intel.com/sst/isecl/lib/common.git 750d80bf10146b3d33802c50052d3dabd84035c9
 
 replace intel/isecl/lib/verifier => gitlab.devtools.intel.com/sst/isecl/lib/verifier.git v1.0/develop
 
