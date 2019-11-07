@@ -52,7 +52,7 @@ func addJWTToken(req *http.Request) error {
 }
 
 //SendRequest method is used to create an http client object and send the request to the server
-func sendRequest(req *http.Request, insecureConnection bool) ([]byte, error) {
+func sendRequest(req *http.Request) ([]byte, error) {
 	log.Trace("vsclient/client:sendRequest() Entering")
 	defer log.Trace("vsclient/client:sendRequest() Leaving")
 
@@ -101,7 +101,7 @@ func CreateSAMLReport(hwid string) ([]byte, error) {
 	req.Header.Set("Accept", "application/samlassertion+xml")
 	req.Header.Set("Content-Type", "application/json")
 
-	rsp, err := sendRequest(req, true)
+	rsp, err := sendRequest(req)
 	if err != nil {
 		log.Error("vsclient/client:CreateSAMLReport() Error while sending request from client to server")
 		log.Tracef("%+v", err)

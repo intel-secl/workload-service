@@ -5,12 +5,12 @@
 package resource
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"time"
 
 	"encoding/xml"
 	"fmt"
+	"intel/isecl/lib/clients"
 	"intel/isecl/lib/common/validation"
 	kms "intel/isecl/lib/kms-client"
 	consts "intel/isecl/workload-service/constants"
@@ -203,13 +203,14 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					if cachedKeyID != "" && cachedKeyID == keyID {
 						key = cachedKey.Bytes
 					} else {
-						// create insecure client
-						client := &http.Client{
-							Transport: &http.Transport{
-								TLSClientConfig: &tls.Config{
-									InsecureSkipVerify: true,
-								},
-							},
+						// create cert chained client
+						client, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
+						if err != nil {
+							cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() Failed to initialize HTTP client for KMS key transfer")
+							return &endpointError{
+								Message:    "Failed to retrieve key - Unable to setup HTTP connection to KMS",
+								StatusCode: http.StatusInternalServerError,
+							}
 						}
 						kc := &kms.Client{
 							BaseURL:    keyURL.String(),
@@ -226,7 +227,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 								}
 							}
 							return &endpointError{
-								Message:    "Failed to retrieve Key from KMS",
+								Message:    "Failed to retrieve key ",
 								StatusCode: http.StatusInternalServerError,
 							}
 						}
@@ -677,7 +678,7 @@ func createImage(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log.Trace("resource/images:createImage() Entering")
 		defer log.Trace("resource/images:createImage() Leaving")
-		
+
 		var formBody model.Image
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
