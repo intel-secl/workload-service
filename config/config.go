@@ -60,7 +60,7 @@ const KEY_CACHE_SECONDS = "KEY_CACHE_SECONDS"
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
 	Port     int
-	TLS      bool
+	CmsTlsCertDigest string
 	Postgres struct {
 		DBName   string
 		User     string
@@ -99,12 +99,17 @@ func SaveConfiguration(c setup.Context) error {
 	defer log.Trace("config/config:SaveConfiguration() Leaving")
 	var err error = nil
 
+	tlsCertDigest, err := c.GetenvString(constants.CmsTlsCertDigestEnv, "CMS TLS certificate digest")
+	if err == nil &&  tlsCertDigest != "" {
+		Configuration.CmsTlsCertDigest = tlsCertDigest
+	} else if Configuration.CmsTlsCertDigest == "" {
+		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_TLS_CERT_SHA384 is not defined in environment or configuration file")
+	}
+
 	cmsBaseUrl, err := c.GetenvString(constants.CmsBaseUrlEnv, "CMS Base URL")
 	if err == nil && cmsBaseUrl != "" {
 		Configuration.CMS_BASE_URL = cmsBaseUrl
 	} else if Configuration.CMS_BASE_URL == "" {
-		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", constants.CmsBaseUrlEnv)
-		fmt.Fprintf(os.Stderr, "%s is required parameter", constants.CmsBaseUrlEnv)
 		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_BASE_URL is not defined in environment or configuration file")
 	}
 
@@ -112,8 +117,6 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && aasAPIUrl != "" {
 		Configuration.AAS_API_URL = aasAPIUrl
 	} else if Configuration.AAS_API_URL == "" {
-		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", AAS_API_URL)
-		fmt.Fprintf(os.Stderr, "%s is required parameter", AAS_API_URL)
 		return errors.Wrap(err, "config/config:SaveConfiguration() AAS_API_URL is not defined in environment or configuration file")
 	}
 
@@ -121,8 +124,6 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && hvsAPIURL != "" {
 		Configuration.HVS_API_URL = hvsAPIURL
 	} else if Configuration.HVS_API_URL == "" {
-		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", HVS_URL)
-		fmt.Fprintf(os.Stderr, "%s is required parameter", HVS_URL)
 		return errors.Wrap(err, "config/config:SaveConfiguration() HVS_URL is not defined in environment or configuration file")
 	}
 
@@ -130,8 +131,6 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && wlsAASUser != "" {
 		Configuration.WLS.User = wlsAASUser
 	} else if Configuration.WLS.User == "" {
-		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", WLS_USER)
-		fmt.Fprintf(os.Stderr, "%s is required parameter", WLS_USER)
 		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_USER is not defined in environment or configuration file")
 	}
 
@@ -139,8 +138,6 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && wlsAASPassword != "" {
 		Configuration.WLS.User = wlsAASPassword
 	} else if Configuration.WLS.Password == "" {
-		log.Fatalf("config/config:SaveConfiguration() %s is required parameter", WLS_PASSWORD)
-		fmt.Fprintf(os.Stderr, "%s is required parameter", WLS_PASSWORD)
 		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_PASSWORD is not defined in environment or configuration file")
 	}
 

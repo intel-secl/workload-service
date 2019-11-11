@@ -36,6 +36,7 @@ const (
 	WlsCertLocalityEnv            = "WLS_CERT_LOCALITY"
 	DefaultKeyCacheSeconds        = 300
 	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
+	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
 	JWTCertsCacheTime             = "1m"
 	HttpLogFile                   = "/var/log/workload-service/http.log"
 )

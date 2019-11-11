@@ -67,8 +67,10 @@ func (aas AASConnection) Run(c csetup.Context) error {
 	var role_ids []string
 	for _, role := range roles {
 		roleCreate := aasTypes.RoleCreate{
-			Name:    role,
-			Service: consts.ServiceName,
+			RoleInfo: aasTypes.RoleInfo{
+				Name:    role,
+				Service: consts.ServiceName,
+			},
 		}
 		roleCreateResponse, err := ac.CreateRole(roleCreate)
 		if err != nil {
