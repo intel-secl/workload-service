@@ -5,13 +5,10 @@
 package setup
 
 import (
-	"fmt"
 	"intel/isecl/lib/clients"
-	aasClient "intel/isecl/lib/clients/aas"
 	"intel/isecl/lib/common/crypt"
 	commLog "intel/isecl/lib/common/log"
 	csetup "intel/isecl/lib/common/setup"
-	aasTypes "intel/isecl/lib/common/types/aas"
 	"intel/isecl/workload-service/config"
 	consts "intel/isecl/workload-service/constants"
 	"io/ioutil"
@@ -32,13 +29,12 @@ func (aas AASConnection) Run(c csetup.Context) error {
 	log.Trace("setup/aas:Run() Entering")
 	defer log.Trace("setup/aas:Run() Leaving")
 
-	fmt.Println("Setting up roles in AAS ...")
 	var aasURL string
-	var aasBearerToken string
 	var err error
 	if aasURL, err = c.GetenvString(config.AAS_API_URL, "AAS Server URL"); err != nil {
 		return errors.Wrap(err, "setup/aas:Run AAS endpoint not set in environment")
 	}
+
 	if strings.HasSuffix(aasURL, "/") {
 		config.Configuration.AAS_API_URL = aasURL
 	} else {
@@ -47,45 +43,6 @@ func (aas AASConnection) Run(c csetup.Context) error {
 
 	config.Save()
 	log.Info("setup/aas:Run() AAS endpoint updated")
-	if aasBearerToken, err = c.GetenvString(consts.BearerToken, "AAS Bearer Token"); err != nil {
-		return errors.Wrap(err, "setup/aas:Run AAS bearer token not set in environment")
-	}
-
-	hc, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
-	if err != nil {
-		return errors.Wrapf(err, "setup/aas:Run() Error setting up HTTP client: %s", err.Error())
-	}
-
-	ac := &aasClient.Client{
-		BaseURL:    aasURL,
-		JWTToken:   []byte(aasBearerToken),
-		HTTPClient: hc,
-	}
-
-	roles := [3]string{consts.FlavorImageRetrievalGroupName, consts.ReportCreationGroupName, consts.AdministratorGroupName}
-
-	var role_ids []string
-	for _, role := range roles {
-		roleCreate := aasTypes.RoleCreate{
-			RoleInfo: aasTypes.RoleInfo{
-				Name:    role,
-				Service: consts.ServiceName,
-			},
-		}
-		roleCreateResponse, err := ac.CreateRole(roleCreate)
-		if err != nil {
-			if strings.Contains(err.Error(), "same role exists") {
-				seclog.Debugf("setup/aas:Run() Role %s already exists in AAS. Role creation skipped: %v", role, err)
-				log.Tracef("%+v", err)
-				continue
-			}
-			return errors.Wrapf(err, "setup/aas:Run() Error in role %s creation", role)
-		}
-		log.Debugf("setup/aas:Run() Role %s created in AAS with ID %s ", role, roleCreateResponse.ID)
-		log.Infof("setup/aas:Run() Role %s created in AAS ", role)
-
-		role_ids = append(role_ids, roleCreateResponse.ID)
-	}
 
 	//Fetch JWT Certificate from AAS
 	err = fnGetJwtCerts()
