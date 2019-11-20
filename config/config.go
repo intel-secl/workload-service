@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -85,6 +86,11 @@ var Configuration struct {
 	}
 	LogLevel          logrus.Level
 	KEY_CACHE_SECONDS int
+	ReadTimeout            time.Duration
+	ReadHeaderTimeout      time.Duration
+	WriteTimeout           time.Duration
+	IdleTimeout            time.Duration
+	MaxHeaderBytes         int
 }
 
 var log = commLog.GetDefaultLogger()

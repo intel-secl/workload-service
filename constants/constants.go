@@ -4,6 +4,8 @@
  */
 package constants
 
+import "time"
+
 const (
 	ServiceName                   = "WLS"
 	ConfigDir                     = "/etc/workload-service/"
@@ -39,6 +41,11 @@ const (
 	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
 	JWTCertsCacheTime             = "1m"
 	HttpLogFile                   = "/var/log/workload-service/http.log"
+	DefaultReadTimeout             = 30 * time.Second
+	DefaultReadHeaderTimeout       = 10 * time.Second
+	DefaultWriteTimeout            = 10 * time.Second
+	DefaultIdleTimeout             = 10 * time.Second
+	DefaultMaxHeaderBytes          = 1 << 20
 )
 
 // State represents whether or not a daemon is running or not

@@ -7,6 +7,8 @@ package setup
 import (
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
+	"intel/isecl/workload-service/constants"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -34,6 +36,42 @@ func (ss Server) Run(c csetup.Context) error {
 	if config.Configuration.WLS.Password, err = c.GetenvSecret(config.WLS_PASSWORD, "Workload Service Password"); err != nil {
 		return err
 	}
+
+	readTimeout, err := c.GetenvInt("WLS_SERVER_READ_TIMEOUT", "Workload Service Read Timeout")
+	if err != nil {
+		config.Configuration.ReadTimeout = constants.DefaultReadTimeout
+	} else {
+		config.Configuration.ReadTimeout = time.Duration(readTimeout) * time.Second
+	}
+
+	readHeaderTimeout, err := c.GetenvInt("WLS_SERVER_READ_HEADER_TIMEOUT", "Workload Service Read Header Timeout")
+	if err != nil {
+		config.Configuration.ReadHeaderTimeout = constants.DefaultReadHeaderTimeout
+	} else {
+		config.Configuration.ReadHeaderTimeout = time.Duration(readHeaderTimeout) * time.Second
+	}
+
+	writeTimeout, err := c.GetenvInt("WLS_SERVER_WRITE_TIMEOUT", "Workload Service Write Timeout")
+	if err != nil {
+		config.Configuration.WriteTimeout = constants.DefaultWriteTimeout
+	} else {
+		config.Configuration.WriteTimeout = time.Duration(writeTimeout) * time.Second
+	}
+
+	idleTimeout, err := c.GetenvInt("WLS_SERVER_IDLE_TIMEOUT", "Workload Service Idle Timeout")
+	if err != nil {
+		config.Configuration.IdleTimeout = constants.DefaultIdleTimeout
+	} else {
+		config.Configuration.IdleTimeout = time.Duration(idleTimeout) * time.Second
+	}
+
+	maxHeaderBytes, err := c.GetenvInt("WLS_SERVER_MAX_HEADER_BYTES", "Workload Service Max Header Bytes Timeout")
+	if err != nil {
+		config.Configuration.MaxHeaderBytes = constants.DefaultMaxHeaderBytes
+	} else {
+		config.Configuration.MaxHeaderBytes = maxHeaderBytes
+	}
+	
 	log.Info("setup/server:Run() Updated WLS user credentials and server port in configuration")
 	return config.Save()
 }
