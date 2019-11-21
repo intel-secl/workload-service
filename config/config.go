@@ -60,9 +60,9 @@ const KEY_CACHE_SECONDS = "KEY_CACHE_SECONDS"
 
 // Configuration is the global configuration struct that is marshalled/unmarshaled to a persisted yaml file
 var Configuration struct {
-	Port     int
+	Port             int
 	CmsTlsCertDigest string
-	Postgres struct {
+	Postgres         struct {
 		DBName   string
 		User     string
 		Password string
@@ -86,11 +86,11 @@ var Configuration struct {
 	}
 	LogLevel          logrus.Level
 	KEY_CACHE_SECONDS int
-	ReadTimeout            time.Duration
-	ReadHeaderTimeout      time.Duration
-	WriteTimeout           time.Duration
-	IdleTimeout            time.Duration
-	MaxHeaderBytes         int
+	ReadTimeout       time.Duration
+	ReadHeaderTimeout time.Duration
+	WriteTimeout      time.Duration
+	IdleTimeout       time.Duration
+	MaxHeaderBytes    int
 }
 
 var log = commLog.GetDefaultLogger()
@@ -106,7 +106,7 @@ func SaveConfiguration(c setup.Context) error {
 	var err error = nil
 
 	tlsCertDigest, err := c.GetenvString(constants.CmsTlsCertDigestEnv, "CMS TLS certificate digest")
-	if err == nil &&  tlsCertDigest != "" {
+	if err == nil && tlsCertDigest != "" {
 		Configuration.CmsTlsCertDigest = tlsCertDigest
 	} else if Configuration.CmsTlsCertDigest == "" {
 		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_TLS_CERT_SHA384 is not defined in environment or configuration file")
@@ -196,14 +196,14 @@ func SaveConfiguration(c setup.Context) error {
 	}
 
 	ll, err := c.GetenvString(WLS_LOGLEVEL, "Logging Level")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "No logging level specified, using default logging level: Error")
-		Configuration.LogLevel = logrus.ErrorLevel
+	if err != nil && Configuration.LogLevel.String() == "" {
+		fmt.Fprintln(os.Stderr, "No logging level specified, using default logging level: Info")
+		Configuration.LogLevel = logrus.InfoLevel
 	}
 	Configuration.LogLevel, err = logrus.ParseLevel(ll)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Invalid logging level specified, using default logging level: Error")
-		Configuration.LogLevel = logrus.ErrorLevel
+		fmt.Fprintln(os.Stderr, "Invalid logging level specified, using default logging level: Info")
+		Configuration.LogLevel = logrus.InfoLevel
 	}
 
 	fmt.Println("Configuration Loaded")

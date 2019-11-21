@@ -123,7 +123,7 @@ func main() {
 		if err != nil {
 			log.WithError(err).Error("main:main() Error in running setup tasks")
 			log.Tracef("%+v", err)
-			fmt.Fprintln(os.Stderr, "Error running setup: ", err)
+			fmt.Fprintln(os.Stderr, "Error running setup tasks. Check logs.")
 			os.Exit(1)
 		}
 
@@ -139,10 +139,12 @@ func main() {
 		startServer()
 
 	case "stop":
+		config.LogConfiguration(true, true)
 		stop()
 
 	case "uninstall":
-		log.Info("main:main() Uninstalling workload-service...")
+		config.LogConfiguration(false, false)
+		fmt.Println("Uninstalling workload-service...")
 		stop()
 		removeService()
 		deleteFile("/opt/workload-service/")
@@ -151,7 +153,7 @@ func main() {
 		if len(args) > 1 && strings.ToLower(args[1]) == "--purge" {
 			deleteFile("/etc/workload-service/")
 		}
-		log.Info("main:main() workload-service successfully uninstalled")
+		fmt.Println("workload-service successfully uninstalled")
 
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
@@ -172,7 +174,7 @@ func start() error {
 	if err != nil {
 		log.WithError(err).Error("main:start() Error trying to look up for systemctl path")
 		log.Tracef("%+v", err)
-		fmt.Println("Error trying to look up for systemctl path")
+		fmt.Fprintln(os.Stderr, "Error trying to look up for systemctl path")
 		os.Exit(1)
 	}
 	return syscall.Exec(systemctl, []string{"systemctl", "start", "workload-service"}, os.Environ())
@@ -186,7 +188,7 @@ func stop() error {
 	log.Info("main:stop() Stopping Workload Service")
 	_, _, err := e.RunCommandWithTimeout("systemctl stop workload-service", 5)
 	if err != nil {
-		fmt.Println("Could not stop Workload-service")
+		fmt.Fprintln(os.Stderr, "Could not stop Workload-service")
 		fmt.Println("Error : ", err)
 		log.WithError(err).Error("main:stop() Could not stop Workload-service")
 		log.Tracef("%+v", err)
@@ -202,7 +204,7 @@ func status() error {
 	log.Info("main:status() Workload-service status")
 	systemctl, err := exec.LookPath("systemctl")
 	if err != nil {
-		fmt.Println("Error trying to look up for systemctl path")
+		fmt.Fprintln(os.Stderr, "Error trying to look up for systemctl path")
 		log.WithError(err).Error("main:status() Error trying to look up for systemctl path")
 		log.Tracef("%+v", err)
 		os.Exit(1)
@@ -218,8 +220,8 @@ func removeService() error {
 	log.Info("main:removeService() Removing Workload Service")
 	_, _, err := e.RunCommandWithTimeout("systemctl disable workload-service", 5)
 	if err != nil {
-		fmt.Println("Could not remove Workload-service")
-		fmt.Println("Error : ", err)
+		fmt.Fprintln(os.Stderr, "Could not remove Workload-service")
+		fmt.Fprintf(os.Stderr, "Error: %v", err.Error())
 		log.WithError(err).Error("main:removeService() Could not remove Workload-service")
 		log.Tracef("%+v", err)
 	}
