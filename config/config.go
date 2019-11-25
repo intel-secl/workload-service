@@ -196,14 +196,19 @@ func SaveConfiguration(c setup.Context) error {
 	}
 
 	ll, err := c.GetenvString(WLS_LOGLEVEL, "Logging Level")
-	if err != nil && Configuration.LogLevel.String() == "" {
-		fmt.Fprintln(os.Stderr, "No logging level specified, using default logging level: Info")
-		Configuration.LogLevel = logrus.InfoLevel
-	}
-	Configuration.LogLevel, err = logrus.ParseLevel(ll)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Invalid logging level specified, using default logging level: Info")
-		Configuration.LogLevel = logrus.InfoLevel
+		if Configuration.LogLevel.String() == "" {
+			log.Info("config/config:SaveConfiguration() Logging level not defined, using default log level Info")
+			Configuration.LogLevel = logrus.InfoLevel
+		}
+	} else {
+		Configuration.LogLevel, err = logrus.ParseLevel(ll)
+		if err != nil {
+			Configuration.LogLevel = logrus.InfoLevel
+			log.Info("config/config:SaveConfiguration() Invalid log level, using default log level Info")
+		} else {
+			log.Infof("config/config:SaveConfiguration() Log level set %s\n", ll)
+		}
 	}
 
 	fmt.Println("Configuration Loaded")
