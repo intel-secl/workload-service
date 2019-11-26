@@ -131,8 +131,8 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() Failed to retrieve Flavor and Key for Image")
 			return &endpointError{
-				Message:    "Failed to retrieve Flavo/Key for Image - Backend Error",
-				StatusCode: http.StatusInternalServerError,
+				Message:    "Failed to retrieve Flavor and Key for Image - Backend Error",
+				StatusCode: http.StatusNotFound,
 			}
 		}
 		// Check if flavor keyURL is not empty
@@ -311,7 +311,7 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Failed to retrieve flavor - backend error",
-				StatusCode: http.StatusInternalServerError,
+				StatusCode: http.StatusNotFound,
 			}
 		}
 
