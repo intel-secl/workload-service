@@ -26,7 +26,7 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	defer log.Trace("resource/reports:SetReportsEndpoints() Leaving")
 	r.HandleFunc("", (errorHandler(requiresPermission(getReport(db), []string{consts.AdministratorGroupName})))).Methods("GET")
 	r.HandleFunc("", (errorHandler(requiresPermission(createReport(db), []string{consts.AdministratorGroupName, consts.ReportCreationGroupName})))).Methods("POST").Headers("Content-Type", "application/json")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
+	r.HandleFunc("/{id}",
 		(errorHandler(requiresPermission(deleteReportByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId)
 }

@@ -221,7 +221,7 @@ func TestInvalidImageID(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
-	assert.Contains(recorder.Body.String(), "is not uuidv4 compliant")
+	assert.Contains(recorder.Body.String(), "Failed to delete image - invalid image UUID")
 }
 
 func TestCreateImageEmptyFlavors(t *testing.T) {

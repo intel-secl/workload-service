@@ -7,9 +7,7 @@ package resource
 import (
 	"encoding/json"
 	"time"
-
 	"encoding/xml"
-	"fmt"
 	"intel/isecl/lib/clients"
 	"intel/isecl/lib/common/validation"
 	kms "intel/isecl/lib/kms-client"
@@ -22,10 +20,10 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
-
 	"github.com/gorilla/mux"
-
 	"github.com/pkg/errors"
+	"fmt"
+	"strings"
 )
 
 // Saml is used to represent saml report struct
@@ -46,23 +44,23 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	defer log.Trace("resource/images:SetImagesEndpoints() Leaving")
 	//There is a ambiguity between api endpoints /<id>/flavors and /<id>/flavors?flavor_part=<flavor_part>
 	//Moved /<id>/flavors?flavor_part=<flavor_part> to top so this will be able to check for the filter flavor_part
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+	r.HandleFunc("/{id}/flavors",
 		(errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors", uuidv4),
+	r.HandleFunc("/{id}/flavors",
 		(errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
+	r.HandleFunc("/{id}/flavors/{flavorID}",
 		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
+	r.HandleFunc("/{id}/flavors/{flavorID}",
 		(errorHandler(requiresPermission(putAssociatedFlavor(db), []string{consts.AdministratorGroupName})))).Methods("PUT")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavors/{flavorID:%s}", uuidv4, uuidv4),
+	r.HandleFunc("/{id}/flavors/{flavorID}",
 		errorHandler(requiresPermission(deleteAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
+	r.HandleFunc("/{id}",
 		(errorHandler(requiresPermission(getImageByID(db), []string{consts.AdministratorGroupName})))).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}", uuidv4),
+	r.HandleFunc("/{id}",
 		(errorHandler(requiresPermission(deleteImageByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
+	r.HandleFunc("/{id}/flavor-key",
 		(errorHandler(requiresPermission(retrieveFlavorAndKeyForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
-	r.HandleFunc(fmt.Sprintf("/{id:%s}/flavor-key", uuidv4),
+	r.HandleFunc("/{id}/flavor-key",
 		(missingQueryParameters("hardware_uuid"))).Methods("GET")
 	r.HandleFunc("",
 		(errorHandler(requiresPermission(queryImages(db), []string{consts.AdministratorGroupName})))).Methods("GET")
@@ -310,8 +308,8 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Error("resource/images:retrieveFlavorForImageID() Failed to retrieve Flavor for Image")
 			log.Tracef("%+v", err)
 			return &endpointError{
-				Message:    "Failed to retrieve flavor - backend error",
-				StatusCode: http.StatusNotFound,
+				Message:    "Failed to retrieve flavor - No flavor found for given image ID",
+				StatusCode: http.StatusBadRequest,
 			}
 		}
 
@@ -351,8 +349,11 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 			if err.Error() == "record not found" {
 				cLog.Info("resource/images:getAllAssociatedFlavors() No Flavor found for Image")
 				log.Tracef("%+v", err)
-				json.NewEncoder(w).Encode(flavors)
-				return nil
+				log.Debug(err.Error())
+				return &endpointError{
+					Message:    "Failed to retrieve associated flavors - No Flavor found for Image",
+					StatusCode: http.StatusNotFound,
+				}
 			} else {
 				cLog.WithError(err).Error("resource/images:getAllAssociatedFlavors() Failed to retrieve associated flavors for image defg")
 				log.Tracef("%+v", err)
@@ -456,8 +457,14 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 		if err := db.ImageRepository().AddAssociatedFlavor(imageUUID, flavorUUID); err != nil {
 			cLog.WithError(err).Error("resource/images:putAssociatedFlavor() Failed to add new Flavor association")
 			log.Tracef("%+v", err)
+			if strings.Contains(err.Error(), "record not found") {
+				return &endpointError{
+					Message:    "Failed to create image/flavor association - Record not found",
+					StatusCode: http.StatusNotFound,
+				}
+			}  
 			return &endpointError{
-				Message:    "Failed to create image/flavor association - invalid image UUID format - Backend error",
+				Message:    "Failed to create image/flavor association - Backend error",
 				StatusCode: http.StatusInternalServerError,
 			}
 		}

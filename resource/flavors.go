@@ -22,13 +22,10 @@ import (
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	log.Trace("resource/flavors:SetFlavorsEndpoints() Entering")
 	defer log.Trace("resource/flavors:SetFlavorsEndpoints() Leaving")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
-		errorHandler(requiresPermission(getFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("GET")
+	r.HandleFunc("/{id}", errorHandler(requiresPermission(getFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("GET")
 	r.HandleFunc("/{label}", errorHandler(requiresPermission(getFlavorByLabel(db), []string{consts.AdministratorGroupName}))).Methods("GET")
 	r.HandleFunc("", (errorHandler(requiresPermission(getFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
-	r.HandleFunc("/{id:(?i:[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})}",
-		errorHandler(requiresPermission(deleteFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
-	r.HandleFunc("/{badid}", badId).Methods("DELETE")
+	r.HandleFunc("/{id}", errorHandler(requiresPermission(deleteFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
 	r.HandleFunc("", errorHandler(requiresPermission(createFlavor(db), []string{consts.AdministratorGroupName}))).Methods("POST").Headers("Content-Type", "application/json")
 }
 
@@ -49,7 +46,7 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 		if err != nil {
 			uuidLog.WithError(err).Error("resource/flavors:getFlavorByID() Failed to retrieve flavor by UUID")
 			log.Tracef("%+v", err)
-			return &endpointError{Message: "Failed to retrieve flavor by UUID - JSON marshal failure", StatusCode: http.StatusInternalServerError}
+			return &endpointError{Message: "Failed to retrieve flavor by UUID - Record not found", StatusCode: http.StatusNotFound}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
