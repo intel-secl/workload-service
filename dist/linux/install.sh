@@ -245,18 +245,18 @@ check_env_var_present() {
 
 all_env_vars_present=1
 
-required_vars="CMS_BASE_URL HVS_URL AAS_API_URL WLS_SERVICE_USERNAME WLS_SERVICE_PASSWORD WLS_LOGLEVEL"
+required_vars="CMS_BASE_URL HVS_URL AAS_API_URL WLS_SERVICE_USERNAME WLS_SERVICE_PASSWORD CMS_TLS_CERT_SHA384"
 for env_var in $required_vars; do
   check_env_var_present $env_var
 done
 
 chmod 770 /opt/workload-service/bin/workload-service
 
-# Call workload-agent setup if all the required env variables are set
+# Call workload-service setup if all the required env variables are set
 if [[ $all_env_vars_present -eq 1 ]]; then
   # run setup tasks
   echo_info "Running setup tasks ..."
-  workload-service setup | tee -a $logfile
+  workload-service setup all | tee -a $logfile
   SETUP_RESULT=$?
 else
   echo_failure "One or more environment variables are not present. Setup cannot proceed. Aborting..." | tee -a $logfile

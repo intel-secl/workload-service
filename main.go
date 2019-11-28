@@ -52,6 +52,13 @@ func main() {
 
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
+		config.LogConfiguration(false, true)
+		args := os.Args[1:]
+		if len(args) <= 1 {
+			printUsage()
+			return
+		}
+
 		flags := args
 		if len(args) >= 2 &&
 			args[1] != "download_ca_cert" &&
@@ -60,12 +67,19 @@ func main() {
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
 			args[1] != "aasconnection" &&
-			args[1] != "logs" {
+			args[1] != "all" {
+			fmt.Fprintln(os.Stderr, "Error: Unknown setup task ", args[1])
 			printUsage()
 			os.Exit(1)
 		}
 
-		config.LogConfiguration(false, true)
+		// check if the WLS_NOSETUP env flag is set to "true", if so then skip setup
+		nosetup, err := context.GetenvString(config.WLS_NOSETUP, "WLS Setup Skip Flag")
+		if err == nil && strings.ToLower(nosetup) == "true" {
+			fmt.Println(config.WLS_NOSETUP, " is true, skipping setup")
+			os.Exit(0)
+		}
+
 		if len(args) > 1 {
 			flags = args[2:]
 			if args[1] == "download_cert" && len(args) > 2 {
@@ -73,7 +87,7 @@ func main() {
 			}
 		}
 
-		err := config.SaveConfiguration(context)
+		err = config.SaveConfiguration(context)
 		if err != nil {
 			log.WithError(err).Error("main:main() Unable to save configuration in config.yml")
 			log.Tracef("%+v", err)
@@ -104,7 +118,7 @@ func main() {
 						Province:     []string{config.Configuration.Subject.Province},
 						CommonName:   config.Configuration.Subject.TLSCertCommonName,
 					},
-					SanList:       constants.DefaultWlsTlsSan,
+					SanList:       config.Configuration.CertSANList,
 					CertType:      "TLS",
 					CaCertsDir:    constants.TrustedCaCertsDir,
 					BearerToken:   "",
@@ -114,16 +128,18 @@ func main() {
 				new(setup.Database),
 				new(setup.HVSConnection),
 				new(setup.AASConnection),
-				new(setup.Logs),
 			},
 			AskInput: false,
 		}
-
-		err = setupRunner.RunTasks(args[1:]...)
+		tasklist := []string{}
+		if args[1] != "all" {
+			tasklist = args[1:]
+		}
+		err = setupRunner.RunTasks(tasklist...)
 		if err != nil {
 			log.WithError(err).Error("main:main() Error in running setup tasks")
 			log.Tracef("%+v", err)
-			fmt.Fprintln(os.Stderr, "Error running setup tasks. Check logs.")
+			fmt.Fprintf(os.Stderr, "Error running setup tasks. %s\n", err.Error())
 			os.Exit(1)
 		}
 
@@ -255,15 +271,19 @@ func printUsage() {
 	fmt.Println("    stop                 Stop workload-service")
 	fmt.Println("    status               Determine if workload-service is running")
 	fmt.Println("    uninstall  [--purge] Uninstall workload-service. --purge option needs to be applied to remove configuration and data files")
-	fmt.Printf("    setup               Setup workload-service for use\n\n")
+	fmt.Printf("    setup all               Setup workload-service for use\n\n")
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
+	fmt.Printf("    all                    Runs all setup tasks\n\n")
 	fmt.Println("    download_ca_cert")
 	fmt.Println("                        - Download CMS root CA certificate")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
+	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
+	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API url")
 	fmt.Println("    download_cert TLS")
 	fmt.Println("                        - Generates Key pair and CSR, gets it signed from CMS")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
+	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
 	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with CMS")
 	fmt.Println("                        - Environment variable KEY_PATH=<key_path> to override default specified in config")
 	fmt.Println("                        - Environment variable CERT_PATH=<cert_path> to override default specified in config")
@@ -272,6 +292,7 @@ func printUsage() {
 	fmt.Println("                        - Environment variable WLS_CERT_COUNTRY=<CERTIFICATE COUNTRY> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_CERT_LOCALITY=<CERTIFICATE LOCALITY> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_CERT_PROVINCE=<CERTIFICATE PROVINCE> to override default specified in config")
+	fmt.Println("                        - Environment variable WLS_CERT_SAN=<CSV List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
 	fmt.Println("    server              Setup http server on given port")
 	fmt.Printf("                        -Environment variable WLS_PORT=<port> should be set\n\n")
 	fmt.Println("    database            Setup workload-service database")
@@ -280,15 +301,11 @@ func printUsage() {
 	fmt.Println("                        - WLS_DB_PORT      : database port number")
 	fmt.Println("                        - WLS_DB_USERNAME  : database user name")
 	fmt.Println("                        - WLS_DB_PASSWORD  : database password")
-	fmt.Printf("                        - WLS_DB           : database schema name\n\n")
+	fmt.Printf("                         - WLS_DB           : database schema name\n\n")
 	fmt.Println("    hvsconnection       Setup task for setting up the connection to the Host Verification Service(HVS)")
 	fmt.Println("                        Required env variables are:")
-	fmt.Println("                        - HVS_URL      : HVS URL")
-	fmt.Println("                        - HVS_USER     : HVS API user name")
-	fmt.Printf("                        - HVS_PASSWORD : HVS API password\n\n")
+	fmt.Printf("                        - HVS_URL      : HVS URL\n\n")
 	fmt.Println("    aasconnection       Setup to create workload service user roles in AAS")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
-	fmt.Println("                        - BEARER_TOKEN     : Bearer Token")
-	fmt.Println("    logs                Setup workload-service log level")
-	fmt.Printf("                        - Environment variable WLS_LOG_LEVEL=<log level> should be set\n\n")
+	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
 }

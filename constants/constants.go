@@ -36,6 +36,7 @@ const (
 	WlsCertCountryEnv             = "WLS_CERT_COUNTRY"
 	WlsCertProvinceEnv            = "WLS_CERT_PROVINCE"
 	WlsCertLocalityEnv            = "WLS_CERT_LOCALITY"
+	WlsCertSANList                = "WLS_CERT_SAN"
 	DefaultKeyCacheSeconds        = 300
 	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
 	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
@@ -46,6 +47,8 @@ const (
 	DefaultWriteTimeout           = 10 * time.Second
 	DefaultIdleTimeout            = 10 * time.Second
 	DefaultMaxHeaderBytes         = 1 << 20
+	DefaultWLSListenerPort        = 5000
+	DBTypePostgres                = "postgres"
 )
 
 // State represents whether or not a daemon is running or not

@@ -5,7 +5,6 @@
 package config
 
 import (
-	"fmt"
 	commLog "intel/isecl/lib/common/log"
 	commLogInt "intel/isecl/lib/common/log/setup"
 	"intel/isecl/lib/common/setup"
@@ -13,6 +12,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -91,6 +91,7 @@ var Configuration struct {
 	WriteTimeout      time.Duration
 	IdleTimeout       time.Duration
 	MaxHeaderBytes    int
+	CertSANList       string
 }
 
 var log = commLog.GetDefaultLogger()
@@ -105,115 +106,166 @@ func SaveConfiguration(c setup.Context) error {
 	defer log.Trace("config/config:SaveConfiguration() Leaving")
 	var err error = nil
 
+	wlsPort, err := c.GetenvInt(constants.CmsTlsCertDigestEnv, "WLS Listener Port")
+	if err == nil && wlsPort > 0 {
+		Configuration.Port = wlsPort
+	} else if Configuration.Port <= 0 {
+		Configuration.Port = constants.DefaultWLSListenerPort
+		log.Info("config/config:SaveConfiguration() WLS_PORT not defined, using default value: ", constants.DefaultWLSListenerPort)
+	}
+
 	tlsCertDigest, err := c.GetenvString(constants.CmsTlsCertDigestEnv, "CMS TLS certificate digest")
 	if err == nil && tlsCertDigest != "" {
 		Configuration.CmsTlsCertDigest = tlsCertDigest
-	} else if Configuration.CmsTlsCertDigest == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_TLS_CERT_SHA384 is not defined in environment or configuration file")
+	} else if strings.TrimSpace(Configuration.CmsTlsCertDigest) == "" {
+		return errors.Wrap(err, "CMS_TLS_CERT_SHA384 is not defined in environment or configuration file")
 	}
 
 	cmsBaseUrl, err := c.GetenvString(constants.CmsBaseUrlEnv, "CMS Base URL")
 	if err == nil && cmsBaseUrl != "" {
 		Configuration.CMS_BASE_URL = cmsBaseUrl
-	} else if Configuration.CMS_BASE_URL == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() CMS_BASE_URL is not defined in environment or configuration file")
+	} else if strings.TrimSpace(Configuration.CMS_BASE_URL) == "" {
+		return errors.Wrap(err, "CMS_BASE_URL is not defined in environment or configuration file")
 	}
 
 	aasAPIUrl, err := c.GetenvString(AAS_API_URL, "AAS API URL")
 	if err == nil && aasAPIUrl != "" {
 		Configuration.AAS_API_URL = aasAPIUrl
-	} else if Configuration.AAS_API_URL == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() AAS_API_URL is not defined in environment or configuration file")
+	} else if strings.TrimSpace(Configuration.AAS_API_URL) == "" {
+		return errors.Wrap(err, "AAS_API_URL is not defined in environment or configuration file")
 	}
 
 	hvsAPIURL, err := c.GetenvString(HVS_URL, "Verification Service URL")
 	if err == nil && hvsAPIURL != "" {
 		Configuration.HVS_API_URL = hvsAPIURL
-	} else if Configuration.HVS_API_URL == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() HVS_URL is not defined in environment or configuration file")
+	} else if strings.TrimSpace(Configuration.HVS_API_URL) == "" {
+		return errors.Wrap(err, "HVS_URL is not defined in environment or configuration file")
 	}
 
 	wlsAASUser, err := c.GetenvString(WLS_USER, "WLS Service Username")
 	if err == nil && wlsAASUser != "" {
 		Configuration.WLS.User = wlsAASUser
 	} else if Configuration.WLS.User == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_SERVICE_USERNAME is not defined in environment or configuration file")
+		return errors.Wrap(err, "WLS_SERVICE_USERNAME is not defined in environment or configuration file")
 	}
 
 	wlsAASPassword, err := c.GetenvString(WLS_PASSWORD, "WLS Service Password")
 	if err == nil && wlsAASPassword != "" {
-		Configuration.WLS.User = wlsAASPassword
-	} else if Configuration.WLS.Password == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
+		Configuration.WLS.Password = wlsAASPassword
+	} else if strings.TrimSpace(Configuration.WLS.Password) == "" {
+		return errors.Wrap(err, "WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
+	}
+
+	// Postgres DB configuration
+	wlsDBHostname, err := c.GetenvString(WLS_DB_HOSTNAME, "WLS DB Hostname")
+	if err == nil && wlsDBHostname != "" {
+		Configuration.Postgres.Hostname = wlsDBHostname
+	} else if strings.TrimSpace(Configuration.Postgres.Hostname) == "" {
+		return errors.Wrap(err, "WLS_DB_HOSTNAME is not defined in environment or configuration file")
+	}
+
+	wlsDBPort, err := c.GetenvInt(WLS_DB_PORT, "WLS DB Port")
+	if err == nil && wlsDBPort > 0 {
+		Configuration.Postgres.Port = wlsDBPort
+	} else if Configuration.Postgres.Port == 0 {
+		return errors.Wrap(err, "WLS_DB_PORT is not defined in environment or configuration file")
+	}
+
+	wlsDBUsername, err := c.GetenvString(WLS_DB_USERNAME, "WLS DB Username")
+	if err == nil && wlsDBUsername != "" {
+		Configuration.Postgres.User = wlsDBUsername
+	} else if strings.TrimSpace(Configuration.Postgres.User) == "" {
+		return errors.Wrap(err, "WLS_DB_USERNAME is not defined in environment or configuration file")
+	}
+
+	wlsDBPassword, err := c.GetenvString(WLS_DB_PASSWORD, "WLS DB Password")
+	if err == nil && wlsDBPassword != "" {
+		Configuration.Postgres.Password = wlsDBPassword
+	} else if strings.TrimSpace(Configuration.Postgres.Password) == "" {
+		return errors.Wrap(err, "WLS_DB_PASSWORD is not defined in environment or configuration file")
+	}
+
+	wlsDBName, err := c.GetenvString(WLS_DB, "WLS DB Name")
+	if err == nil && wlsDBName != "" {
+		Configuration.Postgres.DBName = wlsDBName
+	} else if strings.TrimSpace(Configuration.Postgres.DBName) == "" {
+		return errors.Wrap(err, "WLS_DB is not defined in environment or configuration file")
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")
 	if err == nil && tlsCertCN != "" {
 		Configuration.Subject.TLSCertCommonName = tlsCertCN
-	} else if Configuration.Subject.TLSCertCommonName == "" {
-		log.Info("config/config:SaveConfiguration() WLS TLS Certificate Common Name not defined, using default value")
+	} else if strings.TrimSpace(Configuration.Subject.TLSCertCommonName) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_TLS_CERT_CN not defined, using default value")
 		Configuration.Subject.TLSCertCommonName = constants.DefaultWlsTlsCn
 	}
 
 	certOrg, err := c.GetenvString(constants.WlsCertOrgEnv, "WLS Certificate Organization")
 	if err == nil && certOrg != "" {
 		Configuration.Subject.Organization = certOrg
-	} else if Configuration.Subject.Organization == "" {
-		log.Info("config/config:SaveConfiguration() WLS Certificate Organization not defined, using default value")
+	} else if strings.TrimSpace(Configuration.Subject.Organization) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_CERT_ORG not defined, using default value")
 		Configuration.Subject.Organization = constants.DefaultWlsCertOrganization
 	}
 
 	certCountry, err := c.GetenvString(constants.WlsCertCountryEnv, "WLS Certificate Country")
 	if err == nil && certCountry != "" {
 		Configuration.Subject.Country = certCountry
-	} else if Configuration.Subject.Country == "" {
-		log.Info("config/config:SaveConfiguration() WLS Certificate Country not defined, using default value")
+	} else if strings.TrimSpace(Configuration.Subject.Country) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_CERT_COUNTRY not defined, using default value")
 		Configuration.Subject.Country = constants.DefaultWlsCertCountry
 	}
 
 	certProvince, err := c.GetenvString(constants.WlsCertProvinceEnv, "WLS Certificate Province")
 	if err == nil && certProvince != "" {
 		Configuration.Subject.Province = certProvince
-	} else if Configuration.Subject.Province == "" {
-		log.Info("config/config:SaveConfiguration() WLS Certificate Province not defined, using default value")
+	} else if strings.TrimSpace(Configuration.Subject.Province) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_CERT_PROVINCE not defined, using default value")
 		Configuration.Subject.Province = constants.DefaultWlsCertProvince
 	}
 
 	certLocality, err := c.GetenvString(constants.WlsCertLocalityEnv, "WLS Certificate Locality")
 	if err == nil && certLocality != "" {
 		Configuration.Subject.Locality = certLocality
-	} else if Configuration.Subject.Locality == "" {
-		log.Info("config/config:SaveConfiguration() WLS Certificate Locality not defined, using default value")
+	} else if strings.TrimSpace(Configuration.Subject.Locality) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_CERT_LOCALITY not defined, using default value")
 		Configuration.Subject.Locality = constants.DefaultWlsCertLocality
+	}
+
+	certSANList, err := c.GetenvString(constants.WlsCertSANList, "WLS Certificate SAN List")
+	if err == nil && certSANList != "" {
+		Configuration.CertSANList = certSANList
+	} else if strings.TrimSpace(Configuration.CertSANList) == "" {
+		log.Info("config/config:SaveConfiguration() WLS_CERT_SAN List not defined, using default value")
+		Configuration.CertSANList = constants.DefaultWlsTlsSan
 	}
 
 	keyCacheSeconds, err := c.GetenvString(constants.KeyCacheSeconds, "Key Cache Seconds")
 	if err == nil && keyCacheSeconds != "" {
 		Configuration.KEY_CACHE_SECONDS, _ = strconv.Atoi(keyCacheSeconds)
 	} else if Configuration.KEY_CACHE_SECONDS <= 0 {
-		log.Info("config/config:SaveConfiguration() Key Cache Seconds not defined, using default value")
+		log.Info("config/config:SaveConfiguration() KEY_CACHE_SECONDS not defined, using default value")
 		Configuration.KEY_CACHE_SECONDS = constants.DefaultKeyCacheSeconds
 	}
 
 	ll, err := c.GetenvString(WLS_LOGLEVEL, "Logging Level")
 	if err != nil {
 		if Configuration.LogLevel.String() == "" {
-			log.Info("config/config:SaveConfiguration() Logging level not defined, using default log level Info")
+			log.Info("config/config:SaveConfiguration() WLS_LOGLEVEL not defined, using default log level: Info")
 			Configuration.LogLevel = logrus.InfoLevel
 		}
 	} else {
 		Configuration.LogLevel, err = logrus.ParseLevel(ll)
 		if err != nil {
+			log.Info("config/config:SaveConfiguration() Invalid log level specified in env, using default log level: Info")
 			Configuration.LogLevel = logrus.InfoLevel
-			log.Info("config/config:SaveConfiguration() Invalid log level, using default log level Info")
 		} else {
 			log.Infof("config/config:SaveConfiguration() Log level set %s\n", ll)
 		}
 	}
 
-	fmt.Println("Configuration Loaded")
-	log.Info("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
-	return Save()
+	log.Info("config/config:SaveConfiguration() WLS Configuration Loaded")
+	return nil
 }
 
 // Save the configuration struct into /etc/workload-service/config.ynml

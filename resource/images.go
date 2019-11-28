@@ -789,6 +789,6 @@ func getKeyFromCache(imageUUID string) (keycache.Key, error) {
 func cacheKeyInMemory(imageUUID string, keyID string, key []byte) error {
 	log.Trace("Entered resource/images:cacheKeyInMemory()")
 	defer log.Trace("Exited resource/images:cacheKeyInMemory()")
-	keycache.Store(imageUUID, keycache.Key{keyID, key, time.Now(), time.Now().Add(time.Second * time.Duration(consts.DefaultKeyCacheSeconds))})
+	keycache.Store(imageUUID, keycache.Key{ID: keyID, Bytes: key, Created: time.Now(), Expired: time.Now().Add(time.Second * time.Duration(consts.DefaultKeyCacheSeconds))})
 	return nil
 }
