@@ -45,10 +45,9 @@ Add / Update following configuration in workload-service.env
     WLS_DB_PORT=5432
     WLS_DB_USERNAME=runner
     WLS_DB_PASSWORD=test
-    KMS_URL=kmsurl
     HVS_URL=hvsurl
-    HVS_USER=hvsuser
-    HVS_PASSWORD=hvspass
+    WLS_SERVICE_USERNAME=<wlsaasuser>
+    WLS_SERVICE_PASSWORD=<wlsaaspassword>
     CMS_BASE_URL=https://certservice.example.com:8445:/cms/v1/
     AAS_API_URL=https://authservice.example.com:8444/aas
     SAN_LIST=127.0.0.1,localhost

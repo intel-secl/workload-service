@@ -245,7 +245,7 @@ check_env_var_present() {
 
 all_env_vars_present=1
 
-required_vars="CMS_BASE_URL HVS_URL AAS_API_URL WLS_USER WLS_PASSWORD WLS_LOGLEVEL"
+required_vars="CMS_BASE_URL HVS_URL AAS_API_URL WLS_SERVICE_USERNAME WLS_SERVICE_PASSWORD WLS_LOGLEVEL"
 for env_var in $required_vars; do
   check_env_var_present $env_var
 done

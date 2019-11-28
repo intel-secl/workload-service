@@ -46,11 +46,11 @@ const WLS_DB_HOSTNAME = "WLS_DB_HOSTNAME"
 // HVS_URL is a string environment variable for specifying the url pointing to the hvs, such as https://host-verification:8443/mtwilson/v2
 const HVS_URL = "HVS_URL"
 
-// WLS_USER is a string environment variable for specifying  user to get token from AAS
-const WLS_USER = "WLS_USER"
+// WLS_SERVICE_USERNAME is a string environment variable for specifying  user to get token from AAS
+const WLS_USER = "WLS_SERVICE_USERNAME"
 
-// WLS_PASSWORD is a string environment variable for specifying the password get token from AAS
-const WLS_PASSWORD = "WLS_PASSWORD"
+// WLS_SERVICE_PASSWORD is a string environment variable for specifying the password get token from AAS
+const WLS_PASSWORD = "WLS_SERVICE_PASSWORD"
 
 const WLS_LOGLEVEL = "WLS_LOGLEVEL"
 
@@ -133,18 +133,18 @@ func SaveConfiguration(c setup.Context) error {
 		return errors.Wrap(err, "config/config:SaveConfiguration() HVS_URL is not defined in environment or configuration file")
 	}
 
-	wlsAASUser, err := c.GetenvString(WLS_USER, "WLS AAS User")
+	wlsAASUser, err := c.GetenvString(WLS_USER, "WLS Service Username")
 	if err == nil && wlsAASUser != "" {
 		Configuration.WLS.User = wlsAASUser
 	} else if Configuration.WLS.User == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_USER is not defined in environment or configuration file")
+		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_SERVICE_USERNAME is not defined in environment or configuration file")
 	}
 
-	wlsAASPassword, err := c.GetenvString(WLS_PASSWORD, "WLS AAS Password")
+	wlsAASPassword, err := c.GetenvString(WLS_PASSWORD, "WLS Service Password")
 	if err == nil && wlsAASPassword != "" {
 		Configuration.WLS.User = wlsAASPassword
 	} else if Configuration.WLS.Password == "" {
-		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_PASSWORD is not defined in environment or configuration file")
+		return errors.Wrap(err, "config/config:SaveConfiguration() WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")
