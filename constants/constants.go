@@ -40,6 +40,7 @@ const (
 	DefaultKeyCacheSeconds        = 300
 	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
 	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
+	LogEntryMaxlengthEnv          = "LOG_ENTRY_MAXLENGTH"
 	JWTCertsCacheTime             = "1m"
 	HttpLogFile                   = "/var/log/workload-service/http.log"
 	DefaultReadTimeout            = 30 * time.Second
@@ -49,6 +50,7 @@ const (
 	DefaultMaxHeaderBytes         = 1 << 20
 	DefaultWLSListenerPort        = 5000
 	DBTypePostgres                = "postgres"
+	DefaultLogEntryMaxlength      = 300
 )
 
 // State represents whether or not a daemon is running or not

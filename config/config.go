@@ -5,6 +5,7 @@
 package config
 
 import (
+	"fmt"
 	commLog "intel/isecl/lib/common/log"
 	commLogInt "intel/isecl/lib/common/log/setup"
 	"intel/isecl/lib/common/setup"
@@ -85,6 +86,7 @@ var Configuration struct {
 		Password string
 	}
 	LogLevel          logrus.Level
+	LogEntryMaxLength int
 	KEY_CACHE_SECONDS int
 	ReadTimeout       time.Duration
 	ReadHeaderTimeout time.Duration
@@ -264,8 +266,19 @@ func SaveConfiguration(c setup.Context) error {
 		}
 	}
 
-	log.Info("config/config:SaveConfiguration() WLS Configuration Loaded")
-	return nil
+	logEntryMaxLength, err := c.GetenvInt(constants.LogEntryMaxlengthEnv, "Maximum length of each entry in a log")
+	if err == nil && logEntryMaxLength >= 100{
+		Configuration.LogEntryMaxLength = logEntryMaxLength
+	} else {
+		log.Info("config/config:SaveConfiguration() Invalid Log Entry Max Length defined (should be > 100), " +
+			"using default value")
+		Configuration.LogEntryMaxLength = constants.DefaultLogEntryMaxlength
+	}
+
+
+	fmt.Println("Configuration Loaded")
+	log.Info("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
+	return Save()
 }
 
 // Save the configuration struct into /etc/workload-service/config.ynml
@@ -323,8 +336,8 @@ func LogConfiguration(stdOut, logFile bool) {
 	}
 	ioWriterSecurity := io.MultiWriter(ioWriterDefault, secLogFile)
 
-	commLogInt.SetLogger(commLog.DefaultLoggerName, Configuration.LogLevel, nil, ioWriterDefault, false)
-	commLogInt.SetLogger(commLog.SecurityLoggerName, Configuration.LogLevel, nil, ioWriterSecurity, false)
+	commLogInt.SetLogger(commLog.DefaultLoggerName, Configuration.LogLevel, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterDefault, false)
+	commLogInt.SetLogger(commLog.SecurityLoggerName, Configuration.LogLevel, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterSecurity, false)
 	secLog.Trace("config/config:LogConfiguration() Security log initiated")
 	log.Trace("config/config:LogConfiguration() Loggers setup finished")
 }
