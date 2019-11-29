@@ -303,13 +303,17 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 		cLog.Debug("resource/images:retrieveFlavorForImageID() Retrieving Flavor for Image")
+		// The error returned for below db query should be set as "StatusNotFound" for http response status code,
+		// since image UUID and flavorUUID validation have been done earlier in the code 
+		// there would be rare case when there is flavor in db and query fails to fetch flavor
+
 		flavor, err := db.ImageRepository().RetrieveAssociatedFlavorByFlavorPart(id, fp)
 		if err != nil {
 			cLog.WithError(err).Error("resource/images:retrieveFlavorForImageID() Failed to retrieve Flavor for Image")
 			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Failed to retrieve flavor - No flavor found for given image ID",
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusNotFound,
 			}
 		}
 
