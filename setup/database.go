@@ -5,6 +5,7 @@
 package setup
 
 import (
+	"flag"
 	"fmt"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
@@ -18,20 +19,36 @@ import (
 
 // Database is a setup task for setting up the Postgres connection to use for WLS
 // it expects you to set WLS_DB_HOSTNAME, WLS_DB_PORT, WLS_DB_USERNAME, WLS_DB_PASSWORD, and WLS_DB
-type Database struct{}
+type Database struct {
+	Flags []string
+}
 
 // Run will run the database setup tasks, but will skip if Validate() returns no error
 func (ds Database) Run(c csetup.Context) error {
 	log.Trace("setup/database:Run() Entering")
 	defer log.Trace("setup/database:Run() Leaving")
+	var err error
 
-	if ds.Validate(c) == nil {
-		log.Info("setup/database:Run() Database already setup, skipping ...")
+	fmt.Println("Running setup task: database")
+
+	fs := flag.NewFlagSet("database", flag.ExitOnError)
+	force := fs.Bool("force", false, "force recreation, will overwrite any existing certificate")
+
+	err = fs.Parse(ds.Flags)
+	if err != nil {
+		fmt.Println("WLS Database setup: Unable to parse flags")
+		return fmt.Errorf("WLS Database setup: Unable to parse flags")
+	}
+
+	// task only runs if force flag is unset or
+	if !*force && ds.Validate(c) == nil {
+		fmt.Println("setup database: task already complete. Skipping...")
+		log.Info("setup/database:Run() WLS Database already setup, skipping ...")
 		return nil
 	}
 
 	log.Info("setup/database:Run() Setting up database connection ...")
-	var err error
+
 	config.Configuration.Postgres.Hostname, err = c.GetenvString(config.WLS_DB_HOSTNAME, "Database Hostname")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error: WLS_DB_HOSTNAME not set in environment")
@@ -58,8 +75,10 @@ func (ds Database) Run(c csetup.Context) error {
 		return errors.Wrap(err, "setup/database:Run() WLS_DB not set in environment")
 	}
 
+	// post-run validation
 	err = ds.Validate(c)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "setup database: post-run validation failed.")
 		return errors.Wrap(err, "setup/database:Run() Database setup failed with new configuration")
 	}
 

@@ -13,6 +13,7 @@ import (
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/setup"
+	"intel/isecl/workload-service/version"
 	"os"
 	"os/exec"
 	"strings"
@@ -28,13 +29,16 @@ var log = commLog.GetDefaultLogger()
 var secLog = commLog.GetSecurityLogger()
 
 func main() {
+	config.LogConfiguration(false, true)
+
 	log.Trace("main:main() Entering")
 	defer log.Trace("main:main() Leaving")
 
 	var context csetup.Context
-	config.LogConfiguration(false, true)
+
 	/* PARSE COMMAND LINE OPTIONS */
 	args := os.Args[1:]
+
 	if len(args) <= 0 {
 		fmt.Println("Command not found. Usage below ", os.Args[0])
 		printUsage()
@@ -124,10 +128,18 @@ func main() {
 					BearerToken:   "",
 					ConsoleWriter: os.Stdout,
 				},
-				new(setup.Server),
-				new(setup.Database),
-				new(setup.HVSConnection),
-				new(setup.AASConnection),
+				setup.Server{
+					Flags: flags,
+				},
+				setup.Database{
+					Flags: flags,
+				},
+				setup.HVSConnection{
+					Flags: flags,
+				},
+				setup.AASConnection{
+					Flags: flags,
+				},
 			},
 			AskInput: false,
 		}
@@ -141,6 +153,13 @@ func main() {
 			log.Tracef("%+v", err)
 			fmt.Fprintf(os.Stderr, "Error running setup tasks. %s\n", err.Error())
 			os.Exit(1)
+		} else {
+			// when successful, we update the ownership of the config/certs updated by the setup tasks
+			// all of them are likely to be found in /etc/workload-service/ path
+			if config.TakeOwnershipFileWLS(constants.ConfigDir) != nil {
+				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on WLS configuration files")
+				os.Exit(-1)
+			}
 		}
 
 	case "start":
@@ -155,7 +174,7 @@ func main() {
 		startServer()
 
 	case "stop":
-		config.LogConfiguration(true, true)
+		config.LogConfiguration(false, true)
 		stop()
 
 	case "uninstall":
@@ -177,6 +196,10 @@ func main() {
 
 	case "help", "-help", "--help":
 		printUsage()
+
+	case "--version", "-v":
+		printVersion()
+
 	}
 }
 
@@ -267,25 +290,26 @@ func printUsage() {
 	fmt.Printf("    %s <command>\n\n", os.Args[0])
 	fmt.Println("Available Commands:")
 	fmt.Println("    help|-help|--help    Show this help message")
+	fmt.Println("    -v|--version Print version/build information")
 	fmt.Println("    start                Start workload-service")
 	fmt.Println("    stop                 Stop workload-service")
 	fmt.Println("    status               Determine if workload-service is running")
 	fmt.Println("    uninstall  [--purge] Uninstall workload-service. --purge option needs to be applied to remove configuration and data files")
-	fmt.Printf("    setup all               Setup workload-service for use\n\n")
+	fmt.Printf("     setup                Run workload-service setup tasks\n\n")
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
-	fmt.Printf("    all                    Runs all setup tasks\n\n")
-	fmt.Println("    download_ca_cert")
-	fmt.Println("                        - Download CMS root CA certificate")
+	fmt.Printf("   all                  Runs all setup tasks\n\n")
+	fmt.Println("   download_ca_cert     Download CMS root CA certificate")
+	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads new root CA cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
 	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
 	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API url")
-	fmt.Println("    download_cert TLS")
-	fmt.Println("                        - Generates Key pair and CSR, gets it signed from CMS")
+	fmt.Println("   download_cert        Generates Key pair and CSR, gets it signed from CMS")
+	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads newly signed WLS TLS cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
 	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
 	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with CMS")
-	fmt.Println("                        - Environment variable KEY_PATH=<key_path> to override default specified in config")
+	fmt.Println("                        - Environment variable KEY_PATH=<key_path> to override	ride default specified in config")
 	fmt.Println("                        - Environment variable CERT_PATH=<cert_path> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_TLS_CERT_CN=<COMMON NAME> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_CERT_ORG=<CERTIFICATE ORGANIZATION> to override default specified in config")
@@ -294,18 +318,26 @@ func printUsage() {
 	fmt.Println("                        - Environment variable WLS_CERT_PROVINCE=<CERTIFICATE PROVINCE> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_CERT_SAN=<CSV List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
 	fmt.Println("    server              Setup http server on given port")
-	fmt.Printf("                        -Environment variable WLS_PORT=<port> should be set\n\n")
+	fmt.Printf("\t\t                     - Option [--force] overwrites existing server config\n")
+	fmt.Printf("                         - Environment variable WLS_PORT=<port> should be set\n\n")
 	fmt.Println("    database            Setup workload-service database")
+	fmt.Printf("\t\t                     - Option [--force] overwrites existing database config\n")
 	fmt.Println("                        Required env variables are:")
 	fmt.Println("                        - WLS_DB_HOSTNAME  : database host name")
 	fmt.Println("                        - WLS_DB_PORT      : database port number")
 	fmt.Println("                        - WLS_DB_USERNAME  : database user name")
 	fmt.Println("                        - WLS_DB_PASSWORD  : database password")
-	fmt.Printf("                         - WLS_DB           : database schema name\n\n")
+	fmt.Printf("                        - WLS_DB           : database schema name\n\n")
 	fmt.Println("    hvsconnection       Setup task for setting up the connection to the Host Verification Service(HVS)")
+	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
 	fmt.Println("                        Required env variables are:")
 	fmt.Printf("                        - HVS_URL      : HVS URL\n\n")
 	fmt.Println("    aasconnection       Setup to create workload service user roles in AAS")
+	fmt.Printf("\t\t                     - Option [--force] overwrites existing AAS config\n")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
+}
+
+func printVersion() {
+	fmt.Printf("Workload Service Version %s\nBuild %s at %s - %s\n", version.Version, version.Branch, version.GitCommitDate, version.GitHash)
 }

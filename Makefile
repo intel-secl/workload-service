@@ -1,12 +1,14 @@
+VERSION := v1.0
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := $(or ${GITTAG}, v0.0.0)
+GITBRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+TIMESTAMP := $(shell date --iso=seconds)
 
 .PHONY: workload-service installer docker all clean
 
 workload-service:
-	env GOOS=linux go build -ldflags "-X intel/isecl/workload-service/version.Version=$(VERSION) -X intel/isecl/workload-service/version.GitHash=$(GITCOMMIT)" -o out/workload-service
+	env GOOS=linux go build -ldflags "-X intel/isecl/workload-service/version.Version=$(VERSION) -X intel/isecl/workload-service/version.Branch=$(GITBRANCH) -X intel/isecl/workload-service/version.GitHash=$(GITCOMMIT) -X intel/isecl/workload-service/version.GitCommitDate=$(GITCOMMITDATE)" -o out/workload-service
 
 installer: workload-service
 	mkdir -p out/wls

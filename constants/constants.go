@@ -51,6 +51,8 @@ const (
 	DefaultWLSListenerPort        = 5000
 	DBTypePostgres                = "postgres"
 	DefaultLogEntryMaxlength      = 300
+	WLSRuntimeUser                = "wls"
+	WLSRuntimeGroup               = "wls"
 )
 
 // State represents whether or not a daemon is running or not

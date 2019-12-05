@@ -71,16 +71,20 @@ func startServer() error {
 	}
 	wlsDb := postgres.PostgresDatabase{DB: db}
 	wlsDb.Migrate()
-	r := mux.NewRouter().PathPrefix("/wls").Subrouter()
-	r.Use(middleware.NewTokenAuth(consts.TrustedJWTSigningCertsDir, consts.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
-	// Set Resource Endpoints
-	resource.SetFlavorsEndpoints(r.PathPrefix("/flavors").Subrouter(), wlsDb)
-	// Setup Report Endpoints
-	resource.SetReportsEndpoints(r.PathPrefix("/reports").Subrouter(), wlsDb)
-	// Setup Images Endpoints
-	resource.SetImagesEndpoints(r.PathPrefix("/images").Subrouter(), wlsDb)
+	r := mux.NewRouter()
+	noauthr := r.PathPrefix("/wls/noauth/").Subrouter()
+	authr := r.PathPrefix("/wls/").Subrouter()
+
 	// Setup Version Endpoint
-	resource.SetVersionEndpoints(r.PathPrefix("/version").Subrouter(), wlsDb)
+	resource.SetVersionEndpoints(noauthr.PathPrefix("/version").Subrouter())
+
+	authr.Use(middleware.NewTokenAuth(consts.TrustedJWTSigningCertsDir, consts.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
+	// Set Resource Endpoints
+	resource.SetFlavorsEndpoints(authr.PathPrefix("/flavors").Subrouter(), wlsDb)
+	// Setup Report Endpoints
+	resource.SetReportsEndpoints(authr.PathPrefix("/reports").Subrouter(), wlsDb)
+	// Setup Images Endpoints
+	resource.SetImagesEndpoints(authr.PathPrefix("/images").Subrouter(), wlsDb)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
@@ -102,10 +106,10 @@ func startServer() error {
 	}
 	l := stdlog.New(httpWriter, "", 0)
 	h := &http.Server{
-		Addr:      fmt.Sprintf(":%d", config.Configuration.Port),
-		Handler:   handlers.RecoveryHandler(handlers.RecoveryLogger(l), handlers.PrintRecoveryStack(true))(handlers.CombinedLoggingHandler(httpWriter, r)),
-		ErrorLog:  l,
-		TLSConfig: tlsconfig,
+		Addr:              fmt.Sprintf(":%d", config.Configuration.Port),
+		Handler:           handlers.RecoveryHandler(handlers.RecoveryLogger(l), handlers.PrintRecoveryStack(true))(handlers.CombinedLoggingHandler(httpWriter, r)),
+		ErrorLog:          l,
+		TLSConfig:         tlsconfig,
 		ReadTimeout:       config.Configuration.ReadTimeout,
 		ReadHeaderTimeout: config.Configuration.ReadHeaderTimeout,
 		WriteTimeout:      config.Configuration.WriteTimeout,

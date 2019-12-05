@@ -106,6 +106,9 @@ for directory in $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_BIN $WORKLOAD
   chmod 700 $directory
 done
 
+# change the ownership of the WLS_HOME path
+chown wls:wls $WORKLOAD_SERVICE_HOME
+
 mkdir -p /etc/workload-service/cacerts
 chown wls:wls /etc/workload-service/cacerts
 
@@ -122,7 +125,9 @@ ln -sfT $WORKLOAD_SERVICE_BIN/workload-service /usr/local/bin/workload-service
 chown wls:wls /usr/local/bin/workload-service
 
 cp -f workload-service.service $WORKLOAD_SERVICE_HOME
+chown wls:wls $WORKLOAD_SERVICE_HOME/workload-service.service
 systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
+
 
 #Install log rotation
 auto_install() {
@@ -165,7 +170,7 @@ logRotate_install() {
 }
 
 logRotate_install
-
+export WLS_LOGLEVEL=${WLS_LOGLEVEL:-info}
 export LOG_ROTATION_PERIOD=${LOG_ROTATION_PERIOD:-hourly}
 export LOG_COMPRESS=${LOG_COMPRESS:-compress}
 export LOG_DELAYCOMPRESS=${LOG_DELAYCOMPRESS:-delaycompress}
@@ -257,7 +262,7 @@ if [[ $all_env_vars_present -eq 1 ]]; then
   # run setup tasks
   echo_info "Running setup tasks ..."
   workload-service setup all | tee -a $logfile
-  SETUP_RESULT=$?
+  SETUP_RESULT=${PIPESTATUS[0]}
 else
   echo_failure "One or more environment variables are not present. Setup cannot proceed. Aborting..." | tee -a $logfile
   echo_failure "Please export the missing environment variables and run setup again" | tee -a $logfile
@@ -265,11 +270,15 @@ else
 fi
 
 # start wls server
-if [ ${SETUP_RESULT} == 0 ]; then
+if [ ${SETUP_RESULT} -eq 0 ]; then
+  echo_success "Installation completed Successfully" | tee -a $logfile
+  echo_info "Starting Workload Service" | tee -a $logfile
   systemctl start workload-service
-  if [ $? == 0 ]; then
-    echo_success "Installation completed Successfully" | tee -a $logfile
+  if [ $? -eq 0 ]; then
+    echo_success "Started Workload Service" | tee -a $logfile
   else
-    echo_failure "Installation failed to complete successfully" | tee -a $logfile
+    echo_failure "Workload service failed to start" | tee -a $logfile
   fi
+else
+  echo_failure "Installation failed to complete successfully" | tee -a $logfile
 fi

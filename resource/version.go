@@ -6,7 +6,6 @@ package resource
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/version"
 	"net/http"
 
@@ -14,10 +13,10 @@ import (
 )
 
 // SetVersionEndpoints installs route handler for GET /version
-func SetVersionEndpoints(r *mux.Router, db repository.WlsDatabase) {
+func SetVersionEndpoints(r *mux.Router) {
 	log.Trace("Entered resource/version:SetVersionEndpoints()")
 	defer log.Trace("Exited resource/version:SetVersionEndpoints()")
-	r.HandleFunc("", getVersion).Methods("GET")
+	r.HandleFunc("/version", getVersion).Methods("GET")
 }
 
 // GetVersion handles GET /version

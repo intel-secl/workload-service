@@ -5,26 +5,47 @@
 package setup
 
 import (
+	"flag"
+	"fmt"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
-type Server struct{}
+type Server struct {
+	Flags []string
+}
 
 // Run will configure the parameters for the WLS web service layer. This will be skipped if Validate() returns no errors
 func (ss Server) Run(c csetup.Context) error {
 	log.Trace("setup/server:Run() Entering")
 	defer log.Trace("setup/server:Run() Leaving")
-	if ss.Validate(c) == nil {
-		log.Info("setup/server:Run() Webserver already setup, skipping ...")
+
+	var err error
+
+	fmt.Println("Running setup task: server")
+
+	fs := flag.NewFlagSet("server", flag.ExitOnError)
+	force := fs.Bool("force", false, "force re-run of server setup task")
+
+	err = fs.Parse(ss.Flags)
+	if err != nil {
+		fmt.Println("WLS Server setup: Unable to parse flags")
+		return fmt.Errorf("WLS Server setup: Unable to parse flags")
+	}
+
+	if !*force && ss.Validate(c) == nil {
+		fmt.Println("setup server: setup task already complete. Skipping...")
+		log.Info("setup/server:Run() WLS Server setup already complete, skipping ...")
 		return nil
 	}
+
 	log.Info("setup/server:Run() Setting up webserver ...")
-	var err error
+
 	config.Configuration.Port, err = c.GetenvInt(config.WLS_PORT, "Webserver Port")
 	if err != nil {
 		log.Info("setup/server:Run() Listen port not specified.Using default webserver port: 5000")
@@ -71,7 +92,14 @@ func (ss Server) Run(c csetup.Context) error {
 	} else {
 		config.Configuration.MaxHeaderBytes = maxHeaderBytes
 	}
-	
+
+	// post-run validation
+	err = ss.Validate(c)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "setup server: post-run validation failed.")
+		return errors.Wrap(err, "setup/server:Run() Server setup failed with new configuration")
+	}
+
 	log.Info("setup/server:Run() Updated WLS user credentials and server port in configuration")
 	return config.Save()
 }

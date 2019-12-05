@@ -3,9 +3,12 @@ Description=Workload Service
 
 [Service]
 Type=simple
+User=wls
+Group=wls
 WorkingDirectory=/opt/workload-service/bin/
 ExecStart=/opt/workload-service/bin/workload-service startserver
 TimeoutSec=300
+KillMode=process
 Restart=on-failure
 RestartSec=10
 StartLimitIntervalSec=60

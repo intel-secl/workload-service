@@ -8,10 +8,12 @@ import (
 	"fmt"
 	commLog "intel/isecl/lib/common/log"
 	commLogInt "intel/isecl/lib/common/log/setup"
+	cos "intel/isecl/lib/common/os"
 	"intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/constants"
 	"io"
 	"os"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -85,7 +87,7 @@ var Configuration struct {
 		User     string
 		Password string
 	}
-	LogLevel          logrus.Level
+	LogLevel          string
 	LogEntryMaxLength int
 	KEY_CACHE_SECONDS int
 	ReadTimeout       time.Duration
@@ -252,22 +254,23 @@ func SaveConfiguration(c setup.Context) error {
 
 	ll, err := c.GetenvString(WLS_LOGLEVEL, "Logging Level")
 	if err != nil {
-		if Configuration.LogLevel.String() == "" {
-			log.Info("config/config:SaveConfiguration() WLS_LOGLEVEL not defined, using default log level: Info")
-			Configuration.LogLevel = logrus.InfoLevel
+		if Configuration.LogLevel == "" {
+			log.Infof("config/config:SaveConfiguration() %s not defined, using default log level: Info", WLS_LOGLEVEL)
+			Configuration.LogLevel = logrus.InfoLevel.String()
 		}
 	} else {
-		Configuration.LogLevel, err = logrus.ParseLevel(ll)
+		llp, err := logrus.ParseLevel(ll)
 		if err != nil {
 			log.Info("config/config:SaveConfiguration() Invalid log level specified in env, using default log level: Info")
-			Configuration.LogLevel = logrus.InfoLevel
+			Configuration.LogLevel = logrus.InfoLevel.String()
 		} else {
+			Configuration.LogLevel = llp.String()
 			log.Infof("config/config:SaveConfiguration() Log level set %s\n", ll)
 		}
 	}
 
 	logEntryMaxLength, err := c.GetenvInt(constants.LogEntryMaxlengthEnv, "Maximum length of each entry in a log")
-	if err == nil && logEntryMaxLength >= 100{
+	if err == nil && logEntryMaxLength >= 100 {
 		Configuration.LogEntryMaxLength = logEntryMaxLength
 	} else {
 		log.Info("config/config:SaveConfiguration() Invalid Log Entry Max Length defined (should be > 100), " +
@@ -275,9 +278,8 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.LogEntryMaxLength = constants.DefaultLogEntryMaxlength
 	}
 
-
-	fmt.Println("Configuration Loaded")
 	log.Info("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
+
 	return Save()
 }
 
@@ -286,7 +288,7 @@ func Save() error {
 	log.Trace("config/config:Save() Entering")
 	defer log.Trace("config/config:Save() Leaving")
 
-	file, err := os.OpenFile(constants.ConfigFile, os.O_RDWR, 0)
+	file, err := os.OpenFile(constants.ConfigFile, os.O_WRONLY, 0)
 	if err != nil {
 		// we have an error
 		if os.IsNotExist(err) {
@@ -301,6 +303,7 @@ func Save() error {
 			return errors.Wrap(err, "config/config:Save() I/O related error")
 		}
 	}
+
 	defer file.Close()
 	return yaml.NewEncoder(file).Encode(Configuration)
 }
@@ -318,6 +321,42 @@ func init() {
 	LogWriter = os.Stdout
 }
 
+func TakeOwnershipFileWLS(filename string) error {
+	// when successful, we update the ownership of the config/certs updated by the setup tasks
+	// all of them are likely to be found in /etc/workload-service/ path
+	wlsUser, err := user.Lookup(constants.WLSRuntimeUser)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: Unable to find service user - wls. Failed to set permissions on WLS configuration files")
+		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
+	}
+	wlsGroup, err := user.LookupGroup(constants.WLSRuntimeGroup)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: Unable to find service group - wls. Failed to set permissions on WLS configuration files")
+		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
+	}
+	wlsuid, err := strconv.Atoi(wlsUser.Uid)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: Unable to get service user id - wls")
+		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
+	}
+	wlsgid, err := strconv.Atoi(wlsGroup.Gid)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: Unable to get service group id - wls")
+		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
+	}
+	err = cos.ChownR(filename, wlsuid, wlsgid)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on "+filename)
+		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
+	}
+
+	if err != nil {
+		fmt.Println("Error updating permissions on WLS config ", constants.ConfigDir)
+		log.Errorf("config/config:TakeOwnershipFileWLS() Error updating permissions on config path %s: %s", constants.ConfigDir, err)
+	}
+	return nil
+}
+
 func LogConfiguration(stdOut, logFile bool) {
 	log.Trace("config/config:LogConfiguration() Entering")
 	defer log.Trace("config/config:LogConfiguration() Leaving")
@@ -326,6 +365,12 @@ func LogConfiguration(stdOut, logFile bool) {
 	var ioWriterDefault io.Writer
 	secLogFile, _ := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+
+	err := TakeOwnershipFileWLS(constants.LogDir)
+	if err != nil {
+		fmt.Println("Error taking log path ownership ", constants.LogDir)
+		os.Exit(-1)
+	}
 
 	ioWriterDefault = defaultLogFile
 	if stdOut && logFile {
@@ -336,8 +381,15 @@ func LogConfiguration(stdOut, logFile bool) {
 	}
 	ioWriterSecurity := io.MultiWriter(ioWriterDefault, secLogFile)
 
-	commLogInt.SetLogger(commLog.DefaultLoggerName, Configuration.LogLevel, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterDefault, false)
-	commLogInt.SetLogger(commLog.SecurityLoggerName, Configuration.LogLevel, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterSecurity, false)
+	if Configuration.LogLevel == "" {
+		log.Infof("config/config:SaveConfiguration() %s not defined, using default log level: Info\n", WLS_LOGLEVEL)
+		Configuration.LogLevel = logrus.InfoLevel.String()
+	}
+
+	llp, _ := logrus.ParseLevel(Configuration.LogLevel)
+	commLogInt.SetLogger(commLog.DefaultLoggerName, llp, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterDefault, false)
+	commLogInt.SetLogger(commLog.SecurityLoggerName, llp, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterSecurity, false)
+
 	secLog.Trace("config/config:LogConfiguration() Security log initiated")
 	log.Trace("config/config:LogConfiguration() Loggers setup finished")
 }
