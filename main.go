@@ -116,10 +116,6 @@ func main() {
 					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
 					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
 					Subject: pkix.Name{
-						Country:      []string{config.Configuration.Subject.Country},
-						Organization: []string{config.Configuration.Subject.Organization},
-						Locality:     []string{config.Configuration.Subject.Locality},
-						Province:     []string{config.Configuration.Subject.Province},
 						CommonName:   config.Configuration.Subject.TLSCertCommonName,
 					},
 					SanList:       config.Configuration.CertSANList,
@@ -312,10 +308,6 @@ func printUsage() {
 	fmt.Println("                        - Environment variable KEY_PATH=<key_path> to override	ride default specified in config")
 	fmt.Println("                        - Environment variable CERT_PATH=<cert_path> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_TLS_CERT_CN=<COMMON NAME> to override default specified in config")
-	fmt.Println("                        - Environment variable WLS_CERT_ORG=<CERTIFICATE ORGANIZATION> to override default specified in config")
-	fmt.Println("                        - Environment variable WLS_CERT_COUNTRY=<CERTIFICATE COUNTRY> to override default specified in config")
-	fmt.Println("                        - Environment variable WLS_CERT_LOCALITY=<CERTIFICATE LOCALITY> to override default specified in config")
-	fmt.Println("                        - Environment variable WLS_CERT_PROVINCE=<CERTIFICATE PROVINCE> to override default specified in config")
 	fmt.Println("                        - Environment variable WLS_CERT_SAN=<CSV List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
 	fmt.Println("    server              Setup http server on given port")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing server config\n")

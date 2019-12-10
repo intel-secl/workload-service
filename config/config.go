@@ -62,12 +62,8 @@ var Configuration struct {
 	HVS_API_URL  string
 	CMS_BASE_URL string
 	AAS_API_URL  string
-	Subject      struct {
+	Subject struct {
 		TLSCertCommonName string
-		Organization      string
-		Country           string
-		Province          string
-		Locality          string
 	}
 	WLS struct {
 		User     string
@@ -152,38 +148,6 @@ func SaveConfiguration(c setup.Context) error {
 	} else if strings.TrimSpace(Configuration.Subject.TLSCertCommonName) == "" {
 		log.Info("config/config:SaveConfiguration() WLS_TLS_CERT_CN not defined, using default value")
 		Configuration.Subject.TLSCertCommonName = constants.DefaultWlsTlsCn
-	}
-
-	certOrg, err := c.GetenvString(constants.WlsCertOrgEnv, "WLS Certificate Organization")
-	if err == nil && certOrg != "" {
-		Configuration.Subject.Organization = certOrg
-	} else if strings.TrimSpace(Configuration.Subject.Organization) == "" {
-		log.Info("config/config:SaveConfiguration() WLS_CERT_ORG not defined, using default value")
-		Configuration.Subject.Organization = constants.DefaultWlsCertOrganization
-	}
-
-	certCountry, err := c.GetenvString(constants.WlsCertCountryEnv, "WLS Certificate Country")
-	if err == nil && certCountry != "" {
-		Configuration.Subject.Country = certCountry
-	} else if strings.TrimSpace(Configuration.Subject.Country) == "" {
-		log.Info("config/config:SaveConfiguration() WLS_CERT_COUNTRY not defined, using default value")
-		Configuration.Subject.Country = constants.DefaultWlsCertCountry
-	}
-
-	certProvince, err := c.GetenvString(constants.WlsCertProvinceEnv, "WLS Certificate Province")
-	if err == nil && certProvince != "" {
-		Configuration.Subject.Province = certProvince
-	} else if strings.TrimSpace(Configuration.Subject.Province) == "" {
-		log.Info("config/config:SaveConfiguration() WLS_CERT_PROVINCE not defined, using default value")
-		Configuration.Subject.Province = constants.DefaultWlsCertProvince
-	}
-
-	certLocality, err := c.GetenvString(constants.WlsCertLocalityEnv, "WLS Certificate Locality")
-	if err == nil && certLocality != "" {
-		Configuration.Subject.Locality = certLocality
-	} else if strings.TrimSpace(Configuration.Subject.Locality) == "" {
-		log.Info("config/config:SaveConfiguration() WLS_CERT_LOCALITY not defined, using default value")
-		Configuration.Subject.Locality = constants.DefaultWlsCertLocality
 	}
 
 	certSANList, err := c.GetenvString(constants.WlsCertSANList, "WLS Certificate SAN List")
