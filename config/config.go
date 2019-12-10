@@ -31,21 +31,6 @@ const WLS_NOSETUP = "WLS_NOSETUP"
 // WLS_PORT is an integer environment variable for specifying the port WLS should listen on
 const WLS_PORT = "WLS_PORT"
 
-// WLS_DB is a string environment variable for specifying the db name to use in the database
-const WLS_DB = "WLS_DB"
-
-// WLS_DB_USERNAME is a string environment variable for specifying the username to use for the database connection
-const WLS_DB_USERNAME = "WLS_DB_USERNAME"
-
-// WLS_DB_PASSWORD is a string environment variable for specifying the password to use for the database connection
-const WLS_DB_PASSWORD = "WLS_DB_PASSWORD"
-
-// WLS_DB_PORT is an integer environment variable for specifying the port to use for the database connection
-const WLS_DB_PORT = "WLS_DB_PORT"
-
-// WLS_DB_HOSTNAME is a string environment variable for specifying the database hostname to connect to
-const WLS_DB_HOSTNAME = "WLS_DB_HOSTNAME"
-
 // HVS_URL is a string environment variable for specifying the url pointing to the hvs, such as https://host-verification:8443/mtwilson/v2
 const HVS_URL = "HVS_URL"
 
@@ -66,12 +51,13 @@ var Configuration struct {
 	Port             int
 	CmsTlsCertDigest string
 	Postgres         struct {
-		DBName   string
-		User     string
-		Password string
-		Hostname string
-		Port     int
-		SSLMode  bool
+		DBName      string
+		UserName    string
+		Password    string
+		Hostname    string
+		Port        int
+		SSLMode     string
+		SSLCert     string
 	}
 	HVS_API_URL  string
 	CMS_BASE_URL string
@@ -158,42 +144,6 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.WLS.Password = wlsAASPassword
 	} else if strings.TrimSpace(Configuration.WLS.Password) == "" {
 		return errors.Wrap(err, "WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
-	}
-
-	// Postgres DB configuration
-	wlsDBHostname, err := c.GetenvString(WLS_DB_HOSTNAME, "WLS DB Hostname")
-	if err == nil && wlsDBHostname != "" {
-		Configuration.Postgres.Hostname = wlsDBHostname
-	} else if strings.TrimSpace(Configuration.Postgres.Hostname) == "" {
-		return errors.Wrap(err, "WLS_DB_HOSTNAME is not defined in environment or configuration file")
-	}
-
-	wlsDBPort, err := c.GetenvInt(WLS_DB_PORT, "WLS DB Port")
-	if err == nil && wlsDBPort > 0 {
-		Configuration.Postgres.Port = wlsDBPort
-	} else if Configuration.Postgres.Port == 0 {
-		return errors.Wrap(err, "WLS_DB_PORT is not defined in environment or configuration file")
-	}
-
-	wlsDBUsername, err := c.GetenvString(WLS_DB_USERNAME, "WLS DB Username")
-	if err == nil && wlsDBUsername != "" {
-		Configuration.Postgres.User = wlsDBUsername
-	} else if strings.TrimSpace(Configuration.Postgres.User) == "" {
-		return errors.Wrap(err, "WLS_DB_USERNAME is not defined in environment or configuration file")
-	}
-
-	wlsDBPassword, err := c.GetenvString(WLS_DB_PASSWORD, "WLS DB Password")
-	if err == nil && wlsDBPassword != "" {
-		Configuration.Postgres.Password = wlsDBPassword
-	} else if strings.TrimSpace(Configuration.Postgres.Password) == "" {
-		return errors.Wrap(err, "WLS_DB_PASSWORD is not defined in environment or configuration file")
-	}
-
-	wlsDBName, err := c.GetenvString(WLS_DB, "WLS DB Name")
-	if err == nil && wlsDBName != "" {
-		Configuration.Postgres.DBName = wlsDBName
-	} else if strings.TrimSpace(Configuration.Postgres.DBName) == "" {
-		return errors.Wrap(err, "WLS_DB is not defined in environment or configuration file")
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")

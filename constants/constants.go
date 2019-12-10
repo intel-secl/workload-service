@@ -26,6 +26,7 @@ const (
 	DefaultWlsCertLocality        = "SC"
 	DefaultKeyAlgorithm           = "rsa"
 	DefaultKeyAlgorithmLength     = 3072
+	DefaultSSLCertFilePath         = ConfigDir + "wlsdbsslcert.pem"
 	FlavorImageRetrievalGroupName = "FlavorsImageRetrieval"
 	AdministratorGroupName        = "Administrator"
 	ReportCreationGroupName       = "ReportsCreate"

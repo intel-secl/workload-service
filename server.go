@@ -21,8 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
@@ -41,36 +39,17 @@ func fnGetJwtCerts() error {
 func startServer() error {
 	log.Trace("server:startServer() Entering")
 	defer log.Trace("server:startServer() Leaving")
-	var sslMode string
-	if config.Configuration.Postgres.SSLMode {
-		sslMode = "enable"
-		log.Info("server:startServer() sslMode is enabled")
-	} else {
-		sslMode = "disable"
-		log.Info("server:startServer() sslMode is disabled")
+
+	// Open database
+	wlsDB, err := postgres.Open(config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.DBName,
+		config.Configuration.Postgres.UserName, config.Configuration.Postgres.Password, config.Configuration.Postgres.SSLMode, config.Configuration.Postgres.SSLCert)
+	if err != nil {
+		return errors.Wrap(err, "failed to open Postgres database")
 	}
-	var db *gorm.DB
-	var dbErr error
-	var numAttempts = 4
-	for i := 0; i < numAttempts; i = i + 1 {
-		const retryTime = 5
-		db, dbErr = gorm.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
-			config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.User, config.Configuration.Postgres.DBName, config.Configuration.Postgres.Password, sslMode))
-		if dbErr != nil {
-			secLog.Warnf("server:startServer() DB connection attempt %d of %d failed: %s", (i + 1), numAttempts, dbErr)
-			fmt.Printf("Failed to connect to DB, retrying in %d seconds ...\n", retryTime)
-		} else {
-			break
-		}
-		time.Sleep(retryTime * time.Second)
-	}
-	defer db.Close()
-	if dbErr != nil {
-		secLog.Fatalf("server:startServer() Failed to establish DB connection: %s\n", dbErr.Error())
-		return dbErr
-	}
-	wlsDb := postgres.PostgresDatabase{DB: db}
-	wlsDb.Migrate()
+	defer wlsDB.Close()
+	log.Trace("Migrating Database")
+	wlsDB.Migrate()
+
 	r := mux.NewRouter()
 	noauthr := r.PathPrefix("/wls/noauth/").Subrouter()
 	authr := r.PathPrefix("/wls/").Subrouter()
@@ -80,11 +59,11 @@ func startServer() error {
 
 	authr.Use(middleware.NewTokenAuth(consts.TrustedJWTSigningCertsDir, consts.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
 	// Set Resource Endpoints
-	resource.SetFlavorsEndpoints(authr.PathPrefix("/flavors").Subrouter(), wlsDb)
+	resource.SetFlavorsEndpoints(authr.PathPrefix("/flavors").Subrouter(), wlsDB)
 	// Setup Report Endpoints
-	resource.SetReportsEndpoints(authr.PathPrefix("/reports").Subrouter(), wlsDb)
+	resource.SetReportsEndpoints(authr.PathPrefix("/reports").Subrouter(), wlsDB)
 	// Setup Images Endpoints
-	resource.SetImagesEndpoints(authr.PathPrefix("/images").Subrouter(), wlsDb)
+	resource.SetImagesEndpoints(authr.PathPrefix("/images").Subrouter(), wlsDB)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
