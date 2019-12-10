@@ -350,10 +350,6 @@ func TakeOwnershipFileWLS(filename string) error {
 		return errors.Wrapf(err, "Failed to set permissions on %s", filename)
 	}
 
-	if err != nil {
-		fmt.Println("Error updating permissions on WLS config ", constants.ConfigDir)
-		log.Errorf("config/config:TakeOwnershipFileWLS() Error updating permissions on config path %s: %s", constants.ConfigDir, err)
-	}
 	return nil
 }
 

@@ -60,7 +60,7 @@ func TestReportResource(t *testing.T) {
 	currDir, _ := os.Getwd()
 	wlsDB.Migrate()
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
-		"http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "261209df1789073192285e4e408addadb35068421ef4890a5d4d434")
+		"https://10.105.168.160:9443/v1/keys/4377ae27-5b48-4301-9684-3a5f39123511/transfer", "Flt8imDt7sqtRAwcBAFzFxz8j0/E1xMulfEOYlu7FesUt/oief0AB4G0gbYaRM6x")
 	flavorJSON, err := json.Marshal(flavor)
 
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(flavorJSON), "../repository/mock/flavor-signing-key.pem")
@@ -96,7 +96,7 @@ func TestReportResource(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 	rbody, _ := ioutil.ReadAll(recorder.Result().Body)
 	log.Infof("%v", string(rbody))
-	//assert.Equal(http.StatusCreated, recorder.Code)
+	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// ISECL-3639: a GET without parameters to /wls/reports should return 400 and an error message
 	recorder = httptest.NewRecorder()
@@ -104,6 +104,13 @@ func TestReportResource(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
+
+	// reports with filter=false should return all reports
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/reports?filter=false", nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
 	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
@@ -150,26 +157,25 @@ func TestReportResource(t *testing.T) {
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	// TODO: Fix failing tests - after Sprint 29
-	/*
-		recorder = httptest.NewRecorder()
-		req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
-		req.Header.Add("Authorization", "Bearer "+BearerToken)
-		r.ServeHTTP(recorder, req)
-		assert.Equal(http.StatusOK, recorder.Code)
 
-		recorder = httptest.NewRecorder()
-		req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID, nil)
-		req.Header.Add("Authorization", "Bearer "+BearerToken)
-		r.ServeHTTP(recorder, req)
-		assert.Equal(http.StatusNoContent, recorder.Code)
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusOK, recorder.Code)
 
-		recorder = httptest.NewRecorder()
-		req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
-		req.Header.Add("Authorization", "Bearer "+BearerToken)
-		r.ServeHTTP(recorder, req)
-		var rResponse1 []model.Report
-		checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse1))
-		assert.Equal(0, len(rResponse1))
-	*/
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	assert.Equal(http.StatusNoContent, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req.Header.Add("Authorization", "Bearer "+BearerToken)
+	r.ServeHTTP(recorder, req)
+	var rResponse1 []model.Report
+	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse1))
+	assert.Equal(0, len(rResponse1))
 
 }
