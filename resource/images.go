@@ -7,6 +7,8 @@ package resource
 import (
 	"encoding/json"
 	"encoding/xml"
+	"encoding/pem"
+	"encoding/base64"
 	"fmt"
 	"intel/isecl/lib/clients"
 	"intel/isecl/lib/common/log/message"
@@ -17,21 +19,33 @@ import (
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"intel/isecl/workload-service/vsclient"
+	"intel/isecl/workload-service/constants"
+	cos "intel/isecl/lib/common/os"
+	"intel/isecl/lib/common/crypt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"crypto/x509"
 )
 
 // Saml is used to represent saml report struct
 type Saml struct {
 	XMLName   xml.Name    `xml:"Assertion"`
+	Subject   Subject     `xml:"Subject>SubjectConfirmation>SubjectConfirmationData"`
 	Attribute []Attribute `xml:"AttributeStatement>Attribute"`
+	Signature string      `xml:"Signature>KeyInfo>X509Data>X509Certificate"`
+}
+
+type Subject struct {
+	XMLName        xml.Name  `xml:"SubjectConfirmationData"`
+	NotBefore      time.Time `xml:"NotBefore,attr"`
+	NotOnOrAfter   time.Time `xml:"NotOnOrAfter,attr"`
 }
 
 type Attribute struct {
@@ -174,6 +188,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 					StatusCode: http.StatusInternalServerError,
 				}
 			}
+
 			var samlStruct Saml
 			cLog.WithField("saml", string(saml)).Debug("resource/images:retrieveFlavorAndKeyForImageID() Successfully got SAML report from HVS")
 			err = xml.Unmarshal(saml, &samlStruct)
@@ -182,6 +197,26 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    "Failed to retrieve Flavor and Key - Failed to unmarshal host SAML report",
+					StatusCode: http.StatusInternalServerError,
+				}
+			}
+
+			// validate saml report validity and saml signature
+			rootPems, err := cos.GetDirFileContents(constants.TrustedCaCertsDir, "*.pem" )
+			if err != nil{
+				log.Errorf("resource/images:retrieveFlavorAndKeyForImageID() Error while reading certificates from dir: %s", constants.TrustedCaCertsDir)
+				return &endpointError{
+					Message:    "Failed to retrieve Flavor/Key for Image - Error while reading root CA certificates",
+					StatusCode: http.StatusInternalServerError,
+				}
+			}
+
+			// verify saml cert chain
+			verified := verifySamlSignatureAndCertChain(rootPems, samlStruct)
+			if !verified {
+				cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() SAML certificate chain verification failed")
+				return &endpointError{
+					Message:    "Failed to retrieve Flavor/Key for Image - SAML signature or certificate chain verification failed",
 					StatusCode: http.StatusInternalServerError,
 				}
 			}
@@ -306,7 +341,7 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 		}
 		cLog.Info("resource/images:retrieveFlavorForImageID() Retrieving Flavor for Image")
 		// The error returned for below db query should be set as "StatusNotFound" for http response status code,
-		// since image UUID and flavorUUID validation have been done earlier in the code
+		// since image UUID and flavorUUID validation have been done earlier in the code 
 		// there would be rare case when there is flavor in db and query fails to fetch flavor
 
 		flavor, err := db.ImageRepository().RetrieveAssociatedFlavorByFlavorPart(id, fp)
@@ -464,11 +499,11 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Errorf("resource/images:putAssociatedFlavor() %s : Failed to add new Flavor association", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			if strings.Contains(err.Error(), "record not found") {
-				return &endpointError{
+			return &endpointError{
 					Message:    "Failed to create image/flavor association - Record not found",
 					StatusCode: http.StatusNotFound,
 				}
-			}
+			}  
 			return &endpointError{
 				Message:    "Failed to create image/flavor association - Backend error",
 				StatusCode: http.StatusInternalServerError,
@@ -797,4 +832,96 @@ func cacheKeyInMemory(imageUUID string, keyID string, key []byte) error {
 	defer log.Trace("Exited resource/images:cacheKeyInMemory()")
 	keycache.Store(imageUUID, keycache.Key{ID: keyID, Bytes: key, Created: time.Now(), Expired: time.Now().Add(time.Second * time.Duration(consts.DefaultKeyCacheSeconds))})
 	return nil
+}
+
+func validateSamlSignature(saml Saml, certPemSlice [][]byte) bool{
+	// SAML report expiry validation
+	if (!time.Now().After(saml.Subject.NotBefore) || !time.Now().Before(saml.Subject.NotOnOrAfter)) {
+		log.Error("resource/images:validateSamlSignature() SAML report not valid")
+		return false
+	}
+
+	samlReportCert := strings.ReplaceAll(saml.Signature, "\n", "")
+
+	// check if the signatures from one of the CA certs match the signature from the SAML report 
+	for _, certPem := range certPemSlice {
+		block, _ := pem.Decode(certPem)
+		if(samlReportCert == base64.StdEncoding.EncodeToString(block.Bytes)) {
+			return true
+		}
+	}
+	return false
+}
+
+
+func verifySamlSignatureAndCertChain(rootCAPems [][]byte, saml Saml) bool{
+	// build the trust root CAs first
+	roots := x509.NewCertPool()
+	for _, rootPEM := range rootCAPems {
+		roots.AppendCertsFromPEM(rootPEM)
+	}
+
+	verifyRootCAOpts := x509.VerifyOptions{
+		Roots: roots,
+	}
+
+	cacerts, err := ioutil.ReadFile(constants.SamlCaCertFilePath)
+	if err != nil {
+		log.Error("resource/images:verifySamlSignatureAndCertChain() Failed to read SAML ca-certificates")
+		log.Tracef("%+v", err)
+		return false
+	}
+
+	certPemSlice, err := getCertificate(cacerts)
+	if err != nil {
+		log.Errorf("resource/images:verifySamlSignatureAndCertChain() Error while retrieving certificate")
+		return false
+	}
+
+	log.Debug("resource/images:verifySamlSignatureAndCertChain() Validating saml signature from HVS")
+	isValidated := validateSamlSignature(saml, certPemSlice)
+	if !isValidated {
+		log.Errorf("resource/images:verifySamlSignatureAndCertChain() SAML signature verification failed")
+		return false
+	}
+
+	log.Debug("resource/images:verifySamlSignatureAndCertChain() Successfully validated SAML signature")
+	for _, certPem := range certPemSlice {
+		var cert *x509.Certificate
+		var err error
+		cert, verifyRootCAOpts.Intermediates, err = crypt.GetCertAndChainFromPem(certPem)
+		if err != nil {
+			log.Errorf("resource/images:verifySamlSignatureAndCertChain() Error while retrieving certificate and intermediates")
+			continue
+		}
+
+		if !(cert.IsCA && cert.BasicConstraintsValid) {
+			if _, err := cert.Verify(verifyRootCAOpts); err != nil  {
+				log.Errorf("resource/images:verifySamlSignatureAndCertChain() Error while verifying certificate chain: %s", err.Error())
+				continue
+			}
+		}
+		log.Info("resource/images:verifySamlSignatureAndCertChain() SAML certificate chain verification successful")
+		return true
+	}
+	log.Info("resource/images:verifySamlSignatureAndCertChain() SAML certificate chain verification failed")
+	return false
+}
+
+func getCertificate(signingCertPems interface{}) ([][]byte, error){
+	var certPemSlice [][]byte
+
+        switch signingCertPems.(type) {
+        case nil:
+                return nil, errors.New("Empty ")
+        case [][]byte:
+                certPemSlice = signingCertPems.([][]byte)
+        case []byte:
+                certPemSlice = [][]byte{signingCertPems.([]byte)}
+        default:
+                log.Errorf("signingCertPems has to be of type []byte or [][]byte")
+                return nil, errors.New("signingCertPems has to be of type []byte or [][]byte")
+
+        }
+	return certPemSlice, nil
 }

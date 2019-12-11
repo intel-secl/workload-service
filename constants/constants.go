@@ -36,6 +36,7 @@ const (
 	LogEntryMaxlengthEnv          = "LOG_ENTRY_MAXLENGTH"
 	JWTCertsCacheTime             = "1m"
 	HttpLogFile                   = "/var/log/workload-service/http.log"
+	SamlCaCertFilePath             = TrustedCaCertsDir + "SamlCaCert.pem"
 	DefaultReadTimeout            = 30 * time.Second
 	DefaultReadHeaderTimeout      = 10 * time.Second
 	DefaultWriteTimeout           = 10 * time.Second

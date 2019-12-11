@@ -70,6 +70,7 @@ func main() {
 			args[1] != "download_ca_cert" &&
 			args[1] != "download_cert" &&
 			args[1] != "server" &&
+			args[1] != "download_saml_ca_cert" &&
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
 			args[1] != "aasconnection" &&
@@ -139,6 +140,9 @@ func main() {
 				setup.AASConnection{
 					Flags: flags,
 				},
+				setup.Download_Saml_Ca_Cert{
+					Flags: flags,
+				},
 			},
 			AskInput: false,
 		}
@@ -158,7 +162,7 @@ func main() {
 			if config.TakeOwnershipFileWLS(constants.ConfigDir) != nil {
 				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on WLS configuration files")
 				os.Exit(-1)
-			}
+		}
 		}
 
 	case "start":
@@ -300,7 +304,7 @@ func printUsage() {
 	fmt.Printf("    setup                Run workload-service setup tasks\n\n")
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
-	fmt.Printf("   all                  Runs all setup tasks\n\n")
+	fmt.Printf("    all                    Runs all setup tasks\n\n")
 	fmt.Println("   download_ca_cert     Download CMS root CA certificate")
 	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads new root CA cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
@@ -317,7 +321,7 @@ func printUsage() {
 	fmt.Println("                        - Environment variable WLS_CERT_SAN=<CSV List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
 	fmt.Println("    server              Setup http server on given port")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing server config\n")
-	fmt.Printf("                         - Environment variable WLS_PORT=<port> should be set\n\n")
+	fmt.Printf("                        -Environment variable WLS_PORT=<port> should be set\n\n")
 	fmt.Println("    database            Setup workload-service database")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing database config\n")
 	fmt.Println("                        Required env variables are:")
@@ -334,6 +338,12 @@ func printUsage() {
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing AAS config\n")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
+	fmt.Println("download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
+	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
+	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API URL")
+	fmt.Println("                        - Environment variable HVS_URL=<url> for HVS URL")
+	fmt.Println("                        - Environment variable WLS_SERVICE_USERNAME=<username> to get the HVS token")
+	fmt.Println("                        - Environment variable WLS_SERVICE_PASSWORD=<password> to get the HVS token\n\n")
 }
 
 func printVersion() {
