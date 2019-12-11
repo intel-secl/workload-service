@@ -128,7 +128,6 @@ cp -f workload-service.service $WORKLOAD_SERVICE_HOME
 chown wls:wls $WORKLOAD_SERVICE_HOME/workload-service.service
 systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
 
-
 #Install log rotation
 auto_install() {
   local component=${1}
@@ -153,7 +152,7 @@ logRotate_detect() {
 
 logRotate_install() {
   LOGROTATE_YUM_PACKAGES="logrotate"
-  if [ "$(whoami)" == "root" ]; then
+  if [ "$(whoami)" = "root" ]; then
     auto_install "Log Rotate" "LOGROTATE"
     if [ $? -ne 0 ]; then
       echo_failure "Failed to install logrotate"
@@ -194,8 +193,8 @@ if [ ! -a /etc/logrotate.d/wls ]; then
 }" >/etc/logrotate.d/wls
 fi
 
-# exit workload-service setup if WORKLOAD_SERVICE_NOSETUP is set
-if [ $WLS_NOSETUP == "true" ]; then
+# exit workload-service setup if WLS_NOSETUP is set
+if [ $WLS_NOSETUP = "true" ]; then
   echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile
   exit 0
 fi

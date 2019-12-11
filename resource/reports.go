@@ -10,7 +10,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/validation"
+
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
@@ -42,7 +44,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		// if no parameters were provided, just return an empty reports array
 		if len(r.URL.Query()) == 0 {
-			log.Error("resource/reports:getReport() Query params missing in request")
+			log.Errorf("resource/reports:getReport() %s : Query params missing in request", message.InvalidInputBadParam)
 			http.Error(w, "At least one query parameter is required", http.StatusBadRequest)
 			return nil
 		}
@@ -50,7 +52,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		vmID, ok := r.URL.Query()["vm_id"]
 		if ok && len(vmID) >= 1 {
 			if err := validation.ValidateUUIDv4(vmID[0]); err != nil {
-				log.WithError(err).WithError(err).Error("resource/reports:getReport() Invalid VM UUID format")
+				log.WithError(err).WithError(err).Errorf("resource/reports:getReport() %s : Invalid VM UUID format", message.InvalidInputProtocolViolation)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.VMID = vmID[0]
@@ -60,7 +62,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		reportID, ok := r.URL.Query()["report_id"]
 		if ok && len(reportID) >= 1 {
 			if err := validation.ValidateUUIDv4(reportID[0]); err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid report UUID format")
+				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid report UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -71,7 +73,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		hardwareUUID, ok := r.URL.Query()["hardware_uuid"]
 		if ok && len(hardwareUUID) >= 1 {
 			if err := validation.ValidateHardwareUUID(hardwareUUID[0]); err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid hardware UUID format")
+				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid hardware UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -82,7 +84,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		fromDate, ok := r.URL.Query()["from_date"]
 		if ok && len(fromDate) >= 1 {
 			if err := validation.ValidateDate(fromDate[0]); err != nil {
-				log.WithError(err).Error("resource/reports:getReport() Invalid from date format. Expected date format mm-dd-yyyy")
+				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid from date format. Expected date format mm-dd-yyyy", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -93,7 +95,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		toDate, ok := r.URL.Query()["to_date"]
 		if ok && len(toDate) >= 1 {
 			if err := validation.ValidateDate(toDate[0]); err != nil {
-				cLog.WithError(err).Error("resource/reports:getReport() Invalid to date format. Expected date format mm-dd-yyyy")
+				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid to date format. Expected date format mm-dd-yyyy", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -105,7 +107,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		if ok && len(latestPerVM) >= 1 {
 			boolValue, err := strconv.ParseBool(latestPerVM[0])
 			if err != nil {
-				cLog.WithError(err).Error("resource/reports:getReport() Invalid latest_per_vm boolean value, must be true or false")
+				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid latest_per_vm boolean value, must be true or false", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -118,7 +120,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		if ok && len(numOfDays) >= 1 {
 			nd, err := strconv.Atoi(numOfDays[0])
 			if err != nil {
-				cLog.WithError(err).Error("resource/reports:getReport() Invalid integer value for num_of_days query parameter")
+				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid integer value for num_of_days query parameter", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -129,7 +131,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		if ok && len(filter) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
-				cLog.WithError(err).Error("resource/reports:getReport() Invalid filter boolean value, must be true or false")
+				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid filter boolean value, must be true or false", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
@@ -139,19 +141,19 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			filterCriteria.ReportID, filterCriteria.VMID, filterCriteria.ToDate, filterCriteria.FromDate, filterCriteria.NumOfDays, filterCriteria.Filter, filterCriteria.LatestPerVM)
 
 		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.VMID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
-			cLog.Error("Invalid filter criteria. Allowed filter criteria are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days and filter = false\n")
-			return &endpointError{Message: "Invalid filter criteria. Allowed filter criteria are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days and filter = false", StatusCode: http.StatusBadRequest}
+			cLog.Errorf("resource/reports:getReport() %s : Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false\n", message.InvalidInputProtocolViolation)
+			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
 		if err != nil {
-			cLog.WithError(err).Error("resource/reports:getReport() Failed to retrieve reports")
+			cLog.WithError(err).Errorf("resource/reports:getReport() %s : Failed to retrieve reports", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve reports", StatusCode: http.StatusInternalServerError}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(reports); err != nil {
-			cLog.WithError(err).Error("resource/reports:getReport() Unexpectedly failed to encode reports to JSON")
+			cLog.WithError(err).Errorf("resource/reports:getReport() %s : Unexpectedly failed to encode reports to JSON", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve reports - JSON encode failed", StatusCode: http.StatusInternalServerError}
 		}
@@ -169,6 +171,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&vtr); err != nil {
+			log.Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
 			return &endpointError{
 				Message:    "Report creation failed",
 				StatusCode: http.StatusBadRequest,
@@ -176,6 +179,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		if err := json.Unmarshal(vtr.Data, &vtr.InstanceTrustReport); err != nil {
+			log.Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
 			return &endpointError{
 				Message:    "Report creation failed",
 				StatusCode: http.StatusBadRequest,
@@ -196,7 +200,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		switch err := rr.Create(&vtr); err {
 		case errors.New("resource/reports:createReport() report already exists with UUID"):
 			msg := fmt.Sprintf("Report with UUID %s already exists", vtr.Manifest.InstanceInfo.InstanceID)
-			cLog.Error("resource/reports:createReport() " + msg)
+			cLog.Errorf("resource/reports:createReport() %s : %s", message.InvalidInputBadParam, msg)
 			return &endpointError{
 				Message:    msg,
 				StatusCode: http.StatusConflict,
@@ -205,7 +209,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			if err := json.NewEncoder(w).Encode(vtr); err != nil {
-				cLog.WithError(err).Error("resource/reports:createReport() Unexpectedly failed to encode Report to JSON")
+				cLog.WithError(err).Errorf("resource/reports:createReport() %s : Unexpectedly failed to encode Report to JSON", message.AppRuntimeErr)
 				log.Tracef("%+v", err)
 				return &endpointError{
 					Message:    "Failed to create reports - JSON encode failed",
@@ -214,7 +218,7 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 			}
 			return nil
 		default:
-			cLog.WithError(err).Error("resource/reports:createReport() Unexpected error when creating report")
+			cLog.WithError(err).Errorf("resource/reports:createReport() %s : Unexpected error when creating report", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Unexpected error when creating report, check input format",
@@ -232,7 +236,7 @@ func deleteReportByID(db repository.WlsDatabase) endpointHandler {
 		uuid := mux.Vars(r)["id"]
 		// validate UUID
 		if err := validation.ValidateUUIDv4(uuid); err != nil {
-			log.WithError(err).Error("resource/reports:deleteReportByID() Invalid report UUID format")
+			log.WithError(err).Errorf("resource/reports:deleteReportByID() %s : Invalid report UUID format: %s", message.InvalidInputProtocolViolation, uuid)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to delete report by UUID", StatusCode: http.StatusBadRequest}
 		}
@@ -240,14 +244,14 @@ func deleteReportByID(db repository.WlsDatabase) endpointHandler {
 
 		// TODO: Potential dupe check. Shouldn't this be validated by the ValidateUUIDv4 call above?
 		if uuid == "" {
-			log.Error("resource/reports:deleteReportByID() Invalid report UUID format")
+			log.Errorf("resource/reports:deleteReportByID() %s : Report id cannot be empty", message.InvalidInputBadParam)
 			return &endpointError{
 				Message:    "Report id cannot be empty",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
 		if err := db.ReportRepository().DeleteByReportID(uuid); err != nil {
-			cLog.WithError(err).Error("resource/reports:deleteReportByID() Failed to delete Report by UUID")
+			cLog.WithError(err).Errorf("resource/reports:deleteReportByID() %s : Failed to delete Report by UUID", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Report id cannot be empty",

@@ -83,13 +83,6 @@ func (ds Database) Run(c csetup.Context) error {
 		return errors.Wrap(validErr, "setup database: Validation fail")
 	}
 
-	// post-run validation
-	err = ds.Validate(c)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "setup database: post-run validation failed.")
-		return errors.Wrap(err, "setup/database:Run() Database setup failed with new configuration")
-	}
-
 	log.Info("setup/database:Run() Database connection updated in config")
 	return config.Save()
 }

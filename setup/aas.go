@@ -75,14 +75,6 @@ func (aas AASConnection) Run(c csetup.Context) error {
 		return errors.Wrap(err, "Failed to fetch JWT Auth Certs")
 	}
 
-	// post-run validation
-	err = aas.Validate(c)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "setup aasconnection: post-run validation failed.")
-		log.Tracef("%+v", err)
-		return errors.Wrap(err, "AAS JWT certs not present in directory")
-	}
-
 	log.Info("setup/aas:Run() aasconnection setup task successful")
 	return nil
 }
@@ -116,7 +108,7 @@ func isPathContainPemFile(name string) bool {
 	// read in ONLY one file
 	fname, err := f.Readdir(1)
 
-	// and if the file is EOF... well, the dir is empty.
+	// if EOF detected path is empty
 	if err != io.EOF && len(fname) > 0 && strings.HasSuffix(fname[0].Name(), ".pem") {
 		log.Trace("setup/aas:isPathContainPemFile() fname is ", fname[0].Name())
 		_, errs := crypt.GetCertFromPemFile(name + "/" + fname[0].Name())

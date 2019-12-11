@@ -9,7 +9,6 @@ import (
 	"fmt"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -53,13 +52,6 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 		config.Configuration.HVS_API_URL = hvsURL
 	} else {
 		config.Configuration.HVS_API_URL = hvsURL + "/"
-	}
-
-	// post-run validation
-	err = hvs.Validate(c)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "setup hvsconnection: post-run validation failed.")
-		return errors.Wrapf(err, "setup/hvs:Run() setup task validation failed: %s\n", err.Error())
 	}
 
 	log.Info("setup/hvs:Run() Updated HVS endpoint in configuration")

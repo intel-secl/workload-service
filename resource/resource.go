@@ -6,13 +6,15 @@ package resource
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"intel/isecl/lib/common/auth"
 	"intel/isecl/lib/common/context"
 	commLog "intel/isecl/lib/common/log"
+	"intel/isecl/lib/common/log/message"
 	ct "intel/isecl/lib/common/types/aas"
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository"
+
+	"github.com/pkg/errors"
 
 	"net/http"
 
@@ -61,7 +63,7 @@ func requiresPermission(eh endpointHandler, roleNames []string) endpointHandler 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Could not get user roles from http context"))
-			seclog.Debugf("resource/resource:requiresPermission() Roles: %v | Context: %v", roleNames, r.Context())
+			seclog.Errorf("resource/resource:requiresPermission() %s Roles: %v | Context: %v", message.AuthenticationFailed, roleNames, r.Context())
 			return errors.Wrap(err, "resource/resource:requiresPermission() Could not get user roles from http context")
 		}
 		reqRoles := make([]ct.RoleInfo, len(roleNames))
@@ -74,9 +76,11 @@ func requiresPermission(eh endpointHandler, roleNames []string) endpointHandler 
 			true)
 		if !foundRole {
 			w.WriteHeader(http.StatusUnauthorized)
-			seclog.Errorf("resource/resource:requiresPermission() Insufficient privileges to access %s", r.RequestURI)
+			seclog.Error(message.UnauthorizedAccess)
+			seclog.Errorf("resource/resource:requiresPermission() %s Insufficient privileges to access %s", message.UnauthorizedAccess, r.RequestURI)
 			return &privilegeError{Message: "Insufficient privileges to access " + r.RequestURI, StatusCode: http.StatusUnauthorized}
 		}
+		seclog.Infof("resource/resource:requiresPermission() %s - %s", message.AuthorizedAccess, r.RequestURI)
 		return eh(w, r)
 	}
 }

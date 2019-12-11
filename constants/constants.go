@@ -22,7 +22,7 @@ const (
 	DefaultWlsTlsSan              = "127.0.0.1,localhost"
 	DefaultKeyAlgorithm           = "rsa"
 	DefaultKeyAlgorithmLength     = 3072
-	DefaultSSLCertFilePath         = ConfigDir + "wlsdbsslcert.pem"
+	DefaultSSLCertFilePath        = ConfigDir + "wlsdbsslcert.pem"
 	FlavorImageRetrievalGroupName = "FlavorsImageRetrieval"
 	AdministratorGroupName        = "Administrator"
 	ReportCreationGroupName       = "ReportsCreate"
@@ -46,6 +46,7 @@ const (
 	DefaultLogEntryMaxlength      = 300
 	WLSRuntimeUser                = "wls"
 	WLSRuntimeGroup               = "wls"
+	WLSConsoleEnableEnv           = "WLS_CONSOLE_OUT_ENABLE"
 )
 
 // State represents whether or not a daemon is running or not

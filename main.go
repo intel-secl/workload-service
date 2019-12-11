@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	commLog "intel/isecl/lib/common/log"
+	"intel/isecl/lib/common/log/message"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/lib/common/validation"
 	"intel/isecl/workload-service/config"
@@ -29,12 +30,15 @@ var log = commLog.GetDefaultLogger()
 var secLog = commLog.GetSecurityLogger()
 
 func main() {
-	config.LogConfiguration(false, true)
-
 	log.Trace("main:main() Entering")
 	defer log.Trace("main:main() Leaving")
 
 	var context csetup.Context
+	isStdOut := false
+	isWLSConsoleEnabled := os.Getenv(constants.WLSConsoleEnableEnv)
+	if isWLSConsoleEnabled == "true" {
+		isStdOut = true
+	}
 
 	/* PARSE COMMAND LINE OPTIONS */
 	args := os.Args[1:]
@@ -45,8 +49,7 @@ func main() {
 		return
 	}
 
-	inputStringArr := os.Args[0:]
-	if err := validation.ValidateStrings(inputStringArr); err != nil {
+	if err := validation.ValidateStrings(args); err != nil {
 		secLog.WithError(err).Error("main:main() Invalid Input")
 		log.Tracef("%+v", err)
 		fmt.Fprintln(os.Stderr, "Invalid input")
@@ -56,7 +59,6 @@ func main() {
 
 	switch arg := strings.ToLower(args[0]); arg {
 	case "setup":
-		config.LogConfiguration(false, true)
 		args := os.Args[1:]
 		if len(args) <= 1 {
 			printUsage()
@@ -84,18 +86,19 @@ func main() {
 			os.Exit(0)
 		}
 
-		if len(args) > 1 {
+		if len(args) > 2 {
+			// flags for arguments
 			flags = args[2:]
-			if args[1] == "download_cert" && len(args) > 2 {
-				flags = args[3:]
-			}
 		}
+
+		// log initialization
+		config.LogConfiguration(isStdOut, true)
 
 		err = config.SaveConfiguration(context)
 		if err != nil {
-			log.WithError(err).Error("main:main() Unable to save configuration in config.yml")
+			log.WithError(err).Error("main:main() Error processing WLS config: " + err.Error())
 			log.Tracef("%+v", err)
-			fmt.Fprintln(os.Stderr, "Error: Unable to save configuration in config.yml")
+			fmt.Fprintln(os.Stderr, "Error processing WLS config: "+err.Error())
 			os.Exit(1)
 		}
 
@@ -116,7 +119,7 @@ func main() {
 					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
 					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
 					Subject: pkix.Name{
-						CommonName:   config.Configuration.Subject.TLSCertCommonName,
+						CommonName: config.Configuration.Subject.TLSCertCommonName,
 					},
 					SanList:       config.Configuration.CertSANList,
 					CertType:      "TLS",
@@ -147,7 +150,7 @@ func main() {
 		if err != nil {
 			log.WithError(err).Error("main:main() Error in running setup tasks")
 			log.Tracef("%+v", err)
-			fmt.Fprintf(os.Stderr, "Error running setup tasks. %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "Error running setup tasks. %v\n", err.Error())
 			os.Exit(1)
 		} else {
 			// when successful, we update the ownership of the config/certs updated by the setup tasks
@@ -166,15 +169,18 @@ func main() {
 
 	case "startserver":
 		config.LogConfiguration(true, true)
+		log.Info(message.ServiceStart)
+
 		// this runs in attached mode
 		startServer()
 
 	case "stop":
-		config.LogConfiguration(false, true)
+		config.LogConfiguration(isStdOut, true)
+		log.Info(message.ServiceStop)
 		stop()
 
 	case "uninstall":
-		config.LogConfiguration(false, false)
+		config.LogConfiguration(isStdOut, false)
 		fmt.Println("Uninstalling workload-service...")
 		stop()
 		removeService()
@@ -186,15 +192,15 @@ func main() {
 		}
 		fmt.Println("workload-service successfully uninstalled")
 
+	case "--version", "-v":
+		printVersion()
+
 	default:
 		fmt.Printf("Unrecognized option : %s\n", arg)
 		fallthrough
 
 	case "help", "-help", "--help":
 		printUsage()
-
-	case "--version", "-v":
-		printVersion()
 
 	}
 }
@@ -220,7 +226,7 @@ func stop() error {
 	defer log.Trace("main:stop() Leaving")
 
 	fmt.Println("Stopping Workload Service")
-	log.Info("main:stop() Stopping Workload Service")
+
 	_, _, err := e.RunCommandWithTimeout("systemctl stop workload-service", 5)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Could not stop Workload-service")
@@ -291,7 +297,7 @@ func printUsage() {
 	fmt.Println("    stop                 Stop workload-service")
 	fmt.Println("    status               Determine if workload-service is running")
 	fmt.Println("    uninstall  [--purge] Uninstall workload-service. --purge option needs to be applied to remove configuration and data files")
-	fmt.Printf("     setup                Run workload-service setup tasks\n\n")
+	fmt.Printf("    setup                Run workload-service setup tasks\n\n")
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
 	fmt.Printf("   all                  Runs all setup tasks\n\n")

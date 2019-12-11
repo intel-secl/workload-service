@@ -7,6 +7,7 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/validation"
 	flvr "intel/isecl/lib/flavor"
 	consts "intel/isecl/workload-service/constants"
@@ -36,7 +37,7 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {
-			log.Error("resource/flavors:getFlavorByID() Invalid UUID format")
+			seclog.Errorf("resource/flavors:getFlavorByID() %s : Invalid UUID format - %s", message.InvalidInputBadParam, id)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve flavor - Invalid UUID format", StatusCode: http.StatusBadRequest}
 		}
@@ -44,17 +45,18 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 		flavor, err := fr.RetrieveByUUID(id)
 		uuidLog := log.WithField("uuid", id)
 		if err != nil {
-			uuidLog.WithError(err).Error("resource/flavors:getFlavorByID() Failed to retrieve flavor by UUID")
+			uuidLog.WithError(err).Errorf("resource/flavors:getFlavorByID() %s : Failed to retrieve flavor by UUID", message.AppRuntimeErr)
+			log.Error(message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve flavor by UUID - Record not found", StatusCode: http.StatusNotFound}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
-			uuidLog.WithField("flavor", flavor).WithError(err).Error("resource/flavors:getFlavorByID() JSON Flavor document encode failure")
+			uuidLog.WithField("flavor", flavor).WithError(err).Errorf("resource/flavors:getFlavorByID() %s : JSON Flavor document encode failure", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve flavor by UUID - JSON marshal failure", StatusCode: http.StatusInternalServerError}
 		}
-		uuidLog.Debug("resource/flavors:getFlavorByID() Successfully fetched Flavor")
+		uuidLog.Info("resource/flavors:getFlavorByID() Successfully fetched Flavor")
 		return nil
 	}
 }
@@ -67,24 +69,24 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 		// validate label
 		labelArr := []string{label}
 		if validateInputErr := validation.ValidateStrings(labelArr); validateInputErr != nil {
-			log.Error("resource/flavors:getFlavorByLabel() Invalid label string format")
+			log.Errorf("resource/flavors:getFlavorByLabel() %s : Invalid label string format", message.InvalidInputProtocolViolation)
 			return &endpointError{Message: "Failed to retrieve flavor by label - Invalid label string format", StatusCode: http.StatusBadRequest}
 		}
 
 		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		lblLog := log.WithField("label", label)
 		if err != nil {
-			lblLog.WithError(err).Error("resource/flavors:getFlavorByLabel() Failed to retrieve Flavor by Label")
+			lblLog.WithError(err).Errorf("resource/flavors:getFlavorByLabel() %s : Failed to retrieve Flavor by Label", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve flavor by label - backend error", StatusCode: http.StatusInternalServerError}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
-			lblLog.WithField("flavor", flavor).WithError(err).Error("resource/flavors:getFlavorByLabel() JSON Encode error")
+			lblLog.WithField("flavor", flavor).WithError(err).Errorf("resource/flavors:getFlavorByLabel() %s : JSON Encode error", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to retrieve flavor by label - JSON Encode error", StatusCode: http.StatusInternalServerError}
 		}
-		lblLog.Debug("resource/flavors:getFlavorByLabel() Successfully fetched Flavor")
+		lblLog.Info("resource/flavors:getFlavorByLabel() Successfully fetched Flavor")
 		return nil
 	}
 }
@@ -100,7 +102,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		if ok && len(flavorID) >= 1 {
 			// validate UUID
 			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
-				log.Error("resource/flavors:getFlavors() Invalid flavor UUID format")
+				log.Errorf("resource/flavors:getFlavors() %s : Invalid flavor UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Unable to retrieve flavor - Invalid flavor UUID format", StatusCode: http.StatusBadRequest}
 			}
@@ -113,7 +115,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 			// validate label string
 			labelArr := []string{label[0]}
 			if validateInputErr := validation.ValidateStrings(labelArr); validateInputErr != nil {
-				log.Error("resource/flavors:getFlavors() Invalid label string format")
+				log.Errorf("resource/flavors:getFlavors() %s : Invalid label string format", message.InvalidInputProtocolViolation)
 				return &endpointError{Message: "Unable to retrieve flavor - Invalid label string", StatusCode: http.StatusBadRequest}
 			}
 			filterCriteria.Label = label[0]
@@ -124,7 +126,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		if ok && len(filter) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
-				fLog.WithError(err).Error("resource/flavors:getFlavors() Invalid filter boolean value, must be true or false")
+				fLog.WithError(err).Errorf("resource/flavors:getFlavors() %s : Invalid filter boolean value, must be true or false", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Unable to retrieve flavor - Invalid filter boolean value, must be true or false", StatusCode: http.StatusBadRequest}
 			}
@@ -132,23 +134,23 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		}
 
 		if filterCriteria.Label == "" && filterCriteria.FlavorID == "" && filterCriteria.Filter {
-			log.Error("Invalid filter criteria. Allowed filter critierias are id, label and filter = false\n")
+			log.Errorf("resource/flavors:getFlavors() %s : Invalid filter criteria. Allowed filter critierias are id, label and filter = false\n", message.InvalidInputProtocolViolation)
 			return &endpointError{Message: "Unable to retrieve flavor - Invalid filter criteria - Allowed filter critierias are id, label and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		flavors, err := db.FlavorRepository().RetrieveByFilterCriteria(filterCriteria)
 		if err != nil {
-			fLog.WithError(err).Error("resource/flavors:getFlavors() Failed to retrieve flavors")
+			fLog.WithError(err).Errorf("resource/flavors:getFlavors() %s : Failed to retrieve flavors", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Unable to retrieve flavor - backend error", StatusCode: http.StatusInternalServerError}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavors); err != nil {
-			fLog.WithError(err).Error("resource/flavors:getFlavors() Unexpectedly failed to encode flavors to JSON")
+			fLog.WithError(err).Errorf("resource/flavors:getFlavors() %s : Unexpectedly failed to encode flavors to JSON", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Unable to retrieve flavor - Failed to encode flavors to JSON", StatusCode: http.StatusInternalServerError}
 		}
-		fLog.Debug("resource/flavors:getFlavors() Successfully fetched Flavor")
+		fLog.Info("resource/flavors:getFlavors() Successfully fetched Flavor")
 		return nil
 	}
 }
@@ -160,7 +162,7 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 		id := mux.Vars(r)["id"]
 		// validate uuid format
 		if err := validation.ValidateUUIDv4(id); err != nil {
-			log.Error("resource/flavors:deleteFlavorByID() Invalid UUID format")
+			log.Errorf("resource/flavors:deleteFlavorByID() %s : Invalid UUID format", message.InvalidInputProtocolViolation)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to delete flavor - Invalid UUID", StatusCode: http.StatusBadRequest}
 		}
@@ -172,12 +174,12 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 			if err.Error() == "record not found" {
 				return &endpointError{Message: "Non-existent flavor", StatusCode: http.StatusNotFound}
 			}
-			uuidLog.WithError(err).Error("resource/flavors:deleteFlavorByID() Failed to delete Flavor by UUID")
+			uuidLog.WithError(err).Errorf("resource/flavors:deleteFlavorByID() %s : Failed to delete Flavor by UUID", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to delete flavor", StatusCode: http.StatusInternalServerError}
 		}
 		w.WriteHeader(http.StatusNoContent)
-		uuidLog.Debug("resource/flavors:deleteFlavorByID() Successfully deleted Flavor")
+		uuidLog.Info("resource/flavors:deleteFlavorByID() Successfully deleted Flavor")
 		return nil
 	}
 }
@@ -191,7 +193,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&f); err != nil {
-			log.WithError(err).Error("resource/flavors:createFlavor() Failed to encode request body as Flavor")
+			log.WithError(err).Errorf("resource/flavors:createFlavor() %s :  Failed to encode request body as Flavor", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{Message: "Failed to delete flavor", StatusCode: http.StatusBadRequest}
 		}
@@ -199,13 +201,13 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		if f.ImageFlavor.Meta.Description.FlavorPart == "" ||
 			(f.ImageFlavor.Meta.Description.FlavorPart != "CONTAINER_IMAGE" && f.ImageFlavor.Meta.Description.FlavorPart != "IMAGE") {
 			msg := fmt.Sprintf("Invalid FlavorPart value: %s", f.ImageFlavor.Meta.Description.FlavorPart)
-			log.Error("resource/flavors:createFlavor() Failed to create flavor: " + msg)
+			log.Errorf("resource/flavors:createFlavor() %s : Failed to create flavor: "+msg, message.AppRuntimeErr)
 			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
 		}
 
 		if f.Signature == "" {
 			msg := fmt.Sprintf("Flavor signature not provided in input")
-			log.Error("resource/flavors:createFlavor() Failed to create flavor: " + msg)
+			log.Errorf("resource/flavors:createFlavor() %s : Failed to create flavor: "+msg, message.InvalidInputBadParam)
 			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
 		}
 
@@ -223,14 +225,14 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		switch err := fr.Create(&f); err {
 		case repository.ErrFlavorLabelAlreadyExists:
 			msg := fmt.Sprintf("Flavor with Label %s already exists", f.ImageFlavor.Meta.Description.Label)
-			fLog.Error("resource/flavors:createFlavor() " + msg)
+			fLog.Errorf("resource/flavors:createFlavor() %s : "+msg, message.InvalidInputProtocolViolation)
 			return &endpointError{
 				Message:    msg,
 				StatusCode: http.StatusConflict,
 			}
 		case repository.ErrFlavorUUIDAlreadyExists:
 			msg := fmt.Sprintf("Flavor with UUID %s already exists", f.ImageFlavor.Meta.ID)
-			fLog.Error("resource/flavors:createFlavor() " + msg)
+			fLog.Errorf("resource/flavors:createFlavor() %s : "+msg, message.InvalidInputProtocolViolation)
 			return &endpointError{
 				Message:    msg,
 				StatusCode: http.StatusConflict,
@@ -241,14 +243,14 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			var flavor model.Flavor
 			flavor.Image = f.ImageFlavor
 			if err := json.NewEncoder(w).Encode(flavor); err != nil {
-				fLog.WithError(err).Error("resource/flavors:createFlavor() Unexpectedly failed to encode Flavor to JSON")
+				fLog.WithError(err).Errorf("resource/flavors:createFlavor() %s : Unexpectedly failed to encode Flavor to JSON", message.AppRuntimeErr)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to create flavor - JSON encode failed", StatusCode: http.StatusInternalServerError}
 			}
 			fLog.Debug("resource/flavors:createFlavor() Successfully created Flavor")
 			return nil
 		default:
-			fLog.WithError(err).Error("resource/flavors:createFlavor() Unexpected error when writing Flavor to Database")
+			fLog.WithError(err).Errorf("resource/flavors:createFlavor() %s : Unexpected error when writing Flavor to Database", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			return &endpointError{
 				Message:    "Unexpected error when writing Flavor to Database, check input format",

@@ -7,6 +7,7 @@ package config
 import (
 	"fmt"
 	commLog "intel/isecl/lib/common/log"
+	"intel/isecl/lib/common/log/message"
 	commLogInt "intel/isecl/lib/common/log/setup"
 	cos "intel/isecl/lib/common/os"
 	"intel/isecl/lib/common/setup"
@@ -51,13 +52,13 @@ var Configuration struct {
 	Port             int
 	CmsTlsCertDigest string
 	Postgres         struct {
-		DBName      string
-		UserName    string
-		Password    string
-		Hostname    string
-		Port        int
-		SSLMode     string
-		SSLCert     string
+		DBName   string
+		UserName string
+		Password string
+		Hostname string
+		Port     int
+		SSLMode  string
+		SSLCert  string
 	}
 	HVS_API_URL  string
 	CMS_BASE_URL string
@@ -92,7 +93,7 @@ func SaveConfiguration(c setup.Context) error {
 	defer log.Trace("config/config:SaveConfiguration() Leaving")
 	var err error = nil
 
-	wlsPort, err := c.GetenvInt(constants.CmsTlsCertDigestEnv, "WLS Listener Port")
+	wlsPort, err := c.GetenvInt(WLS_PORT, "WLS Listener Port")
 	if err == nil && wlsPort > 0 {
 		Configuration.Port = wlsPort
 	} else if Configuration.Port <= 0 {
@@ -104,6 +105,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && tlsCertDigest != "" {
 		Configuration.CmsTlsCertDigest = tlsCertDigest
 	} else if strings.TrimSpace(Configuration.CmsTlsCertDigest) == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "CMS_TLS_CERT_SHA384 is not defined in environment or configuration file")
 	}
 
@@ -111,6 +113,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && cmsBaseUrl != "" {
 		Configuration.CMS_BASE_URL = cmsBaseUrl
 	} else if strings.TrimSpace(Configuration.CMS_BASE_URL) == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "CMS_BASE_URL is not defined in environment or configuration file")
 	}
 
@@ -118,6 +121,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && aasAPIUrl != "" {
 		Configuration.AAS_API_URL = aasAPIUrl
 	} else if strings.TrimSpace(Configuration.AAS_API_URL) == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "AAS_API_URL is not defined in environment or configuration file")
 	}
 
@@ -125,6 +129,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && hvsAPIURL != "" {
 		Configuration.HVS_API_URL = hvsAPIURL
 	} else if strings.TrimSpace(Configuration.HVS_API_URL) == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "HVS_URL is not defined in environment or configuration file")
 	}
 
@@ -132,6 +137,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && wlsAASUser != "" {
 		Configuration.WLS.User = wlsAASUser
 	} else if Configuration.WLS.User == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "WLS_SERVICE_USERNAME is not defined in environment or configuration file")
 	}
 
@@ -139,6 +145,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && wlsAASPassword != "" {
 		Configuration.WLS.Password = wlsAASPassword
 	} else if strings.TrimSpace(Configuration.WLS.Password) == "" {
+		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
 	}
 
@@ -184,15 +191,12 @@ func SaveConfiguration(c setup.Context) error {
 	}
 
 	logEntryMaxLength, err := c.GetenvInt(constants.LogEntryMaxlengthEnv, "Maximum length of each entry in a log")
-	if err == nil && logEntryMaxLength >= 100 {
+	if err == nil && logEntryMaxLength >= 300 {
 		Configuration.LogEntryMaxLength = logEntryMaxLength
 	} else {
-		log.Info("config/config:SaveConfiguration() Invalid Log Entry Max Length defined (should be > 100), " +
-			"using default value")
+		log.Info("config/config:SaveConfiguration() Invalid Log Entry Max Length defined (should be >= ", constants.DefaultLogEntryMaxlength, "), using default value:", constants.DefaultLogEntryMaxlength)
 		Configuration.LogEntryMaxLength = constants.DefaultLogEntryMaxlength
 	}
-
-	log.Info("config/config:SaveConfiguration() Saving Environment variables inside the configuration file")
 
 	return Save()
 }
@@ -217,6 +221,8 @@ func Save() error {
 			return errors.Wrap(err, "config/config:Save() I/O related error")
 		}
 	}
+
+	log.Info(message.ConfigChanged)
 
 	defer file.Close()
 	return yaml.NewEncoder(file).Encode(Configuration)
@@ -292,14 +298,17 @@ func LogConfiguration(stdOut, logFile bool) {
 	ioWriterSecurity := io.MultiWriter(ioWriterDefault, secLogFile)
 
 	if Configuration.LogLevel == "" {
-		log.Infof("config/config:SaveConfiguration() %s not defined, using default log level: Info\n", WLS_LOGLEVEL)
 		Configuration.LogLevel = logrus.InfoLevel.String()
 	}
 
-	llp, _ := logrus.ParseLevel(Configuration.LogLevel)
+	llp, err := logrus.ParseLevel(Configuration.LogLevel)
+	if err != nil {
+		Configuration.LogLevel = logrus.InfoLevel.String()
+		llp, _ = logrus.ParseLevel(Configuration.LogLevel)
+	}
 	commLogInt.SetLogger(commLog.DefaultLoggerName, llp, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterDefault, false)
 	commLogInt.SetLogger(commLog.SecurityLoggerName, llp, &commLog.LogFormatter{MaxLength: Configuration.LogEntryMaxLength}, ioWriterSecurity, false)
 
-	secLog.Trace("config/config:LogConfiguration() Security log initiated")
-	log.Trace("config/config:LogConfiguration() Loggers setup finished")
+	secLog.Infof("config/config:LogConfiguration() %s", message.LogInit)
+	log.Infof("config/config:LogConfiguration() %s", message.LogInit)
 }

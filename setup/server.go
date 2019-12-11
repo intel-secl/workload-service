@@ -10,7 +10,6 @@ import (
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -91,13 +90,6 @@ func (ss Server) Run(c csetup.Context) error {
 		config.Configuration.MaxHeaderBytes = constants.DefaultMaxHeaderBytes
 	} else {
 		config.Configuration.MaxHeaderBytes = maxHeaderBytes
-	}
-
-	// post-run validation
-	err = ss.Validate(c)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "setup server: post-run validation failed.")
-		return errors.Wrap(err, "setup/server:Run() Server setup failed with new configuration")
 	}
 
 	log.Info("setup/server:Run() Updated WLS user credentials and server port in configuration")

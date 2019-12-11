@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/middleware"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
@@ -103,6 +104,7 @@ func startServer() error {
 		tlsKey := consts.TLSKeyPath
 		fmt.Println("Workload Service Started")
 		if err := h.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
+			secLog.Errorf("server:startServer() %s", message.TLSConnectFailed)
 			secLog.WithError(err).Fatalf("server:startServer() Failed to start HTTPS server: %s\n", err.Error())
 			log.Tracef("%+v", err)
 			stop <- syscall.SIGTERM

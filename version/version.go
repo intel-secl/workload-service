@@ -7,10 +7,10 @@ package version
 // Automatically filled in by linker
 
 // Version holds the build revision for the WLS binary
-var Version = "unknown"
+var Version = ""
 
 // GitHash holds the commit hash for the WLS binary
-var GitHash = "unknown"
+var GitHash = ""
 
 // Time holds the build timestamp for the WLS binary
 var Time string = ""
