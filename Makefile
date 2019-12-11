@@ -23,7 +23,7 @@ docker: installer
 	docker build --build-arg http_proxy=http://proxy-us.intel.com:911 --build-arg https_proxy=http://proxy-us.intel.com:911 -t isecl/workload-service:latest -f ./dist/docker/Dockerfile ./out
 	docker save isecl/workload-service:latest > ./out/docker-wls-$(VERSION).tar 
 
-all: docker
+all: clean installer
 
 clean:
 	rm -rf out/
