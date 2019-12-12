@@ -198,6 +198,41 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.LogEntryMaxLength = constants.DefaultLogEntryMaxlength
 	}
 
+	readTimeout, err := c.GetenvInt("WLS_SERVER_READ_TIMEOUT", "Workload Service Read Timeout")
+	if err != nil {
+		Configuration.ReadTimeout = constants.DefaultReadTimeout
+	} else {
+		Configuration.ReadTimeout = time.Duration(readTimeout) * time.Second
+	}
+
+	readHeaderTimeout, err := c.GetenvInt("WLS_SERVER_READ_HEADER_TIMEOUT", "Workload Service Read Header Timeout")
+	if err != nil {
+		Configuration.ReadHeaderTimeout = constants.DefaultReadHeaderTimeout
+	} else {
+		Configuration.ReadHeaderTimeout = time.Duration(readHeaderTimeout) * time.Second
+	}
+
+	writeTimeout, err := c.GetenvInt("WLS_SERVER_WRITE_TIMEOUT", "Workload Service Write Timeout")
+	if err != nil {
+		Configuration.WriteTimeout = constants.DefaultWriteTimeout
+	} else {
+		Configuration.WriteTimeout = time.Duration(writeTimeout) * time.Second
+	}
+
+	idleTimeout, err := c.GetenvInt("WLS_SERVER_IDLE_TIMEOUT", "Workload Service Idle Timeout")
+	if err != nil {
+		Configuration.IdleTimeout = constants.DefaultIdleTimeout
+	} else {
+		Configuration.IdleTimeout = time.Duration(idleTimeout) * time.Second
+	}
+
+	maxHeaderBytes, err := c.GetenvInt("WLS_SERVER_MAX_HEADER_BYTES", "Workload Service Max Header Bytes Timeout")
+	if err != nil {
+		Configuration.MaxHeaderBytes = constants.DefaultMaxHeaderBytes
+	} else {
+		Configuration.MaxHeaderBytes = maxHeaderBytes
+	}
+
 	return Save()
 }
 
