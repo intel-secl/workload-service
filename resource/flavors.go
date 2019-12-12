@@ -99,7 +99,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		filterCriteria := repository.FlavorFilter{}
 		flavorID, ok := r.URL.Query()["id"]
 
-		if ok && len(flavorID) >= 1 {
+		if ok && len(flavorID[0]) >= 1 {
 			// validate UUID
 			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
 				log.Errorf("resource/flavors:getFlavors() %s : Invalid flavor UUID format", message.InvalidInputProtocolViolation)
@@ -111,7 +111,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		}
 
 		label, ok := r.URL.Query()["label"]
-		if ok && len(label) >= 1 {
+		if ok && len(label[0]) >= 1 {
 			// validate label string
 			labelArr := []string{label[0]}
 			if validateInputErr := validation.ValidateStrings(labelArr); validateInputErr != nil {
@@ -123,7 +123,7 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 		}
 
 		filter, ok := r.URL.Query()["filter"]
-		if ok && len(filter) >= 1 {
+		if ok && len(filter[0]) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
 				fLog.WithError(err).Errorf("resource/flavors:getFlavors() %s : Invalid filter boolean value, must be true or false", message.InvalidInputProtocolViolation)

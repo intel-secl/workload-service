@@ -9,16 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
 	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/validation"
-
 	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
-
 	"github.com/gorilla/mux"
-
 	"github.com/pkg/errors"
 )
 
@@ -50,7 +46,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		vmID, ok := r.URL.Query()["vm_id"]
-		if ok && len(vmID) >= 1 {
+		if ok && len(vmID[0]) >= 1 {
 			if err := validation.ValidateUUIDv4(vmID[0]); err != nil {
 				log.WithError(err).WithError(err).Errorf("resource/reports:getReport() %s : Invalid VM UUID format", message.InvalidInputProtocolViolation)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
@@ -60,7 +56,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		reportID, ok := r.URL.Query()["report_id"]
-		if ok && len(reportID) >= 1 {
+		if ok && len(reportID[0]) >= 1 {
 			if err := validation.ValidateUUIDv4(reportID[0]); err != nil {
 				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid report UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
@@ -71,7 +67,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		hardwareUUID, ok := r.URL.Query()["hardware_uuid"]
-		if ok && len(hardwareUUID) >= 1 {
+		if ok && len(hardwareUUID[0]) >= 1 {
 			if err := validation.ValidateHardwareUUID(hardwareUUID[0]); err != nil {
 				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid hardware UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
@@ -82,7 +78,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		fromDate, ok := r.URL.Query()["from_date"]
-		if ok && len(fromDate) >= 1 {
+		if ok && len(fromDate[0]) >= 1 {
 			if err := validation.ValidateDate(fromDate[0]); err != nil {
 				log.WithError(err).Errorf("resource/reports:getReport() %s : Invalid from date format. Expected date format mm-dd-yyyy", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
@@ -93,7 +89,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		toDate, ok := r.URL.Query()["to_date"]
-		if ok && len(toDate) >= 1 {
+		if ok && len(toDate[0]) >= 1 {
 			if err := validation.ValidateDate(toDate[0]); err != nil {
 				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid to date format. Expected date format mm-dd-yyyy", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
@@ -104,7 +100,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		latestPerVM, ok := r.URL.Query()["latest_per_vm"]
-		if ok && len(latestPerVM) >= 1 {
+		if ok && len(latestPerVM[0]) >= 1 {
 			boolValue, err := strconv.ParseBool(latestPerVM[0])
 			if err != nil {
 				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid latest_per_vm boolean value, must be true or false", message.InvalidInputProtocolViolation)
@@ -117,7 +113,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		numOfDays, ok := r.URL.Query()["num_of_days"]
-		if ok && len(numOfDays) >= 1 {
+		if ok && len(numOfDays[0]) >= 1 {
 			nd, err := strconv.Atoi(numOfDays[0])
 			if err != nil {
 				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid integer value for num_of_days query parameter", message.InvalidInputProtocolViolation)
@@ -128,7 +124,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 		}
 
 		filter, ok := r.URL.Query()["filter"]
-		if ok && len(filter) >= 1 {
+		if ok && len(filter[0]) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
 				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid filter boolean value, must be true or false", message.InvalidInputProtocolViolation)

@@ -576,7 +576,7 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		}
 
 		filter, ok := r.URL.Query()["filter"]
-		if ok && len(filter) >= 1 {
+		if ok && len(filter[0]) >= 1 {
 			boolValue, err := strconv.ParseBool(filter[0])
 			if err != nil {
 				log.WithError(err).Errorf("resource/images:queryImages() %s : Invalid filter boolean value, must be true or false", message.InvalidInputProtocolViolation)
@@ -591,7 +591,7 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		}
 
 		flavorID, ok := r.URL.Query()["flavor_id"]
-		if ok && len(flavorID) >= 1 {
+		if ok && len(flavorID[0]) >= 1 {
 			if err := validation.ValidateUUIDv4(flavorID[0]); err != nil {
 				cLog.WithError(err).Errorf("resource/images:queryImages() %s : Invalid flavor UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
@@ -605,7 +605,7 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		}
 
 		imageID, ok := r.URL.Query()["image_id"]
-		if ok && len(imageID) >= 1 {
+		if ok && len(imageID[0]) >= 1 {
 			if err := validation.ValidateUUIDv4(imageID[0]); err != nil {
 				cLog.WithError(err).Errorf("resource/images:queryImages() %s : Invalid image UUID format", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
