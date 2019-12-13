@@ -162,25 +162,27 @@ func main() {
 			if config.TakeOwnershipFileWLS(constants.ConfigDir) != nil {
 				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on WLS configuration files")
 				os.Exit(-1)
-		}
+			}
 		}
 
 	case "start":
+		config.LogConfiguration(isStdOut, true)
 		start()
 
 	case "status":
+		config.LogConfiguration(isStdOut, true)
 		status()
 
 	case "startserver":
 		config.LogConfiguration(true, true)
-		log.Info(message.ServiceStart)
+		secLog.Info(message.ServiceStart)
 
 		// this runs in attached mode
 		startServer()
 
 	case "stop":
 		config.LogConfiguration(isStdOut, true)
-		log.Info(message.ServiceStop)
+		secLog.Info(message.ServiceStop)
 		stop()
 
 	case "uninstall":
@@ -338,7 +340,7 @@ func printUsage() {
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing AAS config\n")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
-	fmt.Println("download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
+	fmt.Println("    download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
 	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API URL")
 	fmt.Println("                        - Environment variable HVS_URL=<url> for HVS URL")

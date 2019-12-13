@@ -69,27 +69,16 @@ else
   echo_info "workload-service.env not found. Using existing exported variables or default ones"
 fi
 
-export LOG_LEVEL=${LOG_LEVEL:-"info"}
-
 # Load local configurations
 directory_layout() {
   export WORKLOAD_SERVICE_CONFIGURATION=/etc/workload-service
   export WORKLOAD_SERVICE_LOGS=/var/log/workload-service
   export WORKLOAD_SERVICE_HOME=/opt/workload-service
   export WORKLOAD_SERVICE_BIN=$WORKLOAD_SERVICE_HOME/bin
-  export INSTALL_LOG_FILE=$WORKLOAD_SERVICE_LOGS/install.log
 }
 directory_layout
 
-mkdir -p $(dirname $INSTALL_LOG_FILE)
-if [ $? -ne 0 ]; then
-  echo_failure "Cannot create directory: $(dirname $INSTALL_LOG_FILE)"
-  exit 1
-fi
-logfile=$INSTALL_LOG_FILE
-date >>$logfile
-
-echo_info "Installing workload service..." >>$logfile
+echo_info "Installing workload service..."
 
 echo_info "Creating Workload Service User ..."
 id -u wls 2>/dev/null || useradd --comment "Workload Service" --home $WORKLOAD_SERVICE_HOME --system --shell /bin/false wls
@@ -99,7 +88,7 @@ for directory in $WORKLOAD_SERVICE_CONFIGURATION $WORKLOAD_SERVICE_BIN $WORKLOAD
   # mkdir -p will return 0 if directory exists or is a symlink to an existing directory or directory and parents can be created
   mkdir -p $directory
   if [ $? -ne 0 ]; then
-    echo_failure "Cannot create directory: $directory" | tee -a $logfile
+    echo_failure "Cannot create directory: $directory"
     exit 1
   fi
   chown -R wls:wls $directory
@@ -126,7 +115,7 @@ chown wls:wls /usr/local/bin/workload-service
 
 cp -f workload-service.service $WORKLOAD_SERVICE_HOME
 chown wls:wls $WORKLOAD_SERVICE_HOME/workload-service.service
-systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service | tee -a $logfile
+systemctl enable $WORKLOAD_SERVICE_HOME/workload-service.service
 
 #Install log rotation
 auto_install() {
@@ -195,7 +184,7 @@ fi
 
 # exit workload-service setup if WLS_NOSETUP is set
 if [ $WLS_NOSETUP = "true" ]; then
-  echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task." | tee -a $logfile
+  echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task."
   exit 0
 fi
 
@@ -225,7 +214,7 @@ check_env_var_present() {
     if [ "${!1:-}" ]; then
       return 0
     else
-      echo_warning "$1 must be set and exported (empty value is okay)" | tee -a $logfile
+      echo_warning "$1 must be set and exported (empty value is okay)"
       all_env_vars_present=0
       return 1
     fi
@@ -234,7 +223,7 @@ check_env_var_present() {
   if [ "${!1:-}" ]; then
     return 0
   else
-    echo_warning "$1 must be set and exported" | tee -a $logfile
+    echo_warning "$1 must be set and exported"
     all_env_vars_present=0
     return 1
   fi
@@ -260,24 +249,24 @@ chmod 770 /opt/workload-service/bin/workload-service
 if [[ $all_env_vars_present -eq 1 ]]; then
   # run setup tasks
   echo_info "Running setup tasks ..."
-  workload-service setup all | tee -a $logfile
+  workload-service setup all
   SETUP_RESULT=${PIPESTATUS[0]}
 else
-  echo_failure "One or more environment variables are not present. Setup cannot proceed. Aborting..." | tee -a $logfile
-  echo_failure "Please export the missing environment variables and run setup again" | tee -a $logfile
+  echo_failure "One or more environment variables are not present. Setup cannot proceed. Aborting..."
+  echo_failure "Please export the missing environment variables and run setup again"
   exit 1
 fi
 
 # start wls server
 if [ ${SETUP_RESULT} -eq 0 ]; then
-  echo_success "Installation completed Successfully" | tee -a $logfile
-  echo_info "Starting Workload Service" | tee -a $logfile
+  echo_success "Installation completed Successfully"
+  echo_info "Starting Workload Service"
   systemctl start workload-service
   if [ $? -eq 0 ]; then
-    echo_success "Started Workload Service" | tee -a $logfile
+    echo_success "Started Workload Service"
   else
-    echo_failure "Workload service failed to start" | tee -a $logfile
+    echo_failure "Workload service failed to start"
   fi
 else
-  echo_failure "Installation failed to complete successfully" | tee -a $logfile
+  echo_failure "Installation failed to complete successfully"
 fi
