@@ -47,7 +47,7 @@ const (
 	DefaultLogEntryMaxlength      = 300
 	WLSRuntimeUser                = "wls"
 	WLSRuntimeGroup               = "wls"
-	WLSConsoleEnableEnv           = "WLS_CONSOLE_OUT_ENABLE"
+	WLSConsoleEnableEnv           = "WLS_ENABLE_CONSOLE_LOG"
 )
 
 // State represents whether or not a daemon is running or not

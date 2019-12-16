@@ -57,7 +57,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	switch arg := strings.ToLower(args[0]); arg {
+	// force all args to lowercase
+	for i, x := range args {
+		args[i] = strings.ToLower(x)
+	}
+
+	switch arg := args[0]; arg {
 	case "setup":
 		args := os.Args[1:]
 		if len(args) <= 1 {
@@ -88,8 +93,19 @@ func main() {
 		}
 
 		if len(args) > 2 {
-			// flags for arguments
-			flags = args[2:]
+			// check if TLS cert type was specified for downloiad
+			if args[1] == "download_cert" {
+				if args[2] != "tls" {
+					fmt.Println("Invalid cert type provided for download_cert setup task: Only TLS cert type is supported. Aborting.")
+					os.Exit(1)
+				} else if len(args) > 3 {
+					// flags will be post the tls arg
+					flags = args[3:]
+				}
+			} else {
+				// flags for arguments
+				flags = args[2:]
+			}
 		}
 
 		// log initialization
@@ -306,23 +322,26 @@ func printUsage() {
 	fmt.Printf("    setup                Run workload-service setup tasks\n\n")
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
-	fmt.Printf("    all                    Runs all setup tasks\n\n")
+	fmt.Printf("   all                    Runs all setup tasks\n\n")
 	fmt.Println("   download_ca_cert     Download CMS root CA certificate")
 	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads new root CA cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
 	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
 	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API url")
-	fmt.Println("   download_cert        Generates Key pair and CSR, gets it signed from CMS")
+	fmt.Printf("\n")
+	fmt.Println("   download_cert TLS    Generates Key pair and CSR, gets it signed from CMS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads newly signed WLS TLS cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
 	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with CMS")
 	fmt.Println("                        - Environment variable KEY_PATH=<key_path> Path of file where TLS key needs to be stored")
 	fmt.Println("                        - Environment variable CERT_PATH=<cert_path> Path of file/directory where TLS certificate needs to be stored")
 	fmt.Println("                        - Environment variable WLS_TLS_CERT_CN=<COMMON NAME> to override default specified in config")
-	fmt.Println("                        - Environment variable WLS_CERT_SAN=<CSV List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
+	fmt.Println("                        - Environment variable SAN_LIST=<CSV List> List of alternative names to be added to the SAN field in TLS cert> to override default specified in config")
+	fmt.Printf("\n")
 	fmt.Println("    server              Setup http server on given port")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing server config\n")
 	fmt.Printf("                        -Environment variable WLS_PORT=<port> should be set\n\n")
+	fmt.Printf("\n")
 	fmt.Println("    database            Setup workload-service database")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing database config\n")
 	fmt.Println("                        Required env variables are:")
@@ -331,18 +350,21 @@ func printUsage() {
 	fmt.Println("                        - WLS_DB_USERNAME  : database user name")
 	fmt.Println("                        - WLS_DB_PASSWORD  : database password")
 	fmt.Printf("                        - WLS_DB           : database schema name\n\n")
+	fmt.Printf("\n")
 	fmt.Println("    hvsconnection       Setup task for setting up the connection to the Host Verification Service(HVS)")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
 	fmt.Println("                        Required env variables are:")
 	fmt.Printf("                        - HVS_URL      : HVS URL\n\n")
+	fmt.Printf("\n")
 	fmt.Println("    aasconnection       Setup to create workload service user roles in AAS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing AAS config\n")
 	fmt.Println("                        - AAS_API_URL      : AAS API URL")
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
+	fmt.Printf("\n")
 	fmt.Println("    download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
 	fmt.Println("                        - Environment variable HVS_URL=<url> for HVS URL")
-	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with HVS\n\n")
+	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with HVS")
 }
 
 func printVersion() {
