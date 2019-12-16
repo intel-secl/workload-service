@@ -315,7 +315,6 @@ func printUsage() {
 	fmt.Println("   download_cert        Generates Key pair and CSR, gets it signed from CMS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads newly signed WLS TLS cert\n")
 	fmt.Println("                        - Environment variable CMS_BASE_URL=<url> for CMS API url")
-	fmt.Println("                        - Environment variable CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash> to ensure that WLS is talking to the right CMS instance")
 	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with CMS")
 	fmt.Println("                        - Environment variable KEY_PATH=<key_path> Path of file where TLS key needs to be stored")
 	fmt.Println("                        - Environment variable CERT_PATH=<cert_path> Path of file/directory where TLS certificate needs to be stored")
@@ -342,10 +341,8 @@ func printUsage() {
 	fmt.Println("                        - BEARER_TOKEN     : Bearer Token for authenticating with AAS")
 	fmt.Println("    download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
-	fmt.Println("                        - Environment variable AAS_API_URL=<url> for AAS API URL")
 	fmt.Println("                        - Environment variable HVS_URL=<url> for HVS URL")
-	fmt.Println("                        - Environment variable WLS_SERVICE_USERNAME=<username> to get the HVS token")
-	fmt.Println("                        - Environment variable WLS_SERVICE_PASSWORD=<password> to get the HVS token\n\n")
+	fmt.Println("                        - Environment variable BEARER_TOKEN=<token> for authenticating with HVS\n\n")
 }
 
 func printVersion() {

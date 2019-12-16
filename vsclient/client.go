@@ -9,10 +9,12 @@ import (
 	"intel/isecl/lib/clients"
 	"intel/isecl/lib/clients/aas"
 	commLog "intel/isecl/lib/common/log"
+	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/lib/common/validation"
 	config "intel/isecl/workload-service/config"
 	consts "intel/isecl/workload-service/constants"
 	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"sync"
@@ -175,12 +177,30 @@ func GetCaCerts(domain string) ([]byte, error) {
 
 	req.Header.Set("Accept", "application/x-pem-file")
 	req.Header.Set("Content-Type", "application/json")
+	var c csetup.Context
+	jwtToken, err := c.GetenvString(consts.BearerToken, "BEARER_TOKEN")
+	if jwtToken == "" || err != nil {
+		fmt.Fprintln(os.Stderr, "BEARER_TOKEN is not defined in environment")
+		return nil, errors.Wrap(err, "BEARER_TOKEN is not defined in environment")
+	}
+	req.Header.Set("Authorization", "Bearer "+ jwtToken)
+	client, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() Failed to create http client")
+	}
+	rsp, err := client.Do(req)
 
-	rsp, err := sendRequest(req)
 	if err != nil {
 		log.Error("vsclient/client:GetCaCerts() Error while sending request from client to server")
 		log.Tracef("%+v", err)
 		return nil, errors.Wrap(err,"vsclient/client:GetCaCerts() Error while sending request from client to server")
 	}
-	return rsp, nil
+
+	defer rsp.Body.Close()
+	body, err := ioutil.ReadAll(rsp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() Error while reading response body")
+	}
+
+	return body, nil
 }
