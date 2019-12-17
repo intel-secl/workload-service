@@ -38,7 +38,7 @@ func TestFlavorKey(t *testing.T) {
 	req := httptest.NewRequest("GET", "/wls/images/dddd021e-9669-4e53-9224-8880fb4e4080/flavor-key?hardware_uuid=ecee021e-9669-4e53-9224-8880fb4e4080", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
-	assert.Equal(http.StatusOK, recorder.Code)
+	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
 func TestFlavorKeyMissingHWUUID(t *testing.T) {
@@ -144,7 +144,7 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
-	assert.Equal(http.StatusOK, recorder.Code)
+	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
 func TestFlavorKeyKMSBadRequest(t *testing.T) {
@@ -166,7 +166,7 @@ func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	t.Log(recorder.Body.String())
-	assert.Equal(http.StatusOK, recorder.Code)
+	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
 func TestQueryEmptyImagesResource(t *testing.T) {

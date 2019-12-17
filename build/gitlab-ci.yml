@@ -21,21 +21,22 @@ variables:
 
 stages:
   - build
+  - test
   - deploy
 
-# test:
-  # services:
-    # - postgres:latest
-  # stage: test
-  # tags:
-    # - go
-  # script:
-    # - go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
-    # - go tool cover -func cover.out
-    # - go tool cover -html=cover.out -o cover.html
-  # artifacts:
-    # paths:
-      # - "cover.html"
+test:
+  services:
+    - postgres:latest
+  stage: test
+  tags:
+    - go
+  script:
+    - go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
+    - go tool cover -func cover.out
+    - go tool cover -html=cover.out -o cover.html
+  artifacts:
+    paths:
+      - "cover.html"
 
 compile:
   stage: build

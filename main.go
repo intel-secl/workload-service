@@ -98,9 +98,9 @@ func main() {
 					flags = args[3:]
 				}
 			} else {
-				// flags for arguments
-				flags = args[2:]
-			}
+			// flags for arguments
+			flags = args[2:]
+		}
 		}
 
 		// log initialization
@@ -318,7 +318,7 @@ func printUsage() {
 
 	fmt.Printf("Setup command usage:  %s <command> [task...]\n", os.Args[0])
 	fmt.Println("Available tasks for setup:")
-	fmt.Printf("   all                    Runs all setup tasks\n\n")
+	fmt.Printf("    all                    Runs all setup tasks\n\n")
 	fmt.Println("   download_ca_cert     Download CMS root CA certificate")
 	fmt.Printf("\t\t                     - Option [--force] overwrites any existing files, and always downloads new root CA cert\n")
 	fmt.Printf("\t\t                     Required env variables:\n")

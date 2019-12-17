@@ -29,6 +29,7 @@ var aasRWLock = sync.RWMutex{}
 
 func init() {
 	aasRWLock.Lock()
+	defer aasRWLock.Unlock()
 	if aasClient.HTTPClient == nil {
 		c, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
 		if err != nil {
@@ -36,7 +37,6 @@ func init() {
 		}
 		aasClient.HTTPClient = c
 	}
-	aasRWLock.Unlock()
 }
 
 func addJWTToken(req *http.Request) error {
@@ -59,6 +59,7 @@ func addJWTToken(req *http.Request) error {
 	if err != nil {
 		// lock aas with w lock
 		aasRWLock.Lock()
+		defer aasRWLock.Unlock()
 		// check if other thread fix it already
 		jwtToken, err = aasClient.GetUserToken(config.Configuration.WLS.User)
 		// it is not fixed
@@ -71,7 +72,6 @@ func addJWTToken(req *http.Request) error {
 				return errors.Wrap(err, "vsclient/client.go:addJWTToken() Could not fetch token")
 			}
 		}
-		aasRWLock.Unlock()
 	}
 	log.Debug("vsclient/client.go:addJWTToken() successfully added jwt bearer token")
 	req.Header.Set("Authorization", "Bearer "+string(jwtToken))

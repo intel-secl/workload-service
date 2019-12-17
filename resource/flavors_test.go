@@ -46,7 +46,7 @@ func TestInvalidFlavorID(t *testing.T) {
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
-	assert.Contains(recorder.Body.String(), "Invalid UUID")
+	assert.Contains(recorder.Body.String(), "not uuidv4 compliant")
 }
 
 func TestFlavorPartValidation(t *testing.T) {
