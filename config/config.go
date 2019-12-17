@@ -63,7 +63,7 @@ var Configuration struct {
 	HVS_API_URL  string
 	CMS_BASE_URL string
 	AAS_API_URL  string
-	Subject struct {
+	Subject      struct {
 		TLSCertCommonName string
 	}
 	WLS struct {
@@ -71,6 +71,7 @@ var Configuration struct {
 		Password string
 	}
 	LogLevel          string
+	LogEnableStdout   bool
 	LogEntryMaxLength int
 	KEY_CACHE_SECONDS int
 	ReadTimeout       time.Duration
@@ -231,6 +232,15 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.MaxHeaderBytes = constants.DefaultMaxHeaderBytes
 	} else {
 		Configuration.MaxHeaderBytes = maxHeaderBytes
+	}
+
+	Configuration.LogEnableStdout = false
+	logEnableStdout, err := c.GetenvString(constants.WLSConsoleEnableEnv, "Workload Service enable standard output")
+	if err == nil && logEnableStdout != "" {
+		Configuration.LogEnableStdout, err = strconv.ParseBool(logEnableStdout)
+		if err != nil {
+			log.Info("Error while parsing the variable ", constants.WLSConsoleEnableEnv, " setting to default value false")
+		}
 	}
 
 	return Save()
