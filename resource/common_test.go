@@ -71,6 +71,7 @@ func mockHVS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/mtwilson/v2/reports", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/samlassertion+xml")
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.Write([]byte(saml))
 	}).Methods("POST")
 	h := &http.Server{
