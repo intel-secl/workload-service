@@ -88,6 +88,7 @@ func mockKMS(addr string) *http.Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.Write([]byte(`{
 			"authorization_token": "FkJpk11cfoQt+OVTH1Yg+xssxa6hyVm2riLi3RUHe4U=",
 			"authorization_date": "2019-12-18T18:07:16-0800",
