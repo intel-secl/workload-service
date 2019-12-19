@@ -7,10 +7,12 @@ User=wls
 Group=wls
 WorkingDirectory=/opt/workload-service/bin/
 ExecStart=/opt/workload-service/bin/workload-service startserver
-TimeoutSec=300
-KillMode=process
+ExecStop=/bin/kill -s SIGTERM $MAINPID
+TimeoutStartSec=0
 Restart=on-failure
-RestartSec=10
+PermissionsStartOnly=true
+RuntimeDirectory=workload-service
+RuntimeDirectoryMode=0775
 
 [Install]
 WantedBy=multi-user.target

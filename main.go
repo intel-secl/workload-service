@@ -8,7 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	commLog "intel/isecl/lib/common/log"
-	"intel/isecl/lib/common/log/message"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/lib/common/validation"
 	"intel/isecl/workload-service/config"
@@ -186,14 +185,11 @@ func main() {
 
 	case "startserver":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
-		secLog.Info(message.ServiceStart)
-
 		// this runs in attached mode
 		startServer()
 
 	case "stop":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
-		secLog.Info(message.ServiceStop)
 		stop()
 
 	case "uninstall":

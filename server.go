@@ -67,7 +67,7 @@ func startServer() error {
 	resource.SetImagesEndpoints(authr.PathPrefix("/images").Subrouter(), wlsDB)
 
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)
 
 	httpWriter := os.Stderr
 	if httpLogFile, err := os.OpenFile(consts.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
@@ -107,11 +107,12 @@ func startServer() error {
 			secLog.Errorf("server:startServer() %s", message.TLSConnectFailed)
 			secLog.WithError(err).Fatalf("server:startServer() Failed to start HTTPS server: %s\n", err.Error())
 			log.Tracef("%+v", err)
-			stop <- syscall.SIGTERM
 		}
+		sig := <-stop
+		secLog.Infof("Received signal: %s", sig)
 	}()
 
-	fmt.Println("Workload Service is running")
+	secLog.Info(message.ServiceStart)
 	secLog.Infof("server:startServer() Workload Service is running. Listening at port %d", config.Configuration.Port)
 	// TODO dispatch Service status checker goroutine
 	<-stop
@@ -124,5 +125,6 @@ func startServer() error {
 		log.Tracef("%+v", err)
 		return errors.Wrapf(err, "server:startServer() Failed to gracefully shutdown webserver: %v\n", err)
 	}
+	secLog.Info(message.ServiceStop)
 	return nil
 }
