@@ -102,6 +102,7 @@ func mockKMS(addr string) *http.Server {
 		v0U4smZd6s3x6krTP4BiOGttpDiR0TD5N9kbMJMBZvWvERkBMwRED/Nmt9JEdD0s3mHe5zV3G9WX
 		ln40773Cczo9awtNfUVdVyDx6LejJcCgkt4XNdRZbK9cVdGK+w6Q1tASiVxRZmvJDVFA0Pa8F1I0
 		I9Iri2+YRM6sGVg8ZkzcCmFd+CoTNy+cw/Y9AQ==`)
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.Write(enc)
 	}).Methods("POST")
 	h := &http.Server{
@@ -117,6 +118,7 @@ func badKMS(addr string) *http.Server {
 	defer log.Trace("resource/common_test:badKMS() Leaving")
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Bad Request"))
 	})
@@ -133,6 +135,7 @@ func badHVS(addr string) *http.Server {
 	defer log.Trace("resource/common_test:badHVS() Leaving")
 	r := mux.NewRouter()
 	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Bad Request"))
 	})
