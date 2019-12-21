@@ -142,7 +142,7 @@ func SaveConfiguration(c setup.Context) error {
 		return errors.Wrap(err, "WLS_SERVICE_USERNAME is not defined in environment or configuration file")
 	}
 
-	wlsAASPassword, err := c.GetenvString(WLS_PASSWORD, "WLS Service Password")
+	wlsAASPassword, err := c.GetenvSecret(WLS_PASSWORD, "WLS Service Password")
 	if err == nil && wlsAASPassword != "" {
 		Configuration.WLS.Password = wlsAASPassword
 	} else if strings.TrimSpace(Configuration.WLS.Password) == "" {
