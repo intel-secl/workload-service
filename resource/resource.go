@@ -55,26 +55,22 @@ func (e endpointError) Error() string {
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
-func requiresPermission(eh endpointHandler, roleNames []string) endpointHandler {
+func requiresPermission(eh endpointHandler, permissionNames []string) endpointHandler {
 	log.Trace("resource/resource:requiresPermission() Entering")
 	defer log.Trace("resource/resource:requiresPermission() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
-		privileges, err := context.GetUserRoles(r)
+		privileges, err := context.GetUserPermissions(r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Could not get user roles from http context"))
-			seclog.Errorf("resource/resource:requiresPermission() %s Roles: %v | Context: %v", message.AuthenticationFailed, roleNames, r.Context())
+			seclog.Errorf("resource/resource:requiresPermission() %s Roles: %v | Context: %v", message.AuthenticationFailed, permissionNames, r.Context())
 			return errors.Wrap(err, "resource/resource:requiresPermission() Could not get user roles from http context")
 		}
-		reqRoles := make([]ct.RoleInfo, len(roleNames))
-		for i, role := range roleNames {
-			reqRoles[i] = ct.RoleInfo{Service: consts.ServiceName, Name: role}
-		}
+		reqPermissions := ct.PermissionInfo{Service: consts.ServiceName, Rules: permissionNames}
 
-		seclog.Debugf("resource/resource:requiresPermission() Req Roles: %v", reqRoles)
-		_, foundRole := auth.ValidatePermissionAndGetRoleContext(privileges, reqRoles,
+		_, foundMatchingPermission := auth.ValidatePermissionAndGetRoleContext(privileges, reqPermissions,
 			true)
-		if !foundRole {
+		if !foundMatchingPermission {
 			w.WriteHeader(http.StatusUnauthorized)
 			seclog.Error(message.UnauthorizedAccess)
 			seclog.Errorf("resource/resource:requiresPermission() %s Insufficient privileges to access %s", message.UnauthorizedAccess, r.RequestURI)

@@ -7,11 +7,11 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+	"intel/isecl/workload-service/constants"
 	"net/http"
 	"strconv"
 	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/validation"
-	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"github.com/gorilla/mux"
@@ -22,10 +22,10 @@ import (
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	log.Trace("resource/reports:SetReportsEndpoints() Entering")
 	defer log.Trace("resource/reports:SetReportsEndpoints() Leaving")
-	r.HandleFunc("", (errorHandler(requiresPermission(getReport(db), []string{consts.AdministratorGroupName})))).Methods("GET")
-	r.HandleFunc("", (errorHandler(requiresPermission(createReport(db), []string{consts.AdministratorGroupName, consts.ReportCreationGroupName})))).Methods("POST").Headers("Content-Type", "application/json")
+	r.HandleFunc("", errorHandler(requiresPermission(getReport(db), []string{constants.ReportsRetrieve}))).Methods("GET")
+	r.HandleFunc("", errorHandler(requiresPermission(createReport(db), []string{constants.ReportsCreate}))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{id}",
-		(errorHandler(requiresPermission(deleteReportByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
+		errorHandler(requiresPermission(deleteReportByID(db), []string{constants.ReportsDelete}))).Methods("DELETE")
 	r.HandleFunc("/{badid}", badId)
 }
 

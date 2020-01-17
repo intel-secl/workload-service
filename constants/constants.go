@@ -23,9 +23,6 @@ const (
 	DefaultKeyAlgorithm           = "rsa"
 	DefaultKeyAlgorithmLength     = 3072
 	DefaultSSLCertFilePath        = ConfigDir + "wlsdbsslcert.pem"
-	FlavorImageRetrievalGroupName = "FlavorsImageRetrieval"
-	AdministratorGroupName        = "Administrator"
-	ReportCreationGroupName       = "ReportsCreate"
 	BearerToken                   = "BEARER_TOKEN"
 	CmsBaseUrlEnv                 = "CMS_BASE_URL"
 	WlsTLsCertCnEnv               = "WLS_TLS_CERT_CN"
@@ -48,6 +45,25 @@ const (
 	WLSRuntimeUser                = "wls"
 	WLSRuntimeGroup               = "wls"
 	WLSConsoleEnableEnv           = "WLS_ENABLE_CONSOLE_LOG"
+)
+
+//Roles and permissions
+const (
+	FlavorsRetrieve        = "flavors:retrieve"
+	FlavorsCreate           = "flavors:create"
+	FlavorsDelete          = "flavors:delete"
+
+	ImageFlavorsRetrieve   = "image_flavors:retrieve"
+	ImageFlavorsStore      = "image_flavors:store"
+	ImageFlavorsDelete     = "image_flavors:delete"
+
+	ImagesRetrieve = "images:retrieve"
+	ImagesCreate   = "images:create"
+	ImagesDelete   = "images:delete"
+
+	ReportsRetrieve = "reports:retrieve"
+	ReportsCreate = "reports:create"
+	ReportsDelete = "reports:delete"
 )
 
 // State represents whether or not a daemon is running or not

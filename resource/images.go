@@ -61,27 +61,27 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	//There is a ambiguity between api endpoints /<id>/flavors and /<id>/flavors?flavor_part=<flavor_part>
 	//Moved /<id>/flavors?flavor_part=<flavor_part> to top so this will be able to check for the filter flavor_part
 	r.HandleFunc("/{id}/flavors",
-		(errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("flavor_part", "{flavor_part}")
+		errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("/{id}/flavors",
-		(errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+		errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET")
 	r.HandleFunc("/{id}/flavors/{flavorID}",
-		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("GET")
+		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET")
 	r.HandleFunc("/{id}/flavors/{flavorID}",
-		(errorHandler(requiresPermission(putAssociatedFlavor(db), []string{consts.AdministratorGroupName})))).Methods("PUT")
+		errorHandler(requiresPermission(putAssociatedFlavor(db), []string{constants.ImageFlavorsStore}))).Methods("PUT")
 	r.HandleFunc("/{id}/flavors/{flavorID}",
-		errorHandler(requiresPermission(deleteAssociatedFlavor(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
+		errorHandler(requiresPermission(deleteAssociatedFlavor(db), []string{constants.ImageFlavorsDelete}))).Methods("DELETE")
 	r.HandleFunc("/{id}",
-		(errorHandler(requiresPermission(getImageByID(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+		errorHandler(requiresPermission(getImageByID(db), []string{constants.ImagesRetrieve}))).Methods("GET")
 	r.HandleFunc("/{id}",
-		(errorHandler(requiresPermission(deleteImageByID(db), []string{consts.AdministratorGroupName})))).Methods("DELETE")
+		errorHandler(requiresPermission(deleteImageByID(db), []string{constants.ImagesDelete}))).Methods("DELETE")
 	r.HandleFunc("/{id}/flavor-key",
-		(errorHandler(requiresPermission(retrieveFlavorAndKeyForImageID(db), []string{consts.AdministratorGroupName, consts.FlavorImageRetrievalGroupName})))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
+		errorHandler(requiresPermission(retrieveFlavorAndKeyForImageID(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET").Queries("hardware_uuid", "{hardware_uuid}")
 	r.HandleFunc("/{id}/flavor-key",
-		(missingQueryParameters("hardware_uuid"))).Methods("GET")
+		missingQueryParameters("hardware_uuid")).Methods("GET")
 	r.HandleFunc("",
-		(errorHandler(requiresPermission(queryImages(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+		errorHandler(requiresPermission(queryImages(db), []string{constants.ImagesRetrieve}))).Methods("GET")
 	r.HandleFunc("",
-		(errorHandler(requiresPermission(createImage(db), []string{consts.AdministratorGroupName})))).Methods("POST").Headers("Content-Type", "application/json")
+		errorHandler(requiresPermission(createImage(db), []string{constants.ImagesCreate}))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{badid}", badId)
 }
 
