@@ -10,7 +10,7 @@ import (
 	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/validation"
 	flvr "intel/isecl/lib/flavor"
-	consts "intel/isecl/workload-service/constants"
+	"intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/model"
 	"intel/isecl/workload-service/repository"
 	"net/http"
@@ -24,12 +24,12 @@ func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	log.Trace("resource/flavors:SetFlavorsEndpoints() Entering")
 	defer log.Trace("resource/flavors:SetFlavorsEndpoints() Leaving")
 	r.HandleFunc("/{id:(?i:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$)}",
-		errorHandler(requiresPermission(getFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("GET")
-	r.HandleFunc("/{label}", errorHandler(requiresPermission(getFlavorByLabel(db), []string{consts.AdministratorGroupName}))).Methods("GET")
-	r.HandleFunc("", (errorHandler(requiresPermission(getFlavors(db), []string{consts.AdministratorGroupName})))).Methods("GET")
+		errorHandler(requiresPermission(getFlavorByID(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
+	r.HandleFunc("/{label}", errorHandler(requiresPermission(getFlavorByLabel(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
+	r.HandleFunc("", errorHandler(requiresPermission(getFlavors(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$)}",
-		errorHandler(requiresPermission(deleteFlavorByID(db), []string{consts.AdministratorGroupName}))).Methods("DELETE")
-	r.HandleFunc("", errorHandler(requiresPermission(createFlavor(db), []string{consts.AdministratorGroupName}))).Methods("POST").Headers("Content-Type", "application/json")
+		errorHandler(requiresPermission(deleteFlavorByID(db), []string{constants.FlavorsDelete}))).Methods("DELETE")
+	r.HandleFunc("", errorHandler(requiresPermission(createFlavor(db), []string{constants.FlavorsCreate}))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{badid}", badId).Methods("DELETE")
 }
 
