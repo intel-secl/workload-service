@@ -162,7 +162,7 @@ func SaveConfiguration(c setup.Context) error {
 	if err == nil && certSANList != "" {
 		Configuration.CertSANList = certSANList
 	} else if strings.TrimSpace(Configuration.CertSANList) == "" {
-		log.Info("config/config:SaveConfiguration() WLS_CERT_SAN List not defined, using default value")
+		log.Info("config/config:SaveConfiguration() SAN_LIST List not defined, using default value")
 		Configuration.CertSANList = constants.DefaultWlsTlsSan
 	}
 

@@ -26,7 +26,7 @@ const (
 	BearerToken                   = "BEARER_TOKEN"
 	CmsBaseUrlEnv                 = "CMS_BASE_URL"
 	WlsTLsCertCnEnv               = "WLS_TLS_CERT_CN"
-	WlsCertSANList                = "WLS_CERT_SAN"
+	WlsCertSANList                = "SAN_LIST"
 	DefaultKeyCacheSeconds        = 300
 	KeyCacheSeconds               = "KEY_CACHE_SECONDS"
 	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
