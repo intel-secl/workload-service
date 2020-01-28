@@ -63,7 +63,7 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id}/flavors",
 		errorHandler(requiresPermission(retrieveFlavorForImageID(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET").Queries("flavor_part", "{flavor_part}")
 	r.HandleFunc("/{id}/flavors",
-		errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET")
+		errorHandler(requiresPermission(getAllAssociatedFlavors(db), []string{constants.ImageFlavorsSearch}))).Methods("GET")
 	r.HandleFunc("/{id}/flavors/{flavorID}",
 		errorHandler(requiresPermission(getAssociatedFlavor(db), []string{constants.ImageFlavorsRetrieve}))).Methods("GET")
 	r.HandleFunc("/{id}/flavors/{flavorID}",
@@ -79,7 +79,7 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id}/flavor-key",
 		missingQueryParameters("hardware_uuid")).Methods("GET")
 	r.HandleFunc("",
-		errorHandler(requiresPermission(queryImages(db), []string{constants.ImagesRetrieve}))).Methods("GET")
+		errorHandler(requiresPermission(queryImages(db), []string{constants.ImagesSearch}))).Methods("GET")
 	r.HandleFunc("",
 		errorHandler(requiresPermission(createImage(db), []string{constants.ImagesCreate}))).Methods("POST").Headers("Content-Type", "application/json")
 	r.HandleFunc("/{badid}", badId)

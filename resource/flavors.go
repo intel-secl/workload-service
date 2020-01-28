@@ -26,7 +26,7 @@ func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{id:(?i:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$)}",
 		errorHandler(requiresPermission(getFlavorByID(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
 	r.HandleFunc("/{label}", errorHandler(requiresPermission(getFlavorByLabel(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
-	r.HandleFunc("", errorHandler(requiresPermission(getFlavors(db), []string{constants.FlavorsRetrieve}))).Methods("GET")
+	r.HandleFunc("", errorHandler(requiresPermission(getFlavors(db), []string{constants.FlavorsSearch}))).Methods("GET")
 	r.HandleFunc("/{id:(?i:[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$)}",
 		errorHandler(requiresPermission(deleteFlavorByID(db), []string{constants.FlavorsDelete}))).Methods("DELETE")
 	r.HandleFunc("", errorHandler(requiresPermission(createFlavor(db), []string{constants.FlavorsCreate}))).Methods("POST").Headers("Content-Type", "application/json")

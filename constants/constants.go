@@ -49,19 +49,22 @@ const (
 
 //Roles and permissions
 const (
-	FlavorsRetrieve        = "flavors:retrieve"
-	FlavorsCreate           = "flavors:create"
-	FlavorsDelete          = "flavors:delete"
+	FlavorsRetrieve = "flavors:retrieve"
+	FlavorsSearch   = "flavors:search"
+	FlavorsCreate   = "flavors:create"
+	FlavorsDelete   = "flavors:delete"
 
-	ImageFlavorsRetrieve   = "image_flavors:retrieve"
-	ImageFlavorsStore      = "image_flavors:store"
-	ImageFlavorsDelete     = "image_flavors:delete"
+	ImageFlavorsRetrieve = "image_flavors:retrieve"
+	ImageFlavorsSearch   = "image_flavors:search"
+	ImageFlavorsStore    = "image_flavors:store"
+	ImageFlavorsDelete   = "image_flavors:delete"
 
 	ImagesRetrieve = "images:retrieve"
+	ImagesSearch   = "images:search"
 	ImagesCreate   = "images:create"
 	ImagesDelete   = "images:delete"
 
-	ReportsRetrieve = "reports:retrieve"
+	ReportsSearch = "reports:search"
 	ReportsCreate = "reports:create"
 	ReportsDelete = "reports:delete"
 )
