@@ -7,18 +7,22 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"intel/isecl/lib/common/crypt"
 	"intel/isecl/lib/common/log/message"
 	"intel/isecl/lib/common/middleware"
+	cos "intel/isecl/lib/common/os"
 	"intel/isecl/workload-service/config"
 	"intel/isecl/workload-service/constants"
-	consts "intel/isecl/workload-service/constants"
 	"intel/isecl/workload-service/repository/postgres"
 	"intel/isecl/workload-service/resource"
+	"io/ioutil"
 	stdlog "log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -30,10 +34,55 @@ import (
 
 var cacheTime, _ = time.ParseDuration(constants.JWTCertsCacheTime)
 
-//To be implemented if JWT certificate is needed from any other services
+// Fetch JWT certificate from AAS
 func fnGetJwtCerts() error {
 	log.Trace("server:fnGetJwtCerts() Entering")
 	defer log.Trace("server:fnGetJwtCerts() Leaving")
+
+	c := config.Configuration
+	if !strings.HasSuffix(c.AAS_API_URL, "/") {
+		c.AAS_API_URL = c.AAS_API_URL + "/"
+	}
+	url := c.AAS_API_URL + "noauth/jwt-certificates"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return errors.Wrap(err, "server:fnGetJwtCerts() Could not create http request")
+	}
+	req.Header.Add("accept", "application/x-pem-file")
+	rootCaCertPems, err := cos.GetDirFileContents(constants.TrustedCaCertsDir, "*.pem")
+	if err != nil {
+		return errors.Wrap(err, "server:fnGetJwtCerts() Could not read root CA certificate")
+	}
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+	for _, rootCACert := range rootCaCertPems {
+		if ok := rootCAs.AppendCertsFromPEM(rootCACert); !ok {
+			return err
+		}
+	}
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+			},
+		},
+	}
+
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "server:fnGetJwtCerts() Could not retrieve jwt certificate")
+	}
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+	err = crypt.SavePemCertWithShortSha1FileName(body, constants.TrustedJWTSigningCertsDir)
+	if err != nil {
+		return errors.Wrap(err, "server:fnGetJwtCerts() Could not store Certificate")
+	}
 	return nil
 }
 
@@ -58,7 +107,7 @@ func startServer() error {
 	// Setup Version Endpoint
 	resource.SetVersionEndpoints(noauthr.PathPrefix("/version").Subrouter())
 
-	authr.Use(middleware.NewTokenAuth(consts.TrustedJWTSigningCertsDir, consts.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
+	authr.Use(middleware.NewTokenAuth(constants.TrustedJWTSigningCertsDir, constants.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(authr.PathPrefix("/flavors").Subrouter(), wlsDB)
 	// Setup Report Endpoints
@@ -70,7 +119,7 @@ func startServer() error {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)
 
 	httpWriter := os.Stderr
-	if httpLogFile, err := os.OpenFile(consts.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
+	if httpLogFile, err := os.OpenFile(constants.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
 		secLog.WithError(err).Errorf("server:startServer() Failed to open http log file: %s\n", err.Error())
 		log.Tracef("%+v", err)
 	} else {
@@ -100,8 +149,8 @@ func startServer() error {
 	// dispatch web server go routine
 	fmt.Println("Starting Workload Service ...")
 	go func() {
-		tlsCert := consts.TLSCertPath
-		tlsKey := consts.TLSKeyPath
+		tlsCert := constants.TLSCertPath
+		tlsKey := constants.TLSKeyPath
 		fmt.Println("Workload Service Started")
 		if err := h.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			secLog.Errorf("server:startServer() %s", message.TLSConnectFailed)
