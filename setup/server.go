@@ -7,6 +7,7 @@ package setup
 import (
 	"flag"
 	"fmt"
+	commLog "intel/isecl/lib/common/log"
 	csetup "intel/isecl/lib/common/setup"
 	"intel/isecl/workload-service/config"
 
@@ -16,6 +17,9 @@ import (
 type Server struct {
 	Flags []string
 }
+
+var log = commLog.GetDefaultLogger()
+var seclog = commLog.GetSecurityLogger()
 
 // Run will configure the parameters for the WLS web service layer. This will be skipped if Validate() returns no errors
 func (ss Server) Run(c csetup.Context) error {

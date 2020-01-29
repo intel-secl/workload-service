@@ -72,7 +72,6 @@ func main() {
 			args[1] != "download_saml_ca_cert" &&
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
-			args[1] != "aasconnection" &&
 			args[1] != "all" {
 			fmt.Fprintln(os.Stderr, "Error: Unknown setup task ", args[1])
 			printUsage()
@@ -145,9 +144,6 @@ func main() {
 					Flags: flags,
 				},
 				setup.HVSConnection{
-					Flags: flags,
-				},
-				setup.AASConnection{
 					Flags: flags,
 				},
 				setup.Download_Saml_Ca_Cert{
@@ -348,7 +344,6 @@ func printUsage() {
 	fmt.Println("                        - Environment variable WLS_DB_USERNAME  : database user name")
 	fmt.Println("                        - Environment variable WLS_DB_PASSWORD  : database password")
 	fmt.Println("                        - Environment variable WLS_DB_SSLMODE  : database SSL Connection Mode")
-	
 	fmt.Println("                        - Environment variable WLS_DB_SSLCERT  : database SSL Certificate target path")
 	fmt.Printf("                        - Environment variable WLS_DB_SSLCERTSRC  : database SSL Certificate source path\n\n")
 	fmt.Printf("\n")
@@ -357,10 +352,6 @@ func printUsage() {
 	fmt.Printf("\t\t                     - Option [--force] overwrites existing HVS config\n")
 	fmt.Printf("                        - Environment variable HVS_URL=<url>      : HVS API Endpoint URL\n\n")
 	fmt.Printf("\n")
-
-	fmt.Println("    aasconnection       Get the JWT Signing Certs which may be used to validate JWT tokens")
-	fmt.Printf("\t\t                     - Option [--force] overwrites existing AAS config\n")
-	fmt.Printf("                        - Environment variable AAS_API_URL=<url>  : AAS API Endpoint URL\n\n")
 
 	fmt.Printf("\n")
 	fmt.Println("    download_saml_ca_cert   Setup to download SAML CA certificates from HVS")
