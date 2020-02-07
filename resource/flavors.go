@@ -15,7 +15,7 @@ import (
 	"intel/isecl/workload-service/repository"
 	"net/http"
 	"strconv"
-
+	"strings"
 	"github.com/gorilla/mux"
 )
 
@@ -79,10 +79,21 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 		flavor, err := db.FlavorRepository().RetrieveByLabel(label)
 		lblLog := log.WithField("label", label)
 		if err != nil {
-			lblLog.WithError(err).Errorf("resource/flavors:getFlavorByLabel() %s : Failed to retrieve Flavor by Label", message.AppRuntimeErr)
-			log.Tracef("%+v", err)
-			return &endpointError{Message: "Failed to retrieve flavor by label - backend error", StatusCode: http.StatusInternalServerError}
+			if strings.Contains(err.Error(), "record not found") {
+				lblLog.WithError(err).Errorf("resource/flavors:getFlavorByLabel() Failed to retrieve flavor by label %s", label)
+				log.Tracef("%+v", err)
+				log.Debug(err.Error())
+				return &endpointError{
+					Message:    "Failed to retrieve associated flavors - Failed to retrieve flavor by label",
+					StatusCode: http.StatusNotFound,
+				}
+			} else {
+				lblLog.WithError(err).Errorf("resource/flavors:getFlavorByLabel() %s : Failed to retrieve Flavor by Label", message.AppRuntimeErr)
+				log.Tracef("%+v", err)
+				return &endpointError{Message: "Failed to retrieve flavor by label - backend error", StatusCode: http.StatusInternalServerError}
+			}
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flavor); err != nil {
 			lblLog.WithField("flavor", flavor).WithError(err).Errorf("resource/flavors:getFlavorByLabel() %s : JSON Encode error", message.AppRuntimeErr)

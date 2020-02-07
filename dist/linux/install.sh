@@ -185,6 +185,7 @@ fi
 # exit workload-service setup if WLS_NOSETUP is set
 if [ $WLS_NOSETUP = "true" ]; then
   echo_info "WLS_NOSETUP is set. So, skipping the workload-service setup task."
+  echo_info "Execute 'workload-service setup' to run all the setup tasks that are required for workload-service to perform it's functions"
   exit 0
 fi
 
