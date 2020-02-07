@@ -33,7 +33,8 @@ func (dc Download_Saml_Ca_Cert) Run(c csetup.Context) error {
 	}
 
 	if dc.Validate(c) == nil && !*force {
-		log.Info("setup/download_saml_ca_cert:Run() SAML CA certificates are already downloaded by WLS...")
+		fmt.Println("setup/download_saml_ca_cert:Run() SAML CA certificates are already downloaded by WLS. Skipping setup task execution...")
+		log.Info("setup/download_saml_ca_cert:Run() SAML CA certificates are already downloaded by WLS. Skipping setup task execution...")
 		return nil
 	}
 	log.Info("setup/download_saml_ca_cert:Run() Downloading SAML CA certificates.")

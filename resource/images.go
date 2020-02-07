@@ -387,8 +387,8 @@ func getAllAssociatedFlavors(db repository.WlsDatabase) endpointHandler {
 		cLog := log.WithField("uuid", uuid)
 		flavors, err := db.ImageRepository().RetrieveAssociatedFlavors(uuid)
 		if err != nil {
-			if err.Error() == "record not found" {
-				cLog.Info("resource/images:getAllAssociatedFlavors() No Flavor found for Image")
+			if strings.Contains(err.Error(), "record not found") {
+				cLog.WithError(err).Errorf("resource/images:getAllAssociatedFlavors() %s : Failed to retrieve associated flavors for image", message.AppRuntimeErr)
 				log.Tracef("%+v", err)
 				log.Debug(err.Error())
 				return &endpointError{
@@ -447,11 +447,20 @@ func getAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 
 		flavor, err := db.ImageRepository().RetrieveAssociatedFlavor(imageUUID, flavorUUID)
 		if err != nil {
-			cLog.WithError(err).Errorf("resource/images:getAssociatedFlavor() %s : Failed to retrieve associated flavor for image", message.AppRuntimeErr)
-			log.Tracef("%+v", err)
-			return &endpointError{
-				Message:    "No flavor associated with given image UUID",
-				StatusCode: http.StatusNotFound,
+			if strings.Contains(err.Error(), "record not found") {
+				cLog.WithError(err).Errorf("resource/images:getAssociatedFlavor() %s : Failed to retrieve associated flavors for image", message.AppRuntimeErr)
+				log.Debug(err.Error())
+				return &endpointError{
+					Message:    "Failed to retrieve associated flavors - No flavor associated with given image UUID",
+					StatusCode: http.StatusNotFound,
+				}
+			} else {
+				cLog.WithError(err).Errorf("resource/images:getAssociatedFlavor() %s : Failed to retrieve associated flavors for image", message.AppRuntimeErr)
+				log.Tracef("%+v", err)
+				return &endpointError{
+					Message:    "Failed to retrieve associated flavors - backend error",
+					StatusCode: http.StatusInternalServerError,
+				}
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
