@@ -70,6 +70,8 @@ var Configuration struct {
 		User     string
 		Password string
 	}
+	TLSKeyFile        string
+	TLSCertFile       string
 	LogLevel          string
 	LogEnableStdout   bool
 	LogEntryMaxLength int
@@ -148,6 +150,20 @@ func SaveConfiguration(c setup.Context) error {
 	} else if strings.TrimSpace(Configuration.WLS.Password) == "" {
 		log.Error(message.InvalidInputProtocolViolation)
 		return errors.Wrap(err, "WLS_SERVICE_PASSWORD is not defined in environment or configuration file")
+	}
+
+	tlsKeyPath, err := c.GetenvString("KEY_PATH", "Path of file where TLS key needs to be stored")
+	if err == nil && tlsKeyPath != "" {
+		Configuration.TLSKeyFile = tlsKeyPath
+	} else if Configuration.TLSKeyFile == "" {
+		Configuration.TLSKeyFile = constants.DefaultTLSKeyPath
+	}
+
+	tlsCertPath, err := c.GetenvString("CERT_PATH", "Path of file/directory where TLS certificate needs to be stored")
+	if err == nil && tlsCertPath != "" {
+		Configuration.TLSCertFile = tlsCertPath
+	} else if Configuration.TLSCertFile == "" {
+		Configuration.TLSCertFile = constants.DefaultTLSCertPath
 	}
 
 	tlsCertCN, err := c.GetenvString(constants.WlsTLsCertCnEnv, "WLS TLS Certificate Common Name")

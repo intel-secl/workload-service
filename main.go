@@ -123,8 +123,8 @@ func main() {
 				},
 				csetup.Download_Cert{
 					Flags:              flags,
-					KeyFile:            constants.TLSKeyPath,
-					CertFile:           constants.TLSCertPath,
+					KeyFile:            config.Configuration.TLSKeyFile,
+					CertFile:           config.Configuration.TLSCertFile,
 					KeyAlgorithm:       constants.DefaultKeyAlgorithm,
 					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
 					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
@@ -167,6 +167,16 @@ func main() {
 			// all of them are likely to be found in /etc/workload-service/ path
 			if config.TakeOwnershipFileWLS(constants.ConfigDir) != nil {
 				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on WLS configuration files")
+				os.Exit(-1)
+			}
+
+			if config.TakeOwnershipFileWLS(config.Configuration.TLSKeyFile) != nil {
+				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Key file")
+				os.Exit(-1)
+			}
+
+			if config.TakeOwnershipFileWLS(config.Configuration.TLSCertFile) != nil {
+				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Cert file")
 				os.Exit(-1)
 			}
 		}
