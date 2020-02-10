@@ -149,8 +149,8 @@ func startServer() error {
 	// dispatch web server go routine
 	fmt.Println("Starting Workload Service ...")
 	go func() {
-		tlsCert := constants.TLSCertPath
-		tlsKey := constants.TLSKeyPath
+		tlsCert := config.Configuration.TLSCertFile
+		tlsKey := config.Configuration.TLSKeyFile
 		fmt.Println("Workload Service Started")
 		if err := h.ListenAndServeTLS(tlsCert, tlsKey); err != nil {
 			secLog.Errorf("server:startServer() %s", message.TLSConnectFailed)
