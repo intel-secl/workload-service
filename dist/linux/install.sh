@@ -98,11 +98,11 @@ done
 # change the ownership of the WLS_HOME path
 chown wls:wls $WORKLOAD_SERVICE_HOME
 
-mkdir -p /etc/workload-service/cacerts
-chown wls:wls /etc/workload-service/cacerts
+mkdir -p /etc/workload-service/certs/trustedca
+chown wls:wls /etc/workload-service/certs/trustedca
 
-mkdir -p /etc/workload-service/jwt
-chown wls:wls /etc/workload-service/jwt
+mkdir -p /etc/workload-service/certs/trustedjwt
+chown wls:wls /etc/workload-service/certs/trustedjwt
 
 # Create PID file directory in /var/run
 mkdir -p /var/run/workload-service

@@ -209,7 +209,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 		if err := dec.Decode(&f); err != nil {
 			log.WithError(err).Errorf("resource/flavors:createFlavor() %s :  Failed to encode request body as Flavor", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
-			return &endpointError{Message: "Failed to delete flavor", StatusCode: http.StatusBadRequest}
+			return &endpointError{Message: "Failed to create flavor", StatusCode: http.StatusBadRequest}
 		}
 
 		if f.ImageFlavor.Meta.Description.FlavorPart == "" ||

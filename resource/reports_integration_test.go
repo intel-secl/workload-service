@@ -113,13 +113,13 @@ func TestReportResource(t *testing.T) {
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?vm_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42&&latest_per_vm=false", nil)
+	req = httptest.NewRequest("GET", "/wls/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42&&latest_per_vm=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)

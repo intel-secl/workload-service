@@ -53,7 +53,7 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 	var reportEntities []reportEntity
 	var err error
 
-	vmID := ""
+	instanceID := ""
 	reportID := ""
 	hardwareUUID := ""
 	var toDate time.Time
@@ -61,8 +61,8 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 	latestPerVM := true
 	filterQuery := true
 
-	if len(filter.VMID) > 0 {
-		vmID = filter.VMID
+	if len(filter.InstanceID) > 0 {
+		instanceID = filter.InstanceID
 	}
 
 	if len(filter.ReportID) > 0 {
@@ -118,18 +118,18 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 		db.Find(&reportEntities)
 		return getReportModels(reportEntities)
 	}
-	return findReports(vmID, hardwareUUID, toDate, fromDate, latestPerVM, db)
+	return findReports(instanceID, hardwareUUID, toDate, fromDate, latestPerVM, db)
 }
 
-func findReports(vmID string, hardwareUUID string, toDate time.Time, fromDate time.Time, latestPerVM bool, db *gorm.DB) ([]model.Report, error) {
+func findReports(instanceID string, hardwareUUID string, toDate time.Time, fromDate time.Time, latestPerVM bool, db *gorm.DB) ([]model.Report, error) {
 	log.Trace("repository/postgres/report_repository:findReports() Entering")
 	defer log.Trace("repository/postgres/report_repository:findReports() Leaving")
 
 	var reportEntities []reportEntity
 	partialQueryString := ""
 
-	if vmID != "" {
-		partialQueryString = fmt.Sprintf("vm_id = '%s'", vmID)
+	if instanceID != "" {
+		partialQueryString = fmt.Sprintf("trust_report -> 'instance_manifest' -> 'instance_info' ->> 'instance_id' = '%s'", instanceID)
 	}
 
 	if hardwareUUID != "" {
@@ -187,7 +187,7 @@ func (repo reportRepo) Create(report *model.Report) error {
 		&reportEntity{
 			TrustReport: postgres.Jsonb{RawMessage: reportJSON},
 			SignedData:  postgres.Jsonb{RawMessage: signedJSON},
-			VMID:        report.Manifest.InstanceInfo.InstanceID,
+			InstanceID:  report.Manifest.InstanceInfo.InstanceID,
 		}).Error; err != nil {
 		return errors.Wrap(err, "repository/postgres/report_repository:Create() Failed to create instance trust report")
 	}

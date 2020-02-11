@@ -7,21 +7,22 @@ package postgres
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"intel/isecl/workload-service/model"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 type reportEntity struct {
 	ID        string    `gorm:"type:uuid;primary_key;"`
 	CreatedAt time.Time `sql:"type:timestamp"`
 	ExpiresOn time.Time `sql:"type:timestamp"`
-	// normalize VMID
-	VMID        string `gorm:"type:uuid;not null"`
+	// normalize InstanceID
+	InstanceID  string `gorm:"type:uuid;not null"`
 	Saml        string
 	TrustReport postgres.Jsonb `gorm:"type:jsonb;not null"`
 	SignedData  postgres.Jsonb `gorm:"type:jsonb;not null"`

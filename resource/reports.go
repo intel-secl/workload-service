@@ -7,15 +7,15 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"intel/isecl/workload-service/constants"
-	"net/http"
-	"strconv"
-	"intel/isecl/lib/common/log/message"
-	"intel/isecl/lib/common/validation"
-	"intel/isecl/workload-service/model"
-	"intel/isecl/workload-service/repository"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"intel/isecl/lib/common/log/message"
+	"intel/isecl/lib/common/validation"
+	"intel/isecl/workload-service/constants"
+	"intel/isecl/workload-service/model"
+	"intel/isecl/workload-service/repository"
+	"net/http"
+	"strconv"
 )
 
 // SetReportEndpoints
@@ -45,14 +45,14 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			return nil
 		}
 
-		vmID, ok := r.URL.Query()["vm_id"]
-		if ok && len(vmID[0]) >= 1 {
-			if err := validation.ValidateUUIDv4(vmID[0]); err != nil {
+		instanceID, ok := r.URL.Query()["instance_id"]
+		if ok && len(instanceID[0]) >= 1 {
+			if err := validation.ValidateUUIDv4(instanceID[0]); err != nil {
 				log.WithError(err).WithError(err).Errorf("resource/reports:getReport() %s : Invalid VM UUID format", message.InvalidInputProtocolViolation)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
-			filterCriteria.VMID = vmID[0]
-			cLog = log.WithField("VMUUID", vmID[0])
+			filterCriteria.InstanceID = instanceID[0]
+			cLog = log.WithField("Instance UUID", instanceID[0])
 		}
 
 		reportID, ok := r.URL.Query()["report_id"]
@@ -133,12 +133,12 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			}
 			filterCriteria.Filter = boolValue
 		}
-		cLog.Debugf("HWID: %s|ReportID: %s|VMID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %t", filterCriteria.HardwareUUID,
-			filterCriteria.ReportID, filterCriteria.VMID, filterCriteria.ToDate, filterCriteria.FromDate, filterCriteria.NumOfDays, filterCriteria.Filter, filterCriteria.LatestPerVM)
+		cLog.Debugf("HWID: %s|ReportID: %s|InstanceID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %t", filterCriteria.HardwareUUID,
+			filterCriteria.ReportID, filterCriteria.InstanceID, filterCriteria.ToDate, filterCriteria.FromDate, filterCriteria.NumOfDays, filterCriteria.Filter, filterCriteria.LatestPerVM)
 
-		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.VMID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
-			cLog.Errorf("resource/reports:getReport() %s : Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false\n", message.InvalidInputProtocolViolation)
-			return &endpointError{Message: "Invalid filter criteria. Allowed filter critierias are vm_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, nums_of_days and filter = false", StatusCode: http.StatusBadRequest}
+		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.InstanceID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
+			cLog.Errorf("resource/reports:getReport() %s : Invalid filter criteria. Allowed filter criteria are instance_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days >=1 and filter = false\n", message.InvalidInputProtocolViolation)
+			return &endpointError{Message: "Invalid filter criteria. Allowed filter criteria are instance_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days >=1 and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)

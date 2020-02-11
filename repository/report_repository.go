@@ -23,7 +23,7 @@ type ReportRepository interface {
 
 // ReportFilter struct defines all the filter criterias to query the reports table
 type ReportFilter struct {
-	VMID         string `json:"vm_id,omitempty"`
+	InstanceID         string `json:"instance_id,omitempty"`
 	ReportID     string `json:"report_id,omitempty"`
 	HardwareUUID string `json:"hardware_uuid,omitempty"`
 	LatestPerVM  bool   `json:"latest_per_vm,omitempty"`
