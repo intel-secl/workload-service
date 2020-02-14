@@ -178,7 +178,7 @@ func GetCaCerts(domain string) ([]byte, error) {
 	req.Header.Set("Accept", "application/x-pem-file")
 	req.Header.Set("Content-Type", "application/json")
 	var c csetup.Context
-	jwtToken, err := c.GetenvString(consts.BearerToken, "BEARER_TOKEN")
+	jwtToken, err := c.GetenvSecret(consts.BearerToken, "BEARER_TOKEN")
 	if jwtToken == "" || err != nil {
 		fmt.Fprintln(os.Stderr, "BEARER_TOKEN is not defined in environment")
 		return nil, errors.Wrap(err, "BEARER_TOKEN is not defined in environment")
