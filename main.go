@@ -170,14 +170,16 @@ func main() {
 				os.Exit(-1)
 			}
 
-			if config.TakeOwnershipFileWLS(config.Configuration.TLSKeyFile) != nil {
-				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Key file")
-				os.Exit(-1)
-			}
+			if args[1] == "download_cert" {
+				if config.TakeOwnershipFileWLS(config.Configuration.TLSKeyFile) != nil {
+					fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Key file")
+					os.Exit(-1)
+				}
 
-			if config.TakeOwnershipFileWLS(config.Configuration.TLSCertFile) != nil {
-				fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Cert file")
-				os.Exit(-1)
+				if config.TakeOwnershipFileWLS(config.Configuration.TLSCertFile) != nil {
+					fmt.Fprintln(os.Stderr, "Error: Failed to set permissions on TLS Cert file")
+					os.Exit(-1)
+				}
 			}
 		}
 
