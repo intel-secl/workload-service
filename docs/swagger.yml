@@ -55,7 +55,7 @@ paths:
                     label: Cirros-enc
                 encryption:
                   encryption_required: true
-                  key_url: 'http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer'
+                  key_url: 'http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer'
                   digest: 261209df1789073192285e4e408addadb35068421ef4890a5d4d434
                       
       responses:
@@ -670,7 +670,7 @@ components:
                 key_URL:
                   type: string
                   format: uri
-                  example: "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+                  example: "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
                 digest:
                   type: string
                 initialization_vector:

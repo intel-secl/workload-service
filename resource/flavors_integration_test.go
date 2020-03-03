@@ -39,7 +39,7 @@ import (
 // 		},
 // 		"encryption": {
 // 		  "encryption_required": true,
-// 		  "key_URL": "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+// 		  "key_URL": "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
 // 		}
 // 	  }
 // 	}
@@ -84,7 +84,7 @@ func TestFlavorResource(t *testing.T) {
 	}
 	r := setupFlavorServer(t)
 
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
@@ -128,7 +128,7 @@ func TestDuplicate(t *testing.T) {
 	}
 	r := setupFlavorServer(t)
 
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
@@ -171,11 +171,11 @@ func TestFlavorDuplicateLabel(t *testing.T) {
 	}
 	r := setupFlavorServer(t)
 
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
-	f2, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f2, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
 	checkErr(err)
@@ -232,7 +232,7 @@ func TestFlavorDeleteByLabel(t *testing.T) {
 	}
 	r := setupFlavorServer(t)
 
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
@@ -274,7 +274,7 @@ func TestGetByLabel(t *testing.T) {
 	}
 	r := setupFlavorServer(t)
 
-	f, err := flavor.GetImageFlavor("TestGetByLabel", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("TestGetByLabel", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)

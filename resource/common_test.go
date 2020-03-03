@@ -179,7 +179,7 @@ func badHVS(addr string) *http.Server {
 var saml = `<?xml version="1.0" encoding="UTF-8"?>
 <saml2:Assertion ID="MapAssertion" IssueInstant="2019-08-13T20:35:04.312Z" Version="2.0" 
     xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
-    <saml2:Issuer>https://10.105.168.102:8443</saml2:Issuer>
+    <saml2:Issuer>https://vs.server.com:8443</saml2:Issuer>
     <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
         <SignedInfo>
             <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments"/>

@@ -60,7 +60,7 @@ func TestReportResource(t *testing.T) {
 	currDir, _ := os.Getwd()
 	wlsDB.Migrate()
 	flavor, err := flavor.GetImageFlavor("Cirros-enc", true,
-		"https://10.105.168.160:9443/v1/keys/4377ae27-5b48-4301-9684-3a5f39123511/transfer", "Flt8imDt7sqtRAwcBAFzFxz8j0/E1xMulfEOYlu7FesUt/oief0AB4G0gbYaRM6x")
+		"https://kbs.server.com:9443/v1/keys/4377ae27-5b48-4301-9684-3a5f39123511/transfer", "Flt8imDt7sqtRAwcBAFzFxz8j0/E1xMulfEOYlu7FesUt/oief0AB4G0gbYaRM6x")
 	flavorJSON, err := json.Marshal(flavor)
 
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(flavorJSON), "../repository/mock/flavor-signing-key.pem")

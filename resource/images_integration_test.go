@@ -34,13 +34,13 @@ func TestImagesResourceIntegration(t *testing.T) {
 	}
 	r := setupServer(t)
 	// First Create a Flavor, and store it in DB
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
 
-	// Free standing falvor that wont be associated with any images
-	f2, err := flavor.GetImageFlavor("Bad-guy", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	// Free standing flavor that wont be associated with any images
+	f2, err := flavor.GetImageFlavor("Bad-guy", true, "http://kbs.server.com:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
 	checkErr(err)
@@ -235,13 +235,13 @@ func TestImageAssociatedFlavors(t *testing.T) {
 	}
 	r := setupServer(t)
 	// First Create a Flavor, and store it in DB
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	checkErr(err)
 
 	// Free standing falvor that wont be associated with any images
-	f2, err := flavor.GetImageFlavor("PretendSoftwareFlavor", true, "http://10.1.68.21:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f2, err := flavor.GetImageFlavor("PretendSoftwareFlavor", true, "http://kbs.server.com:20080/v1/keys/83755fdb-c910-46be-821f-e8ddeab189e8/transfer", "2260f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	f2.Image.Meta.Description.FlavorPart = "IMAGE"
 	checkErr(err)
 	f2JSON, err := json.Marshal(f2)
@@ -379,7 +379,7 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 	}
 	r := setupServer(t)
 	// First Create a Flavor, and store it in DB
-	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
+	f, err := flavor.GetImageFlavor("Cirros-enc", true, "http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer", "1160f92d07a3e9bf2633c49bfc2654428c517ee5a648d715bf984c83f266a4fd")
 	checkErr(err)
 	fJSON, err := json.Marshal(f)
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")

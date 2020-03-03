@@ -65,10 +65,9 @@ WLS_SERVICE_USERNAME   | String         | Yes                         | -       
 WLS_SERVICE_PASSWORD   | String         | Yes                         | -                                      | Password for AAS user account assigned to WLS                                    | wlsAdminPassword
 WLS_TLS_CERT_CN        | String         | No                          | WLS TLS Certificate                    | Common Name in WLS TLS Certificate                                               | Acme Inc Enterprise Workload Service Instance
 WLS_NOSETUP            | boolean        | No                          | WLS No Setup Flag                      | If set to "true" the setup tasks are skipped, else the setup tasks are skipped   | true/false
-SAN_LIST               | CSV of strings | No                          | 127.0.0.1,localhost                    | List of FQDNs to be added on Cert Request to CMS                                 | wls.example.com,workloadserivce.example.com,10.12.34.56
+SAN_LIST               | CSV of strings | No                          | 127.0.0.1,localhost                    | List of FQDNs to be added on Cert Request to CMS                                 | wls.example.com,workloadserivce.example.com
 CERT_PATH              | String         | No                          | /etc/workload-service/tls-cert.pem     | Filesystem path where the CA certificates will be downloaded from CMS            |
 KEY_PATH               | String         | no                          | /etc/workload-service/tls.key          | Filesystem path where the SAML verification key from HVS will be stored          |
-SAN_LIST               | CSV of strings | No                          | 127.0.0.1,localhost                    | List of FQDNs to be added on Cert Request to CMS                                 | wls.example.com,workloadserivce.example.com,10.12.34.56
 
 ## Manage service
 

@@ -34,7 +34,7 @@ func TestFlavorKeyDeserialize(t *testing.T) {
 		  },
 		  "encryption": {
 			"encryption_required": true,
-			"key_url": "https://10.1.68.68:443/v1/keys/ecee021e-9669-4e53-9224-8880fb4e4080/transfer",
+			"key_url": "https://kbs.server.com:443/v1/keys/ecee021e-9669-4e53-9224-8880fb4e4080/transfer",
 			"digest": "C6CR+CsFIqfxEgkoe4hWVQyBwJ71amh1TwVQBo4TWa0="
 		  }
 		},

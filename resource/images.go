@@ -152,7 +152,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		// Check if flavor keyURL is not empty
 		if len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
 			// we have key URL
-			// http://10.1.68.21:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
+			// http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
 			// post HVS with hardwareUUID
 			// extract key_id from KeyURL
 			cLog = cLog.WithField("keyURL", flavor.ImageFlavor.Encryption.KeyURL)
