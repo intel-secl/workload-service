@@ -18,16 +18,16 @@ require (
 	intel/isecl/lib/verifier v1.0.0
 )
 
-replace intel/isecl/lib/flavor => github.com/intel-secl/flavor v2.0
+replace intel/isecl/lib/flavor => github.com/intel-secl/flavor v2.0.0
 
-replace intel/isecl/lib/common => github.com/intel-secl/common v2.0
+replace intel/isecl/lib/common => github.com/intel-secl/common v2.0.0
 
-replace intel/isecl/lib/verifier => github.com/intel-secl/verifier v2.0
+replace intel/isecl/lib/verifier => github.com/intel-secl/verifier v2.0.0
 
-replace intel/isecl/lib/kms-client => github.com/intel-secl/kms-client v2.0
+replace intel/isecl/lib/kms-client => github.com/intel-secl/kms-client v2.0.0
 
-replace intel/isecl/cms => github.com/sst/isecl/certificate-management-service v2.0
+replace intel/isecl/cms => github.com/sst/isecl/certificate-management-service v2.0.0
 
-replace intel/isecl/lib/clients => github.com/intel-secl/clients v2.0
+replace intel/isecl/lib/clients => github.com/intel-secl/clients v2.0.0
 
-replace intel/isecl/lib/mtwilson-client => github.com/intel-secl/mtwilson-client v2.0
+replace intel/isecl/lib/mtwilson-client => github.com/intel-secl/mtwilson-client v2.0.0
