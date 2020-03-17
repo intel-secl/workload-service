@@ -101,6 +101,8 @@ func startServer() error {
 	wlsDB.Migrate()
 
 	r := mux.NewRouter()
+	// ISECL-8715 - Prevent potential open redirects to external URLs
+	r.SkipClean(true)
 	noauthr := r.PathPrefix("/wls/noauth/").Subrouter()
 	authr := r.PathPrefix("/wls/").Subrouter()
 
