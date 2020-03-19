@@ -150,7 +150,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 			}
 		}
 		// Check if flavor keyURL is not empty
-		if len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
+		if flavor.ImageFlavor.EncryptionRequired && len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
 			// we have key URL
 			// http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
 			// post HVS with hardwareUUID
