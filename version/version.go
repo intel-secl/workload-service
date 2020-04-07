@@ -12,11 +12,5 @@ var Version = ""
 // GitHash holds the commit hash for the WLS binary
 var GitHash = ""
 
-// Time holds the build timestamp for the WLS binary
-var Time string = ""
-
-// Branch holds the git build branch for the WLS binary
-var Branch string = ""
-
-// GitCommitDate holds the git commit date for the WLS binary
-var GitCommitDate string = ""
+// BuildDate holds the build timestamp for the WLS binary
+var BuildDate = ""

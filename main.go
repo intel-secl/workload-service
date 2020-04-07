@@ -415,5 +415,5 @@ func printUsage() {
 }
 
 func printVersion() {
-	fmt.Printf("Workload Service Version %s\nBuild %s at %s - %s\n", version.Version, version.Branch, version.Time, version.GitHash)
+	fmt.Printf("Workload Service %s-%s\nBuilt %s\n", version.Version, version.GitHash, version.BuildDate)
 }
