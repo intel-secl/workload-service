@@ -6,13 +6,13 @@ package vsclient
 
 import (
 	"bytes"
-	"intel/isecl/lib/clients"
-	"intel/isecl/lib/clients/aas"
-	commLog "intel/isecl/lib/common/log"
-	csetup "intel/isecl/lib/common/setup"
-	"intel/isecl/lib/common/validation"
-	config "intel/isecl/workload-service/config"
-	consts "intel/isecl/workload-service/constants"
+	"intel/isecl/lib/clients/v2"
+	"intel/isecl/lib/clients/v2/aas"
+	commLog "intel/isecl/lib/common/v2/log"
+	csetup "intel/isecl/lib/common/v2/setup"
+	"intel/isecl/lib/common/v2/validation"
+	config "intel/isecl/workload-service/v2/config"
+	consts "intel/isecl/workload-service/v2/constants"
 	"io/ioutil"
 	"os"
 

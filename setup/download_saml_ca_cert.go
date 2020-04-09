@@ -5,9 +5,9 @@
 package setup
 
 import (
-	csetup "intel/isecl/lib/common/setup"
-	"intel/isecl/workload-service/constants"
-	"intel/isecl/workload-service/vsclient"
+	csetup "intel/isecl/lib/common/v2/setup"
+	"intel/isecl/workload-service/v2/constants"
+	"intel/isecl/workload-service/v2/vsclient"
 	"os"
 	"io/ioutil"
 	"github.com/pkg/errors"

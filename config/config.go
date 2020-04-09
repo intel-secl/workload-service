@@ -6,12 +6,12 @@ package config
 
 import (
 	"fmt"
-	commLog "intel/isecl/lib/common/log"
-	"intel/isecl/lib/common/log/message"
-	commLogInt "intel/isecl/lib/common/log/setup"
-	cos "intel/isecl/lib/common/os"
-	"intel/isecl/lib/common/setup"
-	"intel/isecl/workload-service/constants"
+	commLog "intel/isecl/lib/common/v2/log"
+	"intel/isecl/lib/common/v2/log/message"
+	commLogInt "intel/isecl/lib/common/v2/log/setup"
+	cos "intel/isecl/lib/common/v2/os"
+	"intel/isecl/lib/common/v2/setup"
+	"intel/isecl/workload-service/v2/constants"
 	"io"
 	"os"
 	"os/user"

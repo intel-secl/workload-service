@@ -4,7 +4,7 @@
  */
 package model
 
-import "intel/isecl/lib/flavor"
+import "intel/isecl/lib/flavor/v2"
 
 // FlavorKey is the output for the RPC call to /images/{id}/flavor-key
 type FlavorKey struct {

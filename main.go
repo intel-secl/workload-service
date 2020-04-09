@@ -7,20 +7,20 @@ package main
 import (
 	"crypto/x509/pkix"
 	"fmt"
-	commLog "intel/isecl/lib/common/log"
-	csetup "intel/isecl/lib/common/setup"
-	"intel/isecl/lib/common/validation"
-	"intel/isecl/workload-service/config"
-	"intel/isecl/workload-service/constants"
-	"intel/isecl/workload-service/setup"
-	"intel/isecl/workload-service/version"
+	commLog "intel/isecl/lib/common/v2/log"
+	csetup "intel/isecl/lib/common/v2/setup"
+	"intel/isecl/lib/common/v2/validation"
+	"intel/isecl/workload-service/v2/config"
+	"intel/isecl/workload-service/v2/constants"
+	"intel/isecl/workload-service/v2/setup"
+	"intel/isecl/workload-service/v2/version"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 
 	// Import Postgres driver
-	e "intel/isecl/lib/common/exec"
+	e "intel/isecl/lib/common/v2/exec"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )

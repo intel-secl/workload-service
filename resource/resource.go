@@ -6,13 +6,13 @@ package resource
 
 import (
 	"fmt"
-	"intel/isecl/lib/common/auth"
-	"intel/isecl/lib/common/context"
-	commLog "intel/isecl/lib/common/log"
-	"intel/isecl/lib/common/log/message"
-	ct "intel/isecl/lib/common/types/aas"
-	consts "intel/isecl/workload-service/constants"
-	"intel/isecl/workload-service/repository"
+	"intel/isecl/lib/common/v2/auth"
+	"intel/isecl/lib/common/v2/context"
+	commLog "intel/isecl/lib/common/v2/log"
+	"intel/isecl/lib/common/v2/log/message"
+	ct "intel/isecl/lib/common/v2/types/aas"
+	consts "intel/isecl/workload-service/v2/constants"
+	"intel/isecl/workload-service/v2/repository"
 
 	"github.com/pkg/errors"
 
