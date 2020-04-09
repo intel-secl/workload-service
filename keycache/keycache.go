@@ -5,7 +5,7 @@
 package keycache
 
 import (
-	commLog "intel/isecl/lib/common/log"
+	commLog "intel/isecl/lib/common/v2/log"
 	"sync"
 	"time"
 )

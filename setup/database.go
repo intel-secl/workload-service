@@ -7,15 +7,15 @@ package setup
 import (
 	"flag"
 	"fmt"
-	cos "intel/isecl/lib/common/os"
-	csetup "intel/isecl/lib/common/setup"
-	"intel/isecl/lib/common/validation"
-	"intel/isecl/workload-service/config"
-	"intel/isecl/workload-service/constants"
+	cos "intel/isecl/lib/common/v2/os"
+	csetup "intel/isecl/lib/common/v2/setup"
+	"intel/isecl/lib/common/v2/validation"
+	"intel/isecl/workload-service/v2/config"
+	"intel/isecl/workload-service/v2/constants"
 	"os"
 	"strings"
 
-	"intel/isecl/workload-service/repository/postgres"
+	"intel/isecl/workload-service/v2/repository/postgres"
 
 	"github.com/pkg/errors"
 )

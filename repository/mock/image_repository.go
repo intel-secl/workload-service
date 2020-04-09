@@ -5,9 +5,9 @@
 package mock
 
 import (
-	flvr "intel/isecl/lib/flavor"
-	"intel/isecl/workload-service/model"
-	"intel/isecl/workload-service/repository"
+	flvr "intel/isecl/lib/flavor/v2"
+	"intel/isecl/workload-service/v2/model"
+	"intel/isecl/workload-service/v2/repository"
 )
 
 type MockImage struct {

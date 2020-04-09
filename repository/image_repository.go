@@ -6,8 +6,8 @@ package repository
 
 import (
 	"errors"
-	flvr "intel/isecl/lib/flavor"
-	"intel/isecl/workload-service/model"
+	flvr "intel/isecl/lib/flavor/v2"
+	"intel/isecl/workload-service/v2/model"
 )
 
 var (

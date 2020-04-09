@@ -7,8 +7,8 @@ package model
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	commLog "intel/isecl/lib/common/log"
-	"intel/isecl/lib/flavor"
+	commLog "intel/isecl/lib/common/v2/log"
+	"intel/isecl/lib/flavor/v2"
 	"testing"
 )
 
