@@ -7,7 +7,7 @@ BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 .PHONY: workload-service installer docker all clean
 
 workload-service:
-	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/version.Version=$(VERSION) -X intel/isecl/workload-service/version.GitHash=$(GITCOMMIT)" -o out/workload-service
+	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/v2/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/v2/version.Version=$(VERSION) -X intel/isecl/workload-service/v2/version.GitHash=$(GITCOMMIT)" -o out/workload-service
 
 installer: workload-service
 	mkdir -p out/wls
