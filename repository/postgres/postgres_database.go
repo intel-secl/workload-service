@@ -67,7 +67,7 @@ func Open(host string, port int, dbname, user, password, sslMode, sslCert string
 	defer log.Trace("repository/postgres/postgres_database:Open() Leaving")
 
 	sslMode = strings.TrimSpace(strings.ToLower(sslMode))
-	if sslMode != "disable" && sslMode != "allow" && sslMode != "prefer" && sslMode != "verify-ca" && sslMode != "verify-full" {
+	if sslMode != "allow" && sslMode != "prefer" && sslMode != "verify-ca" && sslMode != "verify-full" {
 		sslMode = "require"
 	}
 
