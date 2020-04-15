@@ -18,6 +18,17 @@ type imageRepo struct {
 	db *gorm.DB
 }
 
+func getImageModels(imageEntities []imageEntity) ([]model.Image, error) {
+	log.Trace("repository/postgres/image_repository:getImageModels() Entering")
+	defer log.Trace("repository/postgres/image_repository:getImageModels() Leaving")
+
+	ids := make([]model.Image, len(imageEntities))
+	for i, v := range imageEntities {
+		ids[i] = v.Image()
+	}
+	return ids, nil
+}
+
 func (repo imageRepo) RetrieveByFilterCriteria(filter repository.ImageFilter) ([]model.Image, error) {
 	log.Trace("repository/postgres/image_repository:RetrieveByFilterCriteria() Entering")
 	defer log.Trace("repository/postgres/image_repository:RetrieveByFilterCriteria() Leaving")
@@ -25,39 +36,37 @@ func (repo imageRepo) RetrieveByFilterCriteria(filter repository.ImageFilter) ([
 	log.Debug("repository/postgres/image_repository:RetrieveByFilterCriteria() Retrieve image by filter criteria")
 	db := repo.db
 	var entities []imageEntity
-	var err error
+
+	//Only fetch the image since imageid is unique across the table
+	if len(filter.ImageID) > 0 {
+		db.Where("id = ?", filter.ImageID).Preload("Flavors").Find(&entities)
+		return getImageModels(entities)
+	}
+
+	// fetch all the images if filter=false
+	if !filter.Filter {
+		db.Preload("Flavors").Find(&entities)
+		return getImageModels(entities)
+	}
 
 	// handling for options
-	// - neither image_id or flavor_id are provided-> no sql filter to return all records
-	// - only image_id is provided --> filter on image_id
 	// - only flavor_id is provided --> filter on flavor_id
 	// - both image_id and flavor_id are provided --> filter on both
 	//
-	// When image_id or flavor_id is provided, apply a single 'like' query to account for
-	// the last three possibilities (otherwise pass through to 'select *')
-	if len(filter.ImageID) > 0 || len(filter.FlavorID) > 0 {
+	// When flavor_id is provided, apply a single 'like' query to account for
+	// the above two possibilities
+	if len(filter.FlavorID) > 0 {
 
 		if len(filter.ImageID) == 0 {
 			filter.ImageID = "%"
 		}
 
-		if len(filter.FlavorID) == 0 {
-			filter.FlavorID = "%"
-		}
-
 		db = db.Joins("LEFT JOIN image_flavors ON (image_flavors.image_id = images.id)").Where("flavor_id::text like ? and image_id::text like ?", filter.FlavorID, filter.ImageID)
+		db.Preload("Flavors").Find(&entities)
+		return getImageModels(entities)
 	}
 
-	err = db.Preload("Flavors").Find(&entities).Error
-	if err != nil {
-		return nil, errors.Wrap(err, "repository/postgres/image_repository:RetrieveByFilterCriteria() Failed to retrieve image by filter criteria")
-	}
-
-	images := make([]model.Image, len(entities))
-	for i, v := range entities {
-		images[i] = v.Image()
-	}
-	return images, nil
+	return nil, errors.New("repository/postgres/image_repository:RetrieveByFilterCriteria() Failed to retrieve image by filter criteria")
 }
 
 func (repo imageRepo) Create(image *model.Image) error {

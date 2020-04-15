@@ -41,7 +41,6 @@ func getReportModels(reportEntities []reportEntity) ([]model.Report, error) {
 	for i, v := range reportEntities {
 		ids[i] = v.Report()
 	}
-	fmt.Println(len(ids))
 	return ids, nil
 }
 
