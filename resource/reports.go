@@ -101,15 +101,14 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 
 		latestPerVM, ok := r.URL.Query()["latest_per_vm"]
 		if ok && len(latestPerVM[0]) >= 1 {
-			boolValue, err := strconv.ParseBool(latestPerVM[0])
+			_, err := strconv.ParseBool(latestPerVM[0])
 			if err != nil {
 				cLog.WithError(err).Errorf("resource/reports:getReport() %s : Invalid latest_per_vm boolean value, must be true or false", message.InvalidInputProtocolViolation)
 				log.Tracef("%+v", err)
 				return &endpointError{Message: "Failed to retrieve report", StatusCode: http.StatusBadRequest}
 			}
-			filterCriteria.LatestPerVM = boolValue
-		} else {
-			filterCriteria.LatestPerVM = false
+			filterCriteria.LatestPerVM = latestPerVM[0]
+			cLog = cLog.WithField("LatestPerVM", latestPerVM[0])
 		}
 
 		numOfDays, ok := r.URL.Query()["num_of_days"]
@@ -133,12 +132,12 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			}
 			filterCriteria.Filter = boolValue
 		}
-		cLog.Debugf("HWID: %s|ReportID: %s|InstanceID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %t", filterCriteria.HardwareUUID,
+		cLog.Debugf("HWID: %s|ReportID: %s|InstanceID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %s", filterCriteria.HardwareUUID,
 			filterCriteria.ReportID, filterCriteria.InstanceID, filterCriteria.ToDate, filterCriteria.FromDate, filterCriteria.NumOfDays, filterCriteria.Filter, filterCriteria.LatestPerVM)
 
-		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.InstanceID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
+		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.InstanceID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.LatestPerVM == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
 			cLog.Errorf("resource/reports:getReport() %s : Invalid filter criteria. Allowed filter criteria are instance_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days >=1 and filter = false\n", message.InvalidInputProtocolViolation)
-			return &endpointError{Message: "Invalid filter criteria. Allowed filter criteria are instance_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days >=1 and filter = false", StatusCode: http.StatusBadRequest}
+			return &endpointError{Message: "Failed to retrieve reports - Invalid filter criteria. Allowed filter criteria are instance_id, report_id, hardware_uuid, from_date, to_date, latest_per_vm, num_of_days >=1 and filter = false", StatusCode: http.StatusBadRequest}
 		}
 
 		reports, err := db.ReportRepository().RetrieveByFilterCriteria(filterCriteria)
