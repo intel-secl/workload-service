@@ -628,9 +628,9 @@ func queryImages(db repository.WlsDatabase) endpointHandler {
 		}
 
 		if locator.FlavorID == "" && locator.ImageID == "" && locator.Filter {
-			cLog.Errorf("resource/images:queryImages() %s : Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false", message.InvalidInputBadParam)
+			cLog.Errorf("resource/images:queryImages() %s : Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false\n", message.InvalidInputBadParam)
 			return &endpointError{
-				Message:    "Failed to retrieve image - Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter",
+				Message:    "Failed to retrieve image - Invalid filter criteria. Allowed filter critierias are image_id, flavor_id and filter = false",
 				StatusCode: http.StatusBadRequest,
 			}
 		}

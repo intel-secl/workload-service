@@ -107,7 +107,7 @@ func startServer() error {
 	authr := r.PathPrefix("/wls/").Subrouter()
 
 	// Setup Version Endpoint
-	resource.SetVersionEndpoints(noauthr.PathPrefix("/version").Subrouter())
+	resource.SetVersionEndpoints(noauthr)
 
 	authr.Use(middleware.NewTokenAuth(constants.TrustedJWTSigningCertsDir, constants.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
 	// Set Resource Endpoints

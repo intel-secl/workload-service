@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"intel/isecl/workload-service/v2/model"
 	"intel/isecl/workload-service/v2/repository"
+	"strconv"
 	"time"
 )
 
@@ -98,8 +99,8 @@ func (repo reportRepo) RetrieveByFilterCriteria(filter repository.ReportFilter) 
 		}
 	}
 
-	if !filter.LatestPerVM {
-		latestPerVM = filter.LatestPerVM
+	if len(filter.LatestPerVM) > 0 {
+		latestPerVM, _ = strconv.ParseBool(filter.LatestPerVM)
 	}
 
 	if !filter.Filter {
