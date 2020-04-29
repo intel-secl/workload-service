@@ -213,7 +213,7 @@ func TestImageDuplicate(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
-	assert.Equal(http.StatusConflict, recorder.Code)
+	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Delete it
 	recorder = httptest.NewRecorder()

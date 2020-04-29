@@ -8,9 +8,7 @@ import (
 	flvr "intel/isecl/lib/flavor/v2"
 	"intel/isecl/workload-service/v2/model"
 	"intel/isecl/workload-service/v2/repository"
-
 	"github.com/pkg/errors"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -75,10 +73,21 @@ func (repo imageRepo) Create(image *model.Image) error {
 
 	tx := repo.db.Begin()
 	ie := imageEntity{ID: image.ID}
-	if !tx.Take(&ie).RecordNotFound() {
-		// already exists
+	err := tx.Preload("Flavors").Find(&ie, "id in (?)", image.ID).Error
+	if !gorm.IsRecordNotFoundError(err) && len(ie.Image().FlavorIDs) >= 1 {
+		//alreadyexists
 		tx.Rollback()
 		return repository.ErrImageAssociationAlreadyExists
+
+	} else if !gorm.IsRecordNotFoundError(err) && len(ie.Image().FlavorIDs) == 0 {
+		// if image record exists but no flavor is associated with it, record has to be updated
+		for _, fid := range image.FlavorIDs  {
+			updateErr :=  repo.AddAssociatedFlavor(image.ID, fid)
+			if updateErr != nil {
+				return updateErr
+			}
+		}
+		return nil
 	}
 
 	// make sure there are no duplicates by actually going through the ids
@@ -110,7 +119,7 @@ func (repo imageRepo) Create(image *model.Image) error {
 		}
 	}
 	ie.Flavors = flavorEntities
-	err := tx.Create(&ie).Error
+	err = tx.Create(&ie).Error
 	if err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "repository/postgres/image_repository:Create() Failed to create image")
