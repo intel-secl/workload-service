@@ -21,6 +21,18 @@ docker: installer
 	docker build --build-arg http_proxy=http://proxy-us.intel.com:911 --build-arg https_proxy=http://proxy-us.intel.com:911 -t isecl/workload-service:latest -f ./dist/docker/Dockerfile ./out
 	docker save isecl/workload-service:latest > ./out/docker-wls-$(VERSION).tar 
 
+swagger-get:
+	wget https://github.com/go-swagger/go-swagger/releases/download/v0.21.0/swagger_linux_amd64 -O /usr/local/bin/swagger
+	chmod +x /usr/local/bin/swagger
+	wget https://repo1.maven.org/maven2/io/swagger/codegen/v3/swagger-codegen-cli/3.0.16/swagger-codegen-cli-3.0.16.jar -O /usr/local/bin/swagger-codegen-cli.jar
+
+swagger-doc:
+	mkdir -p out/swagger
+	/usr/local/bin/swagger generate spec -o ./out/swagger/openapi.yml --scan-models
+	java -jar /usr/local/bin/swagger-codegen-cli.jar generate -i ./out/swagger/openapi.yml -o ./out/swagger/ -l html2 -t ./swagger/templates/
+
+swagger: swagger-get swagger-doc
+
 all: clean installer
 
 clean:

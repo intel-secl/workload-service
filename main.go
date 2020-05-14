@@ -23,6 +23,7 @@ import (
 	e "intel/isecl/lib/common/v2/exec"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "intel/isecl/workload-service/v2/swagger/docs"
 )
 
 var log = commLog.GetDefaultLogger()
