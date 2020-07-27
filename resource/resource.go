@@ -55,6 +55,7 @@ func (e endpointError) Error() string {
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
+// Gets permission information for an endpoint handler
 func requiresPermission(eh endpointHandler, permissionNames []string) endpointHandler {
 	log.Trace("resource/resource:requiresPermission() Entering")
 	defer log.Trace("resource/resource:requiresPermission() Leaving")

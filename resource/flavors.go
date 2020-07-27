@@ -19,7 +19,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// SetFlavorsEndpoints
+// SetFlavorsEndpoints sets endpoints for /flavors
 func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	log.Trace("resource/flavors:SetFlavorsEndpoints() Entering")
 	defer log.Trace("resource/flavors:SetFlavorsEndpoints() Leaving")
@@ -33,6 +33,8 @@ func SetFlavorsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{badid}", badId).Methods("DELETE")
 }
 
+// Gets flavor corresponding to a VM or container image UUID
+// UUID must be in UUIDv4 format
 func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:getFlavorByID() Entering")
 	defer log.Trace("resource/flavors:getFlavorByID() Leaving")
@@ -64,6 +66,7 @@ func getFlavorByID(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+// Gets flavor corresponding to a label (name)
 func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:getFlavorByLabel() Entering")
 	defer log.Trace("resource/flavors:getFlavorByLabel() Leaving")
@@ -105,10 +108,11 @@ func getFlavorByLabel(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+// Gets all flavors from the WLS
 func getFlavors(db repository.WlsDatabase) endpointHandler {
+	log.Trace("resource/flavors:getFlavors() Entering")
+	defer log.Trace("resource/flavors:getFlavors() Leaving")
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log.Trace("resource/flavors:getFlavors() Entering")
-		defer log.Trace("resource/flavors:getFlavors() Leaving")
 		var fLog = log
 		filterCriteria := repository.FlavorFilter{}
 		flavorID, ok := r.URL.Query()["id"]
@@ -169,6 +173,8 @@ func getFlavors(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+// Delete flavor corresponding to a VM or container image UUID
+// UUID must be in UUIDv4 format
 func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:deleteFlavorByID() Entering")
 	defer log.Trace("resource/flavors:deleteFlavorByID() Leaving")
@@ -198,10 +204,10 @@ func deleteFlavorByID(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+// Creates flavor for an image
 func createFlavor(db repository.WlsDatabase) endpointHandler {
 	log.Trace("resource/flavors:createFlavor() Entering")
 	defer log.Trace("resource/flavors:createFlavor() Leaving")
-
 	return func(w http.ResponseWriter, r *http.Request) error {
 		var f flvr.SignedImageFlavor
 		dec := json.NewDecoder(r.Body)
@@ -225,7 +231,8 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
 		}
 
-		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, // but at least it provides some validation of the input
+		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, 
+		// but at least it provides some validation of the input
 		fr := db.FlavorRepository()
 
 		// Performance Related:
