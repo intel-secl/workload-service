@@ -106,16 +106,18 @@ func startServer() error {
 	noauthr := r.PathPrefix("/wls/noauth/").Subrouter()
 	authr := r.PathPrefix("/wls/").Subrouter()
 
-	// Setup Version Endpoint
+	// Set Version Endpoint
 	resource.SetVersionEndpoints(noauthr)
 
 	authr.Use(middleware.NewTokenAuth(constants.TrustedJWTSigningCertsDir, constants.TrustedCaCertsDir, fnGetJwtCerts, cacheTime))
 	// Set Resource Endpoints
 	resource.SetFlavorsEndpoints(authr.PathPrefix("/flavors").Subrouter(), wlsDB)
-	// Setup Report Endpoints
+	// Set Report Endpoints
 	resource.SetReportsEndpoints(authr.PathPrefix("/reports").Subrouter(), wlsDB)
-	// Setup Images Endpoints
+	// Set Images Endpoints
 	resource.SetImagesEndpoints(authr.PathPrefix("/images").Subrouter(), wlsDB)
+	// Set Key Endpoints
+	resource.SetKeysEndpoints(authr.PathPrefix("/keys").Subrouter(), wlsDB)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)

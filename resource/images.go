@@ -5,33 +5,28 @@
 package resource
 
 import (
-	"encoding/json"
-	"encoding/xml"
-	"encoding/pem"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"encoding/xml"
 	"fmt"
-	"intel/isecl/lib/clients/v2"
+	"intel/isecl/lib/common/v2/crypt"
 	"intel/isecl/lib/common/v2/log/message"
 	"intel/isecl/lib/common/v2/validation"
-	kms "intel/isecl/lib/kms-client/v2"
+	"intel/isecl/workload-service/v2/constants"
 	consts "intel/isecl/workload-service/v2/constants"
 	"intel/isecl/workload-service/v2/keycache"
 	"intel/isecl/workload-service/v2/model"
 	"intel/isecl/workload-service/v2/repository"
-	"intel/isecl/workload-service/v2/vsclient"
-	"intel/isecl/workload-service/v2/constants"
-	cos "intel/isecl/lib/common/v2/os"
-	"intel/isecl/lib/common/v2/crypt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"crypto/x509"
 )
 
 // Saml is used to represent saml report struct
@@ -43,9 +38,9 @@ type Saml struct {
 }
 
 type Subject struct {
-	XMLName        xml.Name  `xml:"SubjectConfirmationData"`
-	NotBefore      time.Time `xml:"NotBefore,attr"`
-	NotOnOrAfter   time.Time `xml:"NotOnOrAfter,attr"`
+	XMLName      xml.Name  `xml:"SubjectConfirmationData"`
+	NotBefore    time.Time `xml:"NotBefore,attr"`
+	NotOnOrAfter time.Time `xml:"NotOnOrAfter,attr"`
 }
 
 type Attribute struct {
@@ -85,6 +80,7 @@ func SetImagesEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{badid}", badId)
 }
 
+// Logs error if a UUID is not in UUIDv4 format
 func badId(w http.ResponseWriter, r *http.Request) {
 	log.Trace("resource/images:badId() Entering")
 	defer log.Trace("resource/images:badId() Leaving")
@@ -95,6 +91,7 @@ func badId(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("%s is not uuidv4 compliant", badid)))
 }
 
+// Logs error if a query is missing one or more parameters
 func missingQueryParameters(params ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Trace("resource/images:missingQueryParameters() Entering")
@@ -105,6 +102,7 @@ func missingQueryParameters(params ...string) http.HandlerFunc {
 	}
 }
 
+// Retrieves the flavor and key corresponding to a image UUID
 func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log.Trace("resource/images:retrieveFlavorAndKeyForImageID() Entering")
@@ -132,14 +130,6 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		}
 		cLog := log.WithField("imageUUID", id).WithField("hardwareUUID", hwid)
 
-		// TODO: Potential dupe check. Shouldn't this be validated by the ValidateHardwareUUID call above?
-		if hwid == "" {
-			cLog.Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Missing required parameter hardware_uuid", message.InvalidInputBadParam)
-			return &endpointError{
-				Message:    "Query parameter 'hardware_uuid' cannot be nil",
-				StatusCode: http.StatusBadRequest,
-			}
-		}
 		cLog.Debug("resource/images:retrieveFlavorAndKeyForImageID() Retrieving Flavor and Key for Image")
 		flavor, err := db.ImageRepository().RetrieveAssociatedImageFlavor(id)
 		if err != nil {
@@ -149,127 +139,13 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 				StatusCode: http.StatusNotFound,
 			}
 		}
-		// Check if flavor keyURL is not empty
+
+		keyUrl := flavor.ImageFlavor.Encryption.KeyURL
+		// Check if flavor keyUrl is not empty
 		if flavor.ImageFlavor.EncryptionRequired && len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
-			// we have key URL
-			// http://kbs.server.com:20080/v1/keys/73755fda-c910-46be-821f-e8ddeab189e9/transfer"
-			// post HVS with hardwareUUID
-			// extract key_id from KeyURL
-			cLog = cLog.WithField("keyURL", flavor.ImageFlavor.Encryption.KeyURL)
-			cLog.Debug("resource/images:retrieveFlavorAndKeyForImageID() KeyURL is present")
-			keyURL, err := url.Parse(flavor.ImageFlavor.Encryption.KeyURL)
+			key, err := transfer_key(true, hwid, keyUrl, id)
 			if err != nil {
-				cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Flavor KeyURL is malformed", message.InvalidInputProtocolViolation)
-				log.Tracef("%+v", err)
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor/Key for Image - Flavor KeyURL is malformed",
-					StatusCode: http.StatusBadRequest,
-				}
-			}
-			re := regexp.MustCompile("(?i)([0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12})")
-			keyID := re.FindString(keyURL.Path)
-
-			// retrieve host SAML report from HVS
-			saml, err := vsclient.CreateSAMLReport(hwid)
-			if err != nil {
-				cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Failed to read HVS response body", message.BadConnection)
-				log.Tracef("%+v", err)
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor/Key for Image - Failed to read HVS response",
-					StatusCode: http.StatusInternalServerError,
-				}
-			}
-
-			// validate the response from HVS
-			if err = validation.ValidateXMLString(string(saml)); err != nil {
-				cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : HVS response validation failed", message.AppRuntimeErr)
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor/Key for Image - Invalid SAML report format received from HVS",
-					StatusCode: http.StatusInternalServerError,
-				}
-			}
-
-			var samlStruct Saml
-			cLog.WithField("saml", string(saml)).Debug("resource/images:retrieveFlavorAndKeyForImageID() Successfully got SAML report from HVS")
-			err = xml.Unmarshal(saml, &samlStruct)
-			if err != nil {
-				cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Failed to unmarshal host SAML report", message.AppRuntimeErr)
-				log.Tracef("%+v", err)
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor and Key - Failed to unmarshal host SAML report",
-					StatusCode: http.StatusInternalServerError,
-				}
-			}
-
-			// validate saml report validity and saml signature
-			rootPems, err := cos.GetDirFileContents(constants.TrustedCaCertsDir, "*.pem" )
-			if err != nil{
-				log.Errorf("resource/images:retrieveFlavorAndKeyForImageID() Error while reading certificates from dir: %s", constants.TrustedCaCertsDir)
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor/Key for Image - Error while reading root CA certificates",
-					StatusCode: http.StatusInternalServerError,
-				}
-			}
-
-			// verify saml cert chain
-			verified := verifySamlSignatureAndCertChain(rootPems, samlStruct)
-			if !verified {
-				cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() SAML certificate chain verification failed")
-				return &endpointError{
-					Message:    "Failed to retrieve Flavor/Key for Image - SAML signature or certificate chain verification failed",
-					StatusCode: http.StatusInternalServerError,
-				}
-			}
-
-			var key []byte
-			for i := 0; i < len(samlStruct.Attribute); i++ {
-				if samlStruct.Attribute[i].Name == "TRUST_OVERALL" && samlStruct.Attribute[i].AttributeValue == "true" {
-					// check if the key is cached and retrieve it
-					// try to obtain the key from the cache. If the key is not found in the cache,
-					// then it will return and error. In this case, we ignore it and pro
-
-					var cachedKeyID string
-					cachedKey, err := getKeyFromCache(id)
-					if err == nil {
-						cachedKeyID = cachedKey.ID
-						cLog.Infof("resource/images:retrieveFlavorAndKeyForImageID() %s : Retrieved Key from in-memory cache. key ID: %s", message.EncKeyUsed, cachedKey.ID)
-					}
-					// check if the key cached is same as the one in the flavor
-					if cachedKeyID != "" && cachedKeyID == keyID {
-						key = cachedKey.Bytes
-					} else {
-						// create cert chained client
-						client, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
-						if err != nil {
-							cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Failed to initialize HTTP client for KMS key transfer", message.BadConnection)
-							return &endpointError{
-								Message:    "Failed to retrieve key - Unable to setup HTTP connection to KMS",
-								StatusCode: http.StatusInternalServerError,
-							}
-						}
-						kc := &kms.Client{
-							BaseURL:    keyURL.String(),
-							HTTPClient: client,
-						}
-						// post to KBS client with saml
-						key, err = kc.Key(keyID).Transfer(saml)
-						if err != nil {
-							cLog.WithError(err).Errorf("resource/images:retrieveFlavorAndKeyForImageID() %s : Failed to retrieve key from KMS", message.AppRuntimeErr)
-							if kmsErr, ok := err.(*kms.Error); ok {
-								return &endpointError{
-									Message:    "Failed to retrieve key - " + kmsErr.Message,
-									StatusCode: kmsErr.StatusCode,
-								}
-							}
-							return &endpointError{
-								Message:    "Failed to retrieve key ",
-								StatusCode: http.StatusInternalServerError,
-							}
-						}
-						cLog.Info("resource/images:retrieveFlavorAndKeyForImageID() Successfully got key from KMS")
-						cacheKeyInMemory(id, keyID, key)
-					}
-				}
+				return err
 			}
 
 			// got key data
@@ -341,7 +217,7 @@ func retrieveFlavorForImageID(db repository.WlsDatabase) endpointHandler {
 		}
 		cLog.Info("resource/images:retrieveFlavorForImageID() Retrieving Flavor for Image")
 		// The error returned for below db query should be set as "StatusNotFound" for http response status code,
-		// since image UUID and flavorUUID validation have been done earlier in the code 
+		// since image UUID and flavorUUID validation have been done earlier in the code
 		// there would be rare case when there is flavor in db and query fails to fetch flavor
 
 		flavor, err := db.ImageRepository().RetrieveAssociatedFlavorByFlavorPart(id, fp)
@@ -508,11 +384,11 @@ func putAssociatedFlavor(db repository.WlsDatabase) endpointHandler {
 			cLog.WithError(err).Errorf("resource/images:putAssociatedFlavor() %s : Failed to add new Flavor association", message.AppRuntimeErr)
 			log.Tracef("%+v", err)
 			if strings.Contains(err.Error(), "record not found") {
-			return &endpointError{
+				return &endpointError{
 					Message:    "Failed to create image/flavor association - Record not found",
 					StatusCode: http.StatusNotFound,
 				}
-			}  
+			}
 			return &endpointError{
 				Message:    "Failed to create image/flavor association - Backend error",
 				StatusCode: http.StatusInternalServerError,
@@ -843,27 +719,26 @@ func cacheKeyInMemory(imageUUID string, keyID string, key []byte) error {
 	return nil
 }
 
-func validateSamlSignature(saml Saml, certPemSlice [][]byte) bool{
+func validateSamlSignature(saml Saml, certPemSlice [][]byte) bool {
 	// SAML report expiry validation
-	if (!time.Now().After(saml.Subject.NotBefore) || !time.Now().Before(saml.Subject.NotOnOrAfter)) {
+	if !time.Now().After(saml.Subject.NotBefore) || !time.Now().Before(saml.Subject.NotOnOrAfter) {
 		log.Error("resource/images:validateSamlSignature() SAML report not valid")
 		return false
 	}
 
 	samlReportCert := strings.ReplaceAll(saml.Signature, "\n", "")
 
-	// check if the signatures from one of the CA certs match the signature from the SAML report 
+	// check if the signatures from one of the CA certs match the signature from the SAML report
 	for _, certPem := range certPemSlice {
 		block, _ := pem.Decode(certPem)
-		if(samlReportCert == base64.StdEncoding.EncodeToString(block.Bytes)) {
+		if samlReportCert == base64.StdEncoding.EncodeToString(block.Bytes) {
 			return true
 		}
 	}
 	return false
 }
 
-
-func verifySamlSignatureAndCertChain(rootCAPems [][]byte, saml Saml) bool{
+func verifySamlSignatureAndCertChain(rootCAPems [][]byte, saml Saml) bool {
 	// build the trust root CAs first
 	roots := x509.NewCertPool()
 	for _, rootPEM := range rootCAPems {
@@ -905,7 +780,7 @@ func verifySamlSignatureAndCertChain(rootCAPems [][]byte, saml Saml) bool{
 		}
 
 		if !(cert.IsCA && cert.BasicConstraintsValid) {
-			if _, err := cert.Verify(verifyRootCAOpts); err != nil  {
+			if _, err := cert.Verify(verifyRootCAOpts); err != nil {
 				log.Errorf("resource/images:verifySamlSignatureAndCertChain() Error while verifying certificate chain: %s", err.Error())
 				continue
 			}
@@ -917,20 +792,20 @@ func verifySamlSignatureAndCertChain(rootCAPems [][]byte, saml Saml) bool{
 	return false
 }
 
-func getCertificate(signingCertPems interface{}) ([][]byte, error){
+func getCertificate(signingCertPems interface{}) ([][]byte, error) {
 	var certPemSlice [][]byte
 
-        switch signingCertPems.(type) {
-        case nil:
-                return nil, errors.New("Empty ")
-        case [][]byte:
-                certPemSlice = signingCertPems.([][]byte)
-        case []byte:
-                certPemSlice = [][]byte{signingCertPems.([]byte)}
-        default:
-                log.Errorf("signingCertPems has to be of type []byte or [][]byte")
-                return nil, errors.New("signingCertPems has to be of type []byte or [][]byte")
+	switch signingCertPems.(type) {
+	case nil:
+		return nil, errors.New("Empty ")
+	case [][]byte:
+		certPemSlice = signingCertPems.([][]byte)
+	case []byte:
+		certPemSlice = [][]byte{signingCertPems.([]byte)}
+	default:
+		log.Errorf("signingCertPems has to be of type []byte or [][]byte")
+		return nil, errors.New("signingCertPems has to be of type []byte or [][]byte")
 
-        }
+	}
 	return certPemSlice, nil
 }

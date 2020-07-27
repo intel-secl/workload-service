@@ -16,11 +16,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/pkg/errors"
-	"sync"
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
+
+	"github.com/pkg/errors"
 )
 
 var log = commLog.GetDefaultLogger()
@@ -120,7 +121,7 @@ func sendRequest(req *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "vsclient/client.go:sendRequest() sendRequest() Error while reading the response body")
 	}
-	log.Info("vsclient/client.go:sendRequest() Recieved the response successfully")
+	log.Info("vsclient/client.go:sendRequest() Received the response successfully")
 	return body, nil
 }
 
@@ -167,12 +168,12 @@ func GetCaCerts(domain string) ([]byte, error) {
 
 	requestURL, err := url.Parse(config.Configuration.HVS_API_URL + "ca-certificates?domain=" + domain)
 	if err != nil {
-		return nil, errors.Wrap(err,"vsclient/client:GetCaCerts() error forming GET ca-certificates API URL for HVS")
+		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() error forming GET ca-certificates API URL for HVS")
 	}
 
 	req, err := http.NewRequest("GET", requestURL.String(), nil)
 	if err != nil {
-		return nil, errors.Wrap(err,"vsclient/client:GetCaCerts() Error while forming a new http request from client to server")
+		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() Error while forming a new http request from client to server")
 	}
 
 	req.Header.Set("Accept", "application/x-pem-file")
@@ -183,7 +184,7 @@ func GetCaCerts(domain string) ([]byte, error) {
 		fmt.Fprintln(os.Stderr, "BEARER_TOKEN is not defined in environment")
 		return nil, errors.Wrap(err, "BEARER_TOKEN is not defined in environment")
 	}
-	req.Header.Set("Authorization", "Bearer "+ jwtToken)
+	req.Header.Set("Authorization", "Bearer "+jwtToken)
 	client, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() Failed to create http client")
@@ -193,7 +194,7 @@ func GetCaCerts(domain string) ([]byte, error) {
 	if err != nil {
 		log.Error("vsclient/client:GetCaCerts() Error while sending request from client to server")
 		log.Tracef("%+v", err)
-		return nil, errors.Wrap(err,"vsclient/client:GetCaCerts() Error while sending request from client to server")
+		return nil, errors.Wrap(err, "vsclient/client:GetCaCerts() Error while sending request from client to server")
 	}
 
 	defer rsp.Body.Close()

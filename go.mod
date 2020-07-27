@@ -27,3 +27,5 @@ replace intel/isecl/lib/verifier/v2 => github.com/intel-secl/verifier/v2 v2.2.0
 replace intel/isecl/lib/kms-client/v2 => github.com/intel-secl/kms-client/v2 v2.2.0
 
 replace intel/isecl/lib/clients/v2 => github.com/intel-secl/clients/v2 v2.2.0
+
+go 1.13
