@@ -3,7 +3,7 @@ module intel/isecl/workload-service/v2
 require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.3
-	github.com/jinzhu/gorm v1.9.2
+	github.com/jinzhu/gorm v1.9.15
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
