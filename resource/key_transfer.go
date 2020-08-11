@@ -3,14 +3,17 @@ package resource
 
 import (
 	"encoding/xml"
+	"github.com/google/uuid"
+	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
+	"github.com/intel-secl/intel-secl/v3/pkg/model/hvs"
 	"intel/isecl/lib/clients/v2"
 	"intel/isecl/lib/common/v2/log/message"
 	cos "intel/isecl/lib/common/v2/os"
 	"intel/isecl/lib/common/v2/validation"
-	kms "intel/isecl/lib/kms-client/v2"
+	"intel/isecl/lib/kms-client/v2"
+	"intel/isecl/workload-service/v2/config"
 	"intel/isecl/workload-service/v2/constants"
 	consts "intel/isecl/workload-service/v2/constants"
-	"intel/isecl/workload-service/v2/vsclient"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -52,7 +55,27 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 	keyID := re.FindString(keyUrl.Path)
 
 	// retrieve host SAML report from HVS
-	saml, err := vsclient.CreateSAMLReport(hwid)
+	vsClientFactory, err := hvsclient.NewVSClientFactoryWithUserCredentials(config.Configuration.HVS_API_URL, config.AAS_API_URL, config.WLS_USER, config.WLS_PASSWORD, constants.TrustedCaCertsDir)
+	if err != nil {
+		cLog.WithError(err).Error("Error while instantiating VSClientFactory")
+		return nil, &endpointError{
+			Message:    "Error while instantiating VSClientFactory",
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+
+	reportsClient, err := vsClientFactory.ReportsClient()
+	if err != nil {
+		cLog.WithError(err).Error("Error while instantiating ReportsClient")
+		return nil, &endpointError{
+			Message:    "Error while instantiating ReportsClient",
+			StatusCode: http.StatusInternalServerError,
+		}
+	}
+	reportCreateRequest := hvs.ReportCreateRequest{
+		HardwareUUID: uuid.MustParse(hwid),
+	}
+	saml, err := reportsClient.CreateSAMLReport(reportCreateRequest)
 	if err != nil {
 		cLog.WithError(err).Errorf("%s:%s %s : Failed to read HVS response body", endpoint, funcName, message.BadConnection)
 		log.Tracef("%+v", err)

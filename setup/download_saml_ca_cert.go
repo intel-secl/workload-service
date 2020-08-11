@@ -5,14 +5,15 @@
 package setup
 
 import (
-	csetup "intel/isecl/lib/common/v2/setup"
-	"intel/isecl/workload-service/v2/constants"
-	"intel/isecl/workload-service/v2/vsclient"
-	"os"
-	"io/ioutil"
-	"github.com/pkg/errors"
 	"flag"
 	"fmt"
+	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
+	"github.com/pkg/errors"
+	csetup "intel/isecl/lib/common/v2/setup"
+	"intel/isecl/workload-service/v2/config"
+	"intel/isecl/workload-service/v2/constants"
+	"io/ioutil"
+	"os"
 )
 
 type Download_Saml_Ca_Cert struct {
@@ -38,8 +39,25 @@ func (dc Download_Saml_Ca_Cert) Run(c csetup.Context) error {
 		return nil
 	}
 	log.Info("setup/download_saml_ca_cert:Run() Downloading SAML CA certificates.")
+	jwtToken, err := c.GetenvSecret(constants.BearerToken, "BEARER_TOKEN")
+	if jwtToken == "" || err != nil {
+		fmt.Fprintln(os.Stderr, "BEARER_TOKEN is not defined in environment")
+		return errors.Wrap(err, "BEARER_TOKEN is not defined in environment")
+	}
 
-	cacerts, err := vsclient.GetCaCerts("saml")
+	vsClientFactory, err := hvsclient.NewVSClientFactory(config.Configuration.HVS_API_URL, jwtToken, constants.TrustedCaCertsDir)
+	if err != nil {
+		fmt.Fprintln(os.Stderr,"setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
+		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
+	}
+
+	caCertsClient, err := vsClientFactory.CACertificatesClient()
+	if err != nil {
+		fmt.Fprintln(os.Stderr,"setup/download_saml_ca_cert:Run() Error while getting CACertificatesClient")
+		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while getting CACertificatesClient")
+	}
+
+	cacerts, err := caCertsClient.GetCaCertsInPem("saml")
 	if err != nil {
 		log.Error("setup/download_saml_ca_cert:Run() Failed to read HVS response body for GET SAML ca-certificates API")
 		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while getting SAML CA certificates")
