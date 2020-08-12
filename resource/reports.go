@@ -7,8 +7,6 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"intel/isecl/lib/common/v2/log/message"
 	"intel/isecl/lib/common/v2/validation"
 	"intel/isecl/workload-service/v2/constants"
@@ -16,9 +14,12 @@ import (
 	"intel/isecl/workload-service/v2/repository"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
-// SetReportEndpoints
+// SetReportsEndpoints sets endpoints for /reports
 func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	log.Trace("resource/reports:SetReportsEndpoints() Entering")
 	defer log.Trace("resource/reports:SetReportsEndpoints() Leaving")
@@ -29,6 +30,8 @@ func SetReportsEndpoints(r *mux.Router, db repository.WlsDatabase) {
 	r.HandleFunc("/{badid}", badId)
 }
 
+// Gets report for a given set of parameters
+// Example(s) of parameters: instance UUID, hardward UUID, report ID, from_date
 func getReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log.Trace("resource/reports:getReport() Entering")
@@ -132,7 +135,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 			}
 			filterCriteria.Filter = boolValue
 		}
-		cLog.Debugf("HWID: %s|ReportID: %s|InstanceID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %s", filterCriteria.HardwareUUID,
+		cLog.Debugf("HwId: %s|ReportID: %s|InstanceID: %s|ToDate: %s|FromDate: %s|NumOfDays: %d|Filter: %t|LatestPerVM: %s", filterCriteria.HardwareUUID,
 			filterCriteria.ReportID, filterCriteria.InstanceID, filterCriteria.ToDate, filterCriteria.FromDate, filterCriteria.NumOfDays, filterCriteria.Filter, filterCriteria.LatestPerVM)
 
 		if filterCriteria.HardwareUUID == "" && filterCriteria.ReportID == "" && filterCriteria.InstanceID == "" && filterCriteria.ToDate == "" && filterCriteria.FromDate == "" && filterCriteria.LatestPerVM == "" && filterCriteria.NumOfDays <= 0 && filterCriteria.Filter {
@@ -157,6 +160,7 @@ func getReport(db repository.WlsDatabase) endpointHandler {
 	}
 }
 
+// Creates report for json request/content-type
 func createReport(db repository.WlsDatabase) endpointHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log.Trace("resource/reports:createReport() Entering")
