@@ -5,10 +5,10 @@ import (
 	"encoding/xml"
 	"github.com/google/uuid"
 	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
+	samlVerifier "github.com/intel-secl/intel-secl/v3/pkg/lib/saml"
 	"github.com/intel-secl/intel-secl/v3/pkg/model/hvs"
 	"intel/isecl/lib/clients/v2"
 	"intel/isecl/lib/common/v2/log/message"
-	cos "intel/isecl/lib/common/v2/os"
 	"intel/isecl/lib/common/v2/validation"
 	"intel/isecl/lib/kms-client/v2"
 	"intel/isecl/workload-service/v2/config"
@@ -55,7 +55,7 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 	keyID := re.FindString(keyUrl.Path)
 
 	// retrieve host SAML report from HVS
-	vsClientFactory, err := hvsclient.NewVSClientFactoryWithUserCredentials(config.Configuration.HVS_API_URL, config.AAS_API_URL, config.WLS_USER, config.WLS_PASSWORD, constants.TrustedCaCertsDir)
+	vsClientFactory, err := hvsclient.NewVSClientFactoryWithUserCredentials(config.Configuration.HVS_API_URL, config.Configuration.AAS_API_URL, config.Configuration.WLS.User, config.Configuration.WLS.Password, constants.TrustedCaCertsDir)
 	if err != nil {
 		cLog.WithError(err).Error("Error while instantiating VSClientFactory")
 		return nil, &endpointError{
@@ -106,18 +106,8 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 		}
 	}
 
-	// validate saml report validity and saml signature
-	rootPems, err := cos.GetDirFileContents(constants.TrustedCaCertsDir, "*.pem")
-	if err != nil {
-		log.Errorf("%s:%s Error while reading certificates from dir: %s", endpoint, funcName, constants.TrustedCaCertsDir)
-		return nil, &endpointError{
-			Message:    retrievalErr + " - Error while reading root CA certificates",
-			StatusCode: http.StatusInternalServerError,
-		}
-	}
-
 	// verify saml cert chain
-	verified := verifySamlSignatureAndCertChain(rootPems, samlStruct)
+	verified := samlVerifier.VerifySamlSignature(string(saml), constants.SamlCaCertFilePath, constants.TrustedCaCertsDir)
 	if !verified {
 		cLog.WithError(err).Errorf("%s:%s SAML certificate chain verification failed", endpoint, funcName)
 		return nil, &endpointError{
