@@ -6,7 +6,7 @@ package resource
 
 import (
 	"bytes"
-	"intel/isecl/workload-service/v2/repository/mock"
+	"intel/isecl/workload-service/v3/repository/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"

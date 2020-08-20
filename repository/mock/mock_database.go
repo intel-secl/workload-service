@@ -6,7 +6,7 @@ package mock
 
 import (
 	"github.com/jinzhu/gorm"
-	"intel/isecl/workload-service/v2/repository"
+	"intel/isecl/workload-service/v3/repository"
 )
 
 // Database provides a mock Db

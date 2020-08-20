@@ -5,8 +5,8 @@
 package model
 
 import (
-	"intel/isecl/lib/common/v2/crypt"
-	"intel/isecl/lib/verifier/v2"
+	"intel/isecl/lib/common/v3/crypt"
+	"intel/isecl/lib/verifier/v3"
 )
 
 // Report is an alias to verifier.VMTrustReport

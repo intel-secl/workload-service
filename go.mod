@@ -1,4 +1,4 @@
-module intel/isecl/workload-service/v2
+module intel/isecl/workload-service/v3
 
 require (
 	github.com/google/uuid v1.1.1
@@ -12,23 +12,23 @@ require (
 	github.com/sirupsen/logrus v1.4.0
 	github.com/stretchr/testify v1.3.0
 	gopkg.in/yaml.v2 v2.3.0
-	intel/isecl/lib/clients/v2 v2.2.0
-	intel/isecl/lib/common/v2 v2.2.0
-	intel/isecl/lib/flavor/v2 v2.2.0
-	intel/isecl/lib/kms-client/v2 v2.2.0
-	intel/isecl/lib/verifier/v2 v2.2.0
+	intel/isecl/lib/clients/v3 v3.0.0
+	intel/isecl/lib/common/v3 v3.0.0
+	intel/isecl/lib/flavor/v3 v3.0.0
+	intel/isecl/lib/kms-client/v3 v3.0.0
+	intel/isecl/lib/verifier/v3 v3.0.0
 )
 
-replace intel/isecl/lib/flavor/v2 => github.com/intel-secl/flavor/v2 v2.2.0
+replace intel/isecl/lib/flavor/v3 => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git/v3 v3.0/develop
 
-replace intel/isecl/lib/common/v2 => github.com/intel-secl/common/v2 v2.2.0
+replace intel/isecl/lib/common/v3 => gitlab.devtools.intel.com/sst/isecl/lib/common.git/v3 v3.0/develop
 
-replace intel/isecl/lib/verifier/v2 => github.com/intel-secl/verifier/v2 v2.2.0
+replace intel/isecl/lib/verifier/v3 => gitlab.devtools.intel.com/sst/isecl/lib/verifier.git/v3 v3.0/develop
 
-replace intel/isecl/lib/kms-client/v2 => github.com/intel-secl/kms-client/v2 v2.2.0
+replace intel/isecl/lib/kms-client/v3 => gitlab.devtools.intel.com/sst/isecl/lib/kms-client.git/v3 v3.0/develop
 
-replace intel/isecl/lib/clients/v2 => github.com/intel-secl/clients/v2 v2.2.0
+replace intel/isecl/lib/clients/v3 => gitlab.devtools.intel.com/sst/isecl/lib/clients.git/v3 v3.0/develop
 
-replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.0/bug/ISECL-11382
+replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.0/develop
 
 replace github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output

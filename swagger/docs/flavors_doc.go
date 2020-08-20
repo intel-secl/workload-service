@@ -5,7 +5,7 @@
 package docs
 
 import (
-	flvr "intel/isecl/lib/flavor/v2"
+	flvr "intel/isecl/lib/flavor/v3"
 )
 
 // FlavorCreateInfo request payload

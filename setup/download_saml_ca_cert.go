@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
 	"github.com/pkg/errors"
-	csetup "intel/isecl/lib/common/v2/setup"
-	"intel/isecl/workload-service/v2/config"
-	"intel/isecl/workload-service/v2/constants"
+	csetup "intel/isecl/lib/common/v3/setup"
+	"intel/isecl/workload-service/v3/config"
+	"intel/isecl/workload-service/v3/constants"
 	"io/ioutil"
 	"os"
 )
