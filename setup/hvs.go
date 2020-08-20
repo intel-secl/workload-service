@@ -38,7 +38,7 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 	}
 
 	if !*force && hvs.Validate(c) == nil {
-		fmt.Println("setup hvsconnection: task already complete. Skipping...")
+		fmt.Println("setup hvsconnection: HVS config variables already set, so skipping hvs setup task...")
 		log.Info("setup/hvs:Run() HVS config already setup, skipping ...")
 		return nil
 	}

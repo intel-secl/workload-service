@@ -40,7 +40,7 @@ func (ss Server) Run(c csetup.Context) error {
 	}
 
 	if !*force && ss.Validate(c) == nil {
-		fmt.Println("setup server: setup task already complete. Skipping...")
+		fmt.Println("setup server: WLS Server config variables already set, so skipping server setup task...")
 		log.Info("setup/server:Run() WLS Server setup already complete, skipping ...")
 		return nil
 	}
