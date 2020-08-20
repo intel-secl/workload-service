@@ -5,7 +5,7 @@
 package repository
 
 import (
-	"intel/isecl/workload-service/v2/model"
+	"intel/isecl/workload-service/v3/model"
 )
 
 // ReportRepository defines an interface that provides persistence operations for a Flavor.

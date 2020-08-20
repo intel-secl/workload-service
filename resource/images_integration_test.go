@@ -10,9 +10,9 @@ package resource
 import (
 	"bytes"
 	"encoding/json"
-	"intel/isecl/lib/flavor/v2"
-	flavorUtil "intel/isecl/lib/flavor/v2/util"
-	"intel/isecl/workload-service/v2/model"
+	"intel/isecl/lib/flavor/v3"
+	flavorUtil "intel/isecl/lib/flavor/v3/util"
+	"intel/isecl/workload-service/v3/model"
 	"net/http"
 	"net/http/httptest"
 	"testing"

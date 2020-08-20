@@ -7,8 +7,8 @@ package setup
 import (
 	"flag"
 	"fmt"
-	csetup "intel/isecl/lib/common/v2/setup"
-	"intel/isecl/workload-service/v2/config"
+	csetup "intel/isecl/lib/common/v3/setup"
+	"intel/isecl/workload-service/v3/config"
 	"strings"
 
 	"github.com/pkg/errors"

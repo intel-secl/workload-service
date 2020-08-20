@@ -6,7 +6,7 @@ package resource
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/v2/version"
+	"intel/isecl/workload-service/v3/version"
 	"net/http"
 
 	"github.com/gorilla/mux"

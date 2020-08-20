@@ -7,7 +7,7 @@ package postgres
 import (
 	"encoding/json"
 	"fmt"
-	"intel/isecl/workload-service/v2/model"
+	"intel/isecl/workload-service/v3/model"
 	"time"
 
 	"github.com/pkg/errors"

@@ -7,9 +7,9 @@ package postgres
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	flvr "intel/isecl/lib/flavor/v2"
-	"intel/isecl/workload-service/v2/model"
-	"intel/isecl/workload-service/v2/repository"
+	flvr "intel/isecl/lib/flavor/v3"
+	"intel/isecl/workload-service/v3/model"
+	"intel/isecl/workload-service/v3/repository"
 
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"

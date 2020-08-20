@@ -4,6 +4,6 @@
  */
 package model
 
-import "intel/isecl/lib/flavor/v2"
+import "intel/isecl/lib/flavor/v3"
 
 type Flavor flavor.ImageFlavor

@@ -5,7 +5,7 @@
 package postgres
 
 import (
-	"intel/isecl/workload-service/v2/model"
+	"intel/isecl/workload-service/v3/model"
 	"time"
 )
 

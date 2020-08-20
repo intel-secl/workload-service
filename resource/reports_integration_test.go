@@ -12,14 +12,15 @@ import (
 	"crypto"
 	"encoding/json"
 	"fmt"
-	"intel/isecl/lib/common/v2/crypt"
-	"intel/isecl/lib/common/v2/middleware"
-	"intel/isecl/lib/common/v2/pkg/instance"
-	"intel/isecl/lib/flavor/v2"
-	flavorUtil "intel/isecl/lib/flavor/v2/util"
-	"intel/isecl/lib/verifier/v2"
-	"intel/isecl/workload-service/v2/model"
-	"intel/isecl/workload-service/v2/repository/postgres"
+	"intel/isecl/lib/common/v3/crypt"
+	"intel/isecl/lib/common/v3/middleware"
+	"intel/isecl/lib/common/v3/pkg/instance"
+	"intel/isecl/lib/flavor/v3"
+	flavorUtil "intel/isecl/lib/flavor/v3/util"
+	"intel/isecl/lib/verifier/v3"
+	"intel/isecl/workload-service/v3/model"
+	"intel/isecl/workload-service/v3/repository/postgres"
+	"github.com/intel-secl/intel-secl/v3/pkg/model/wls"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +39,7 @@ import (
 func TestReportResource(t *testing.T) {
 	log.Trace("resource/reports_integration_test:TestReportResource() Entering")
 	defer log.Trace("resource/reports_integration_test:TestReportResource() Leaving")
-	var signedFlavor flavor.SignedImageFlavor
+	var signedFlavor wls.SignedImageFlavor
 	assert := assert.New(t)
 	checkErr := func(e error) {
 		assert.NoError(e)
