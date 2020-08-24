@@ -23,6 +23,7 @@ func SetVersionEndpoints(r *mux.Router) {
 func getVersion(w http.ResponseWriter, r *http.Request) {
 	log.Trace("resource/version:getVersion() Entering")
 	defer log.Trace("resource/version:getVersion() Leaving")
+	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	w.WriteHeader(http.StatusOK)
 	log.Debugf("resource/version:getVersion() WLS Version: %s CommitHash: %s", version.Version, version.GitHash)
 	w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
