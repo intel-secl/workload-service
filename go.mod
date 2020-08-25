@@ -19,16 +19,14 @@ require (
 	intel/isecl/lib/verifier/v3 v3.0.0
 )
 
-replace intel/isecl/lib/flavor/v3 => gitlab.devtools.intel.com/sst/isecl/lib/flavor.git/v3 v3.0/develop
+replace intel/isecl/lib/flavor/v3 => github.com/intel-secl/flavor/v3 v3.0.0
 
-replace intel/isecl/lib/common/v3 => gitlab.devtools.intel.com/sst/isecl/lib/common.git/v3 v3.0/develop
+replace intel/isecl/lib/common/v3 => github.com/intel-secl/common/v3 v3.0.0
 
-replace intel/isecl/lib/verifier/v3 => gitlab.devtools.intel.com/sst/isecl/lib/verifier.git/v3 v3.0/develop
+replace intel/isecl/lib/verifier/v3 => github.com/intel-secl/verifier/v3 v3.0.0
 
-replace intel/isecl/lib/kms-client/v3 => gitlab.devtools.intel.com/sst/isecl/lib/kms-client.git/v3 v3.0/develop
+replace intel/isecl/lib/kms-client/v3 => github.com/intel-secl/kms-client/v3 v3.0.0
 
-replace intel/isecl/lib/clients/v3 => gitlab.devtools.intel.com/sst/isecl/lib/clients.git/v3 v3.0/develop
-
-replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.0/develop
+replace intel/isecl/lib/clients/v3 => github.com/intel-secl/clients/v3 v3.0.0
 
 replace github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output
