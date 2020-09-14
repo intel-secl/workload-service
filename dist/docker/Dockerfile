@@ -1,7 +1,10 @@
-FROM centos:latest
+FROM centos:8
 
-COPY wls-*.bin /tmp/wls.bin
+RUN useradd -u 1001 --comment "Workload Service" --home /opt/workload-service --shell /bin/false wls
+
+RUN mkdir -p /opt/workload-service/bin
+COPY workload-service  /usr/bin/workload-service
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN env WLS_NOSETUP=true /tmp/wls.bin && rm /tmp/wls.bin
-USER wls
+
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

@@ -18,8 +18,8 @@ installer: workload-service
 
 docker: installer
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
-	docker build --build-arg http_proxy=http://proxy-us.intel.com:911 --build-arg https_proxy=http://proxy-us.intel.com:911 -t isecl/workload-service:latest -f ./dist/docker/Dockerfile ./out
-	docker save isecl/workload-service:latest > ./out/docker-wls-$(VERSION).tar 
+	docker build --build-arg http_proxy=http://proxy-us.intel.com:911 --build-arg https_proxy=http://proxy-us.intel.com:911 -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
+	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION).tar 
 
 swagger-get:
 	wget https://github.com/go-swagger/go-swagger/releases/download/v0.21.0/swagger_linux_amd64 -O /usr/local/bin/swagger
