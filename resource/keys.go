@@ -59,6 +59,7 @@ func retrieveKey(db repository.WlsDatabase) endpointHandler {
 		if len(keyUrl) > 0 {
 			key, err := transfer_key(false, hwid, keyUrl, "")
 			if err != nil {
+                                cLog.WithError(err).Error("resource/keys:retrieveKey() Error while retrieving key")
 				return err
 			}
 
@@ -76,7 +77,7 @@ func retrieveKey(db repository.WlsDatabase) endpointHandler {
 					StatusCode: http.StatusInternalServerError,
 				}
 			}
-			cLog.Info("resource/keys:retreiveKey() Successfully retrieved FlavorKey")
+			cLog.Info("resource/keys:retreiveKey() Successfully retrieved Key")
 			return nil
 		}
 		return nil
