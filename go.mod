@@ -12,10 +12,8 @@ require (
 	github.com/sirupsen/logrus v1.4.0
 	github.com/stretchr/testify v1.3.0
 	gopkg.in/yaml.v2 v2.3.0
-	intel/isecl/lib/clients/v3 v3.0.0
 	intel/isecl/lib/common/v3 v3.0.0
-	intel/isecl/lib/flavor/v3 v3.0.0
-	intel/isecl/lib/kms-client/v3 v3.0.0
+	intel/isecl/lib/flavor/v3 v3.3.0
 	intel/isecl/lib/verifier/v3 v3.0.0
 )
 
@@ -25,8 +23,6 @@ replace intel/isecl/lib/common/v3 => github.com/intel-secl/common/v3 v3.0.0
 
 replace intel/isecl/lib/verifier/v3 => github.com/intel-secl/verifier/v3 v3.0.0
 
-replace intel/isecl/lib/kms-client/v3 => github.com/intel-secl/kms-client/v3 v3.0.0
-
-replace intel/isecl/lib/clients/v3 => github.com/intel-secl/clients/v3 v3.0.0
+replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.2/develop
 
 replace github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output

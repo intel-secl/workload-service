@@ -67,7 +67,7 @@ func retrieveKey(db repository.WlsDatabase) endpointHandler {
 			returnKey := model.ReturnKey{
 				Key: key,
 			}
-			w.Header().Set("Content-Type", "application/x-pem-file")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(returnKey); err != nil {
 				// marshalling error 500
 				cLog.WithError(err).Errorf("resource/keys:retrieveKey() %s : Unexpectedly failed to encode returnKey to JSON", message.AppRuntimeErr)

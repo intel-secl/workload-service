@@ -9,18 +9,19 @@ import (
 	"encoding/xml"
 	"github.com/google/uuid"
 	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
+	"github.com/intel-secl/intel-secl/v3/pkg/clients/kbs"
+	"github.com/intel-secl/intel-secl/v3/pkg/lib/common/crypt"
 	samlVerifier "github.com/intel-secl/intel-secl/v3/pkg/lib/saml"
 	"github.com/intel-secl/intel-secl/v3/pkg/model/hvs"
-	"intel/isecl/lib/clients/v3"
 	"intel/isecl/lib/common/v3/log/message"
 	"intel/isecl/lib/common/v3/validation"
-	"intel/isecl/lib/kms-client/v3"
 	"intel/isecl/workload-service/v3/config"
 	"intel/isecl/workload-service/v3/constants"
 	consts "intel/isecl/workload-service/v3/constants"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 // Verifies host and retrieves key from KMS
@@ -143,30 +144,26 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 			if cachedKeyID != "" && cachedKeyID == keyID {
 				key = cachedKey.Bytes
 			} else {
-				// create cert chained client
-				client, err := clients.HTTPClientWithCADir(consts.TrustedCaCertsDir)
+				//Load trusted CA certificates
+				caCerts, err := crypt.GetCertsFromDir(consts.TrustedCaCertsDir)
 				if err != nil {
-					cLog.WithError(err).Errorf("%s:%s %s : Failed to initialize HTTP client for KMS key transfer", endpoint, funcName, message.BadConnection)
+					cLog.WithError(err).Errorf("%s:%s %s : Failed to load CA certificates", endpoint, funcName, message.AppRuntimeErr)
 					return nil, &endpointError{
-						Message:    retrievalErr + " - Unable to setup HTTP connection to KMS",
+						Message:    retrievalErr + " - Unable to load CA certificates",
 						StatusCode: http.StatusInternalServerError,
 					}
 				}
-				kc := &kms.Client{
-					BaseURL:    keyUrl.String(),
-					HTTPClient: client,
-				}
+
+				baseUrl := strings.TrimSuffix(re.Split(kUrl, 2)[0], "keys/")
+				kbsUrl, _ := url.Parse(baseUrl)
+				//Initialize the KBS client
+				kc := kbs.NewKBSClient(nil, kbsUrl, "", "", caCerts)
+
 				// post to KBS client with saml
-				cLog.Infof("%s:%s baseURL: %s, keyID: %s : start to retrieve key from KMS", endpoint, funcName, keyUrl.String(), keyID)
-				key, err = kc.Key(keyID).Transfer(saml)
+				cLog.Infof("%s:%s baseURL: %s, keyID: %s : start to retrieve key from KMS", endpoint, funcName, baseUrl, keyID)
+				key, err = kc.TransferKeyWithSaml(keyID, string(saml))
 				if err != nil {
 					cLog.WithError(err).Errorf("%s:%s %s : Failed to retrieve key from KMS", endpoint, funcName, message.AppRuntimeErr)
-					if kmsErr, ok := err.(*kms.Error); ok {
-						return nil, &endpointError{
-							Message:    "Failed to retrieve key - " + kmsErr.Message,
-							StatusCode: kmsErr.StatusCode,
-						}
-					}
 					return nil, &endpointError{
 						Message:    "Failed to retrieve key ",
 						StatusCode: http.StatusInternalServerError,
