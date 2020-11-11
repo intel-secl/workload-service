@@ -154,7 +154,7 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 					}
 				}
 
-				baseUrl := strings.TrimSuffix(re.Split(kUrl, 2)[0], "/keys/")
+				baseUrl := strings.TrimSuffix(re.Split(kUrl, 2)[0], "keys/")
 				kbsUrl, _ := url.Parse(baseUrl)
 				//Initialize the KBS client
 				kc := kbs.NewKBSClient(nil, kbsUrl, "", "", caCerts)
