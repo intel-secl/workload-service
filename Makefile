@@ -3,6 +3,7 @@ GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
+PROXY := $($http_proxy)
 
 .PHONY: workload-service installer docker all clean
 
@@ -18,7 +19,7 @@ installer: workload-service
 
 docker: installer
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
-	docker build --build-arg http_proxy=http://proxy-us.intel.com:911 --build-arg https_proxy=http://proxy-us.intel.com:911 -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
+	docker build --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
 	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION).tar 
 
 swagger-get:
