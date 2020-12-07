@@ -26,5 +26,8 @@ func getVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	w.WriteHeader(http.StatusOK)
 	log.Debugf("resource/version:getVersion() WLS Version: %s CommitHash: %s", version.Version, version.GitHash)
-	w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
+	_, err := w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
+	if err != nil {
+		log.Errorf("resource/version:getVersion() WLS Version: Failed to write version response")
+	}
 }

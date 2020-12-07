@@ -186,26 +186,44 @@ func main() {
 
 	case "start":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
-		start()
+		err := start()
+		if err != nil {
+			fmt.Println("Failed to start service")
+		}
 
 	case "status":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
-		status()
+		err := status()
+		if err != nil {
+			fmt.Println("Failed to check service status")
+		}
 
 	case "startserver":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
 		// this runs in attached mode
-		startServer()
+		err := startServer()
+		if err != nil {
+			fmt.Println("Failed to start service")
+		}
 
 	case "stop":
 		config.LogConfiguration(config.Configuration.LogEnableStdout, true)
-		stop()
+		err := stop()
+		if err != nil {
+			fmt.Println("Failed to stop service")
+		}
 
 	case "uninstall":
 		config.LogConfiguration(false, false)
 		fmt.Println("Uninstalling workload-service...")
-		stop()
-		removeService()
+		err := stop()
+		if err != nil {
+			fmt.Println("Failed to stop service")
+		}
+		err = removeService()
+		if err != nil {
+			fmt.Println("Failed to remove service")
+		}
 		deleteFile("/opt/workload-service/")
 		deleteFile("/usr/local/bin/workload-service")
 		deleteFile("/var/log/workload-service/")

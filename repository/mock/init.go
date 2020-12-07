@@ -45,7 +45,10 @@ func init() {
 
 	f = model.Flavor(*f2)
 	log.Info("repository/mock/init:init() Unmarshal the signed flavor")
-	json.Unmarshal([]byte(signedFlavorString), &signedFlavor)
+	err := json.Unmarshal([]byte(signedFlavorString), &signedFlavor)
+	if err != nil {
+		log.WithError(err).Errorf("Failed to unmarshal flavor")
+	}
 	f2.Image.Meta.ID = "ecee021e-9669-4e53-9224-8880fb4e4080"
 	i.ID = "dddd021e-9669-4e53-9224-8880fb4e4080"
 	i.FlavorIDs = []string{f.Image.Meta.ID}

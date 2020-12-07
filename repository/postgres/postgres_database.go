@@ -57,7 +57,10 @@ func (pd *PostgresDatabase) Close() {
 	log.Trace("repository/postgres/postgres_database:Close() Entering")
 	defer log.Trace("repository/postgres/postgres_database:Close() Leaving")
 	if pd.DB != nil {
-		pd.DB.Close()
+		err := pd.DB.Close()
+		if err != nil {
+			log.WithError(err).Errorf("Failed to close DB connection")
+		}
 	}
 }
 
