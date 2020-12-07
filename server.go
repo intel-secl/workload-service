@@ -98,7 +98,10 @@ func startServer() error {
 	}
 	defer wlsDB.Close()
 	log.Trace("Migrating Database")
-	wlsDB.Migrate()
+	err = wlsDB.Migrate()
+	if err != nil {
+		return errors.Wrap(err, "failed to migrate database")
+	}
 
 	r := mux.NewRouter()
 	// ISECL-8715 - Prevent potential open redirects to external URLs
@@ -127,7 +130,12 @@ func startServer() error {
 		secLog.WithError(err).Errorf("server:startServer() Failed to open http log file: %s\n", err.Error())
 		log.Tracef("%+v", err)
 	} else {
-		defer httpLogFile.Close()
+		defer func() {
+			perr := httpLogFile.Close()
+			if perr != nil {
+				fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+			}
+		}()
 		httpWriter = httpLogFile
 	}
 	tlsconfig := &tls.Config{

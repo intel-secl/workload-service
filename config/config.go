@@ -285,7 +285,12 @@ func Save() error {
 
 	log.Info(message.ConfigChanged)
 
-	defer file.Close()
+	defer func() {
+		perr := file.Close()
+		if perr != nil {
+			fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+		}
+	}()
 	return yaml.NewEncoder(file).Encode(Configuration)
 }
 
@@ -296,8 +301,16 @@ func init() {
 	// load from config
 	file, err := os.Open(constants.ConfigFile)
 	if err == nil {
-		defer file.Close()
-		yaml.NewDecoder(file).Decode(&Configuration)
+		defer func() {
+			perr := file.Close()
+			if perr != nil {
+				fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+			}
+		}()
+		err = yaml.NewDecoder(file).Decode(&Configuration)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error: Unable to decode configuration")
+		}
 	}
 	LogWriter = os.Stdout
 }

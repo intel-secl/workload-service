@@ -88,7 +88,10 @@ func badId(w http.ResponseWriter, r *http.Request) {
 	log.Errorf("resource/images:badId() %s : Request made with non compliant UUIDv4: %v", message.InvalidInputProtocolViolation, badid)
 
 	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(fmt.Sprintf("%s is not uuidv4 compliant", badid)))
+	_, err := w.Write([]byte(fmt.Sprintf("%s is not uuidv4 compliant", badid)))
+	if err != nil {
+		log.Errorf("resource/images:badId() : Failed to write response: %v", badid)
+	}
 }
 
 // Logs error if a query is missing one or more parameters

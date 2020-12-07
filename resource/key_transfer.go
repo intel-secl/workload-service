@@ -170,7 +170,10 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 					}
 				}
 				cLog.Infof("%s:%s Successfully got key from KMS", endpoint, funcName)
-				cacheKeyInMemory(hwid, keyID, key)
+				err = cacheKeyInMemory(hwid, keyID, key)
+				if err != nil {
+					cLog.WithError(err).Errorf("Failed to cache key")
+				}
 			}
 		}
 	}
