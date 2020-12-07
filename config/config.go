@@ -273,7 +273,7 @@ func Save() error {
 		if os.IsNotExist(err) {
 			// error is that the config doesnt yet exist, create it
 			log.Debug("config/config:Save() File does not exist, creating a file... ")
-			file, err = os.Create(constants.ConfigFile)
+			file, err = os.OpenFile(constants.ConfigFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 			if err != nil {
 				return errors.Wrap(err, "config/config:Save() Error in file creation")
 			}
