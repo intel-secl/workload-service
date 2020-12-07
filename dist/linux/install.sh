@@ -244,7 +244,7 @@ for env_var in $required_vars; do
   check_env_var_present $env_var
 done
 
-chmod 770 /opt/workload-service/bin/workload-service
+chmod 700 /opt/workload-service/bin/workload-service
 
 # Call workload-service setup if all the required env variables are set
 if [[ $all_env_vars_present -eq 1 ]]; then
