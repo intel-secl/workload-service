@@ -170,15 +170,14 @@ func createReport(db repository.WlsDatabase) endpointHandler {
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&vtr); err != nil {
-			log.Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
+			log.WithError(err).Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
 			return &endpointError{
 				Message:    "Report creation failed",
 				StatusCode: http.StatusBadRequest,
 			}
 		}
-
 		if err := json.Unmarshal(vtr.Data, &vtr.InstanceTrustReport); err != nil {
-			log.Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
+			log.WithError(err).Errorf("resource/reports:createReport() %s : Report creation failed", message.AppRuntimeErr)
 			return &endpointError{
 				Message:    "Report creation failed",
 				StatusCode: http.StatusBadRequest,
