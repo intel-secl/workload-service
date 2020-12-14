@@ -124,11 +124,11 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 	var key []byte
 	for i := 0; i < len(samlStruct.Attribute); i++ {
 		if samlStruct.Attribute[i].Name == "TRUST_OVERALL" {
-                        if samlStruct.Attribute[i].AttributeValue == "false"{
+			if samlStruct.Attribute[i].AttributeValue == "false" {
 				return nil, &endpointError{
-                        		Message:    retrievalErr + " - Host is untrusted",
-		                        StatusCode: http.StatusInternalServerError,
-                		}
+					Message:    retrievalErr + " - Host is untrusted",
+					StatusCode: http.StatusInternalServerError,
+				}
 			}
 			// check if the key is cached and retrieve it
 			// try to obtain the key from the cache. If the key is not found in the cache,

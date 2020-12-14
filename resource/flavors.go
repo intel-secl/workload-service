@@ -7,6 +7,7 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"intel/isecl/lib/common/v3/log/message"
 	"intel/isecl/lib/common/v3/validation"
 	flvr "intel/isecl/lib/flavor/v3"
@@ -16,7 +17,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"github.com/gorilla/mux"
 )
 
 // SetFlavorsEndpoints sets endpoints for /flavors
@@ -231,7 +231,7 @@ func createFlavor(db repository.WlsDatabase) endpointHandler {
 			return &endpointError{Message: msg, StatusCode: http.StatusBadRequest}
 		}
 
-		// it's almost silly that we unmarshal, then remarshal it to store it back into the database, 
+		// it's almost silly that we unmarshal, then remarshal it to store it back into the database,
 		// but at least it provides some validation of the input
 		fr := db.FlavorRepository()
 

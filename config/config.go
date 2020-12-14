@@ -288,7 +288,7 @@ func Save() error {
 	defer func() {
 		perr := file.Close()
 		if perr != nil {
-			fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+			fmt.Fprintln(os.Stderr, "Error while closing file : "+perr.Error())
 		}
 	}()
 	return yaml.NewEncoder(file).Encode(Configuration)
@@ -304,7 +304,7 @@ func init() {
 		defer func() {
 			perr := file.Close()
 			if perr != nil {
-				fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+				fmt.Fprintln(os.Stderr, "Error while closing file : "+perr.Error())
 			}
 		}()
 		err = yaml.NewDecoder(file).Decode(&Configuration)

@@ -5,7 +5,7 @@
 package docs
 
 type ImageInfo struct {
-	ID string `json:"id"`
+	ID        string   `json:"id"`
 	FlavorIDs []string `json:"flavor_ids"`
 }
 
@@ -29,7 +29,7 @@ type SwaggImagesResponse struct {
 // ---
 //
 // description: |
-//   Creates an association between the image and flavor(s) in the workload service database. 
+//   Creates an association between the image and flavor(s) in the workload service database.
 //   An image id from the image storage and flavor id(s) should be provided in the request body.
 //   A valid bearer token should be provided to authorize this REST call.
 //
@@ -55,17 +55,17 @@ type SwaggImagesResponse struct {
 // x-sample-call-input: |
 //    {
 //       "id" : "ffff021e-9669-4e53-9224-8880fb4e4081",
-//       "flavor_ids" : [ 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c3", 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c4" 
+//       "flavor_ids" : [
+//           "d6129610-4c8f-4ac4-8823-df4e925688c3",
+//           "d6129610-4c8f-4ac4-8823-df4e925688c4"
 //       ]
 //    }
 // x-sample-call-output: |
 //    {
 //       "id" : "ffff021e-9669-4e53-9224-8880fb4e4081",
-//       "flavor_ids" : [ 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c3", 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c4" 
+//       "flavor_ids" : [
+//           "d6129610-4c8f-4ac4-8823-df4e925688c3",
+//           "d6129610-4c8f-4ac4-8823-df4e925688c4"
 //       ]
 //    }
 // ---
@@ -82,10 +82,10 @@ type SwaggImagesResponse struct {
 // produces:
 //  - application/json
 // parameters:
-// - name: filter 
+// - name: filter
 //   description: |
-//      Boolean value to indicate whether the response should be filtered to return specific images instead of 
-//      listing all images. When the filter is true and no other query parameter is specified, error response will be returned. 
+//      Boolean value to indicate whether the response should be filtered to return specific images instead of
+//      listing all images. When the filter is true and no other query parameter is specified, error response will be returned.
 //      Default value is true.
 //   in: query
 //   type: boolean
@@ -121,7 +121,7 @@ type SwaggImagesResponse struct {
 // swagger:operation GET /images/{image_id} Images getImageById
 // ---
 // description: |
-//   Retrieves the image details associated with a specified image id from the workload service 
+//   Retrieves the image details associated with a specified image id from the workload service
 //   database. A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -145,9 +145,9 @@ type SwaggImagesResponse struct {
 // x-sample-call-output: |
 //    {
 //       "id": "ffff021e-9669-4e53-9224-8880fb4e4081",
-//       "flavor_ids" : [ 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c3", 
-//           "d6129610-4c8f-4ac4-8823-df4e925688c4" 
+//       "flavor_ids" : [
+//           "d6129610-4c8f-4ac4-8823-df4e925688c3",
+//           "d6129610-4c8f-4ac4-8823-df4e925688c4"
 //        ]
 //    }
 // ---
@@ -155,7 +155,7 @@ type SwaggImagesResponse struct {
 // swagger:operation DELETE /images/{image_id} Images deleteImageById
 // ---
 // description: |
-//   Deletes the image details associated with a specified image id in the workload service 
+//   Deletes the image details associated with a specified image id in the workload service
 //   database. A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -182,7 +182,7 @@ type SwaggImagesResponse struct {
 // swagger:operation PUT /images/{image_id}/flavors/{flavor_id} ImageFlavor addImageFlavor
 // ---
 // description: |
-//   Assigns a flavor to the image associated with the specified image id in the workload service database. 
+//   Assigns a flavor to the image associated with the specified image id in the workload service database.
 //   A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -246,7 +246,7 @@ type SwaggImagesResponse struct {
 // swagger:operation GET /images/{image_id}/flavors/{flavor_id} ImageFlavor getImageFlavorByID
 // ---
 // description: |
-//   Retrieves the specified flavor associated with an image id from the workload service database. 
+//   Retrieves the specified flavor associated with an image id from the workload service database.
 //   A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -297,7 +297,7 @@ type SwaggImagesResponse struct {
 // swagger:operation GET /images/{image_id}/flavors?flavor_part={flavor_part} ImageFlavor retrieveFlavorForImageId
 // ---
 // description: |
-//   Retrieves the flavor containing the provided flavor part associated with a specified image from 
+//   Retrieves the flavor containing the provided flavor part associated with a specified image from
 //   the workload service database. The query parameter 'flavor_part' is mandatory.
 //   A valid bearer token should be provided to authorize this REST call.
 //
@@ -350,7 +350,7 @@ type SwaggImagesResponse struct {
 //  }
 // ---
 
-// swagger:operation GET /images/{image_id}/flavors ImageFlavor getImageFlavors 
+// swagger:operation GET /images/{image_id}/flavors ImageFlavor getImageFlavors
 // ---
 // description: |
 //   Retrieves all the associated flavors for the specified image.
@@ -361,7 +361,7 @@ type SwaggImagesResponse struct {
 // produces:
 //  - application/json
 // parameters:
-// - name: image_id 
+// - name: image_id
 //   description: Unique ID of the image.
 //   in: path
 //   required: true

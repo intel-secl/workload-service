@@ -5,9 +5,9 @@
 package docs
 
 import (
-        "intel/isecl/lib/common/v3/crypt"
-        "intel/isecl/lib/verifier/v3"
+	"intel/isecl/lib/common/v3/crypt"
 	"intel/isecl/lib/common/v3/pkg/instance"
+	"intel/isecl/lib/verifier/v3"
 )
 
 type Rule struct {
@@ -15,23 +15,23 @@ type Rule struct {
 }
 
 type Result struct {
-        Rule     Rule    `json:"rule"`
-        FlavorID string  `json:"flavor_id"`
-        Faults   []verifier.Fault `json:"faults,omitempty"`
-        Trusted  bool    `json:"trusted"`
+	Rule     Rule             `json:"rule"`
+	FlavorID string           `json:"flavor_id"`
+	Faults   []verifier.Fault `json:"faults,omitempty"`
+	Trusted  bool             `json:"trusted"`
 }
 
 type InstanceTrustReport struct {
-        Manifest   instance.Manifest `json:"instance_manifest"`
-        PolicyName string         `json:"policy_name"`
-        Results    []Result       `json:"results"`
-        Trusted    bool           `json:"trusted"`
+	Manifest   instance.Manifest `json:"instance_manifest"`
+	PolicyName string            `json:"policy_name"`
+	Results    []Result          `json:"results"`
+	Trusted    bool              `json:"trusted"`
 }
 
 type Report struct {
-        ID string `json:"id,omitempty"`
-        InstanceTrustReport
-        crypt.SignedData
+	ID string `json:"id,omitempty"`
+	InstanceTrustReport
+	crypt.SignedData
 }
 
 // ReportCreateInfo request payload
@@ -50,15 +50,14 @@ type SwaggReportsResponse struct {
 	Body ReportsResponse
 }
 
-
 // swagger:operation POST /reports Reports createReport
 // ---
 //
 // description: |
-//   Creates an image trust report. A report contains the status of an associated image. 
-//   The report schema provided in the request body contains an interface called Rule which works on 
-//   any matching policy based on provided rule_name. Rule policy can be either image encryption policy 
-//   or flavor integrity policy or integrity policy. 
+//   Creates an image trust report. A report contains the status of an associated image.
+//   The report schema provided in the request body contains an interface called Rule which works on
+//   any matching policy based on provided rule_name. Rule policy can be either image encryption policy
+//   or flavor integrity policy or integrity policy.
 //   A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -285,9 +284,9 @@ type SwaggReportsResponse struct {
 // produces:
 //  - application/json
 // parameters:
-// - name: filter 
+// - name: filter
 //   description: |
-//      Boolean value to indicate whether the response should be filtered to return no results instead of listing all reports. 
+//      Boolean value to indicate whether the response should be filtered to return no results instead of listing all reports.
 //      When the filter is true and no other query parameter is specified, error response will be returned. Default value is true.
 //   in: query
 //   type: boolean
@@ -321,7 +320,7 @@ type SwaggReportsResponse struct {
 //   type: boolean
 // - name: num_of_days
 //   description: |
-//      Results returned will be restricted to between the current date and number of days prior. 
+//      Results returned will be restricted to between the current date and number of days prior.
 //      This option will override other date options.
 //   in: query
 //   type: integer
@@ -433,7 +432,7 @@ type SwaggReportsResponse struct {
 // swagger:operation DELETE /reports/{report_id} Reports deleteReportById
 // ---
 // description: |
-//   Deletes the image trust report associated with a specified report id from the workload service 
+//   Deletes the image trust report associated with a specified report id from the workload service
 //   database. A valid bearer token should be provided to authorize this REST call.
 //
 // security:

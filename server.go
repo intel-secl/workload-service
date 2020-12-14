@@ -67,7 +67,7 @@ func fnGetJwtCerts() error {
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
+				MinVersion:         tls.VersionTLS12,
 				InsecureSkipVerify: false,
 				RootCAs:            rootCAs,
 			},
@@ -134,7 +134,7 @@ func startServer() error {
 		defer func() {
 			perr := httpLogFile.Close()
 			if perr != nil {
-				fmt.Fprintln(os.Stderr, "Error while closing file : " + perr.Error())
+				fmt.Fprintln(os.Stderr, "Error while closing file : "+perr.Error())
 			}
 		}()
 		httpWriter = httpLogFile

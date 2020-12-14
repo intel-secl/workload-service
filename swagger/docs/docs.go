@@ -5,7 +5,7 @@
 // When the encrypted image is used to launch new VM or container, WLA will request the decryption key from the Workload Service.
 // Then Workload Service will initiate the key transfer request to the Key Broker.
 //
-//  License: Copyright (C) 2020 Intel Corporation. SPDX-License-Identifier: BSD-3-Clause 
+//  License: Copyright (C) 2020 Intel Corporation. SPDX-License-Identifier: BSD-3-Clause
 //
 //  Version: 2.2
 //  Host: workloadservice.com:5000
@@ -15,7 +15,7 @@
 //
 //  SecurityDefinitions:
 //   bearerAuth:
-//     type: apiKey 
+//     type: apiKey
 //     in: header
 //     name: Authorization
 //     description: Enter your bearer token in the format **Bearer &lt;token&gt;**

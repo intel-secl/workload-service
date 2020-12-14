@@ -5,11 +5,11 @@
 package postgres
 
 import (
+	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	flvr "intel/isecl/lib/flavor/v3"
 	"intel/isecl/workload-service/v3/model"
 	"intel/isecl/workload-service/v3/repository"
-	"github.com/pkg/errors"
-	"github.com/jinzhu/gorm"
 )
 
 type imageRepo struct {
@@ -81,8 +81,8 @@ func (repo imageRepo) Create(image *model.Image) error {
 
 	} else if !gorm.IsRecordNotFoundError(err) && len(ie.Image().FlavorIDs) == 0 {
 		// if image record exists but no flavor is associated with it, record has to be updated
-		for _, fid := range image.FlavorIDs  {
-			updateErr :=  repo.AddAssociatedFlavor(image.ID, fid)
+		for _, fid := range image.FlavorIDs {
+			updateErr := repo.AddAssociatedFlavor(image.ID, fid)
 			if updateErr != nil {
 				return updateErr
 			}

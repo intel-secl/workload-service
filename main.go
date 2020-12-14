@@ -97,9 +97,9 @@ func main() {
 					flags = args[3:]
 				}
 			} else {
-			// flags for arguments
-			flags = args[2:]
-		}
+				// flags for arguments
+				flags = args[2:]
+			}
 		}
 
 		// log initialization

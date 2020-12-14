@@ -152,7 +152,7 @@ func (ds Database) Validate(c csetup.Context) error {
 	wlsDB, err := postgres.Open(config.Configuration.Postgres.Hostname, config.Configuration.Postgres.Port, config.Configuration.Postgres.DBName,
 		config.Configuration.Postgres.UserName, config.Configuration.Postgres.Password, config.Configuration.Postgres.SSLMode, config.Configuration.Postgres.SSLCert)
 	if err != nil {
-		return errors.Wrap(err,"setup/database:Validate() Failed to connect to database with the provided configuration")
+		return errors.Wrap(err, "setup/database:Validate() Failed to connect to database with the provided configuration")
 	}
 	defer wlsDB.Close()
 

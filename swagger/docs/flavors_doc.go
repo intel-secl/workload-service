@@ -31,12 +31,11 @@ type SwaggFlavorsResponse struct {
 	Body FlavorsResponse
 }
 
-
 // swagger:operation POST /flavors Flavors createFlavor
 // ---
 //
 // description: |
-//   Creates a flavor for the encrypted image in the workload service database. 
+//   Creates a flavor for the encrypted image in the workload service database.
 //   Flavor can be created by providing the image flavor content obtained from the WPM after encrypting the image.
 //   A valid bearer token should be provided to authorize this REST call.
 //
@@ -113,10 +112,10 @@ type SwaggFlavorsResponse struct {
 // produces:
 //  - application/json
 // parameters:
-// - name: filter 
+// - name: filter
 //   description: |
-//      Boolean value to indicate whether the response should be filtered to return specific flavors instead of listing 
-//      all flavors. When the filter is true and no other query parameter is specified, error response will be returned. 
+//      Boolean value to indicate whether the response should be filtered to return specific flavors instead of listing
+//      all flavors. When the filter is true and no other query parameter is specified, error response will be returned.
 //      Default value is true.
 //   in: query
 //   type: boolean
@@ -161,7 +160,7 @@ type SwaggFlavorsResponse struct {
 // swagger:operation DELETE /flavors/{flavor_id} Flavors deleteFlavorByID
 // ---
 // description: |
-//   Deletes the flavor associated with a specified flavor id from the workload service 
+//   Deletes the flavor associated with a specified flavor id from the workload service
 //   database. A valid bearer token should be provided to authorize this REST call.
 //
 // security:
@@ -188,8 +187,8 @@ type SwaggFlavorsResponse struct {
 // swagger:operation GET /flavors/{flavor_id} Flavors getFlavorByIdOrLabel
 // ---
 // description: |
-//   Retrieves the flavor associated with a specified flavor ID or flavor label from the workload service 
-//   database. The path parameter can be either flavor ID or flavor Label. 
+//   Retrieves the flavor associated with a specified flavor ID or flavor label from the workload service
+//   database. The path parameter can be either flavor ID or flavor Label.
 //   A valid bearer token should be provided to authorize this REST call.
 //
 // security:

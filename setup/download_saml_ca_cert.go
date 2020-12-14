@@ -47,13 +47,13 @@ func (dc Download_Saml_Ca_Cert) Run(c csetup.Context) error {
 
 	vsClientFactory, err := hvsclient.NewVSClientFactory(config.Configuration.HVS_API_URL, jwtToken, constants.TrustedCaCertsDir)
 	if err != nil {
-		fmt.Fprintln(os.Stderr,"setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
+		fmt.Fprintln(os.Stderr, "setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
 		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
 	}
 
 	caCertsClient, err := vsClientFactory.CACertificatesClient()
 	if err != nil {
-		fmt.Fprintln(os.Stderr,"setup/download_saml_ca_cert:Run() Error while getting CACertificatesClient")
+		fmt.Fprintln(os.Stderr, "setup/download_saml_ca_cert:Run() Error while getting CACertificatesClient")
 		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while getting CACertificatesClient")
 	}
 

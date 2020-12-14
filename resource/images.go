@@ -148,7 +148,7 @@ func retrieveFlavorAndKeyForImageID(db repository.WlsDatabase) endpointHandler {
 		if flavor.ImageFlavor.EncryptionRequired && len(flavor.ImageFlavor.Encryption.KeyURL) > 0 {
 			key, err := transfer_key(true, hwid, keyUrl, id)
 			if err != nil {
-                                cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() Error while retrieving key")
+				cLog.WithError(err).Error("resource/images:retrieveFlavorAndKeyForImageID() Error while retrieving key")
 				return err
 			}
 

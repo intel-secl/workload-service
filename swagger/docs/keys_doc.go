@@ -19,7 +19,6 @@ type KeyResponse struct {
 	Body wls.ReturnKey
 }
 
-
 // swagger:operation POST /keys Keys CreateKey
 // ---
 //
