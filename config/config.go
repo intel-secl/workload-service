@@ -6,6 +6,7 @@ package config
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	commLog "intel/isecl/lib/common/v3/log"
 	"intel/isecl/lib/common/v3/log/message"
 	commLogInt "intel/isecl/lib/common/v3/log/setup"
@@ -21,7 +22,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 // Do not use this casing for GoLang constants unless you are making it match environment variable syntax in bash
@@ -316,6 +316,11 @@ func init() {
 }
 
 func TakeOwnershipFileWLS(filename string) error {
+	// Containers are always run as non root users, does not require changing ownership of config directories
+	if _, err := os.Stat("/.container-env"); err == nil {
+		return nil
+	}
+
 	// when successful, we update the ownership of the config/certs updated by the setup tasks
 	// all of them are likely to be found in /etc/workload-service/ path
 	wlsUser, err := user.Lookup(constants.WLSRuntimeUser)

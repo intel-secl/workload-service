@@ -3,9 +3,12 @@ GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
-PROXY := $($http_proxy)
+PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
+ifeq ($(PROXY_EXISTS),1)
+	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
+endif
 
-.PHONY: workload-service installer docker all clean
+.PHONY: workload-service installer wls-docker wls-oci-archive all clean
 
 workload-service:
 	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/v3/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/v3/version.Version=$(VERSION) -X intel/isecl/workload-service/v3/version.GitHash=$(GITCOMMIT)" -o out/workload-service
@@ -19,8 +22,13 @@ installer: workload-service
 
 docker: installer
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
-	docker build --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
-	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION).tar 
+	docker build ${DOCKER_PROXY_FLAGS} -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
+
+wls-docker: docker
+	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION)-$(GITCOMMIT).tar
+
+wls-oci-archive: docker
+	skopeo copy docker-daemon:isecl/workload-service:$(VERSION) oci-archive:out/wls-$(VERSION)-$(GITCOMMIT).tar:$(VERSION)
 
 swagger-get:
 	wget https://github.com/go-swagger/go-swagger/releases/download/v0.21.0/swagger_linux_amd64 -O /usr/local/bin/swagger
