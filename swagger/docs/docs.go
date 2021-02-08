@@ -23,7 +23,7 @@
 // swagger:meta
 package docs
 
-// swagger:operation GET /noauth/version Version getVersion
+// swagger:operation GET /version Version getVersion
 // ---
 // description: Retrieves the version of workload service.
 //
@@ -36,6 +36,6 @@ package docs
 //       type: string
 //       example: v2.2
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/noauth/version
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/version
 // x-sample-call-output: v2.2
 // ---

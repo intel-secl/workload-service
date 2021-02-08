@@ -43,7 +43,7 @@ func fnGetJwtCerts() error {
 	if !strings.HasSuffix(c.AAS_API_URL, "/") {
 		c.AAS_API_URL = c.AAS_API_URL + "/"
 	}
-	url := c.AAS_API_URL + "noauth/jwt-certificates"
+	url := c.AAS_API_URL + "jwt-certificates"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return errors.Wrap(err, "server:fnGetJwtCerts() Could not create http request")
@@ -107,8 +107,9 @@ func startServer() error {
 	r := mux.NewRouter()
 	// ISECL-8715 - Prevent potential open redirects to external URLs
 	r.SkipClean(true)
-	noauthr := r.PathPrefix("/wls/noauth/").Subrouter()
-	authr := r.PathPrefix("/wls/").Subrouter()
+	serviceApi := "/" + strings.ToUpper(constants.ServiceName) + "/" + constants.ApiVersion
+	noauthr := r.PathPrefix(serviceApi).Subrouter()
+	authr := r.PathPrefix(serviceApi).Subrouter()
 
 	// Set Version Endpoint
 	resource.SetVersionEndpoints(noauthr)
