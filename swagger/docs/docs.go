@@ -9,7 +9,7 @@
 //
 //  Version: 2.2
 //  Host: workloadservice.com:5000
-//  BasePath: /wls
+//  BasePath: /wls/v1
 //
 //  Schemes: https
 //

@@ -45,9 +45,9 @@ func setupServer(t *testing.T) *mux.Router {
 	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
 	wlsDB := postgres.PostgresDatabase{DB: db.Debug()}
 	wlsDB.Migrate()
-	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), wlsDB)
-	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), wlsDB)
-	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), wlsDB)
+	SetFlavorsEndpoints(r.PathPrefix("/wls/v1/flavors").Subrouter(), wlsDB)
+	SetImagesEndpoints(r.PathPrefix("/wls/v1/images").Subrouter(), wlsDB)
+	SetReportsEndpoints(r.PathPrefix("/wls/v1/reports").Subrouter(), wlsDB)
 	return r
 }
 
@@ -62,9 +62,9 @@ func setupMockServer(db repository.WlsDatabase) *mux.Router {
 	defer log.Trace("resource/common_test:setupMockServer() Leaving")
 	r := mux.NewRouter()
 	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
-	SetFlavorsEndpoints(r.PathPrefix("/wls/flavors").Subrouter(), db)
-	SetImagesEndpoints(r.PathPrefix("/wls/images").Subrouter(), db)
-	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), db)
+	SetFlavorsEndpoints(r.PathPrefix("/wls/v1/flavors").Subrouter(), db)
+	SetImagesEndpoints(r.PathPrefix("/wls/v1/images").Subrouter(), db)
+	SetReportsEndpoints(r.PathPrefix("/wls/v1/reports").Subrouter(), db)
 	return r
 }
 

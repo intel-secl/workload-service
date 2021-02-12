@@ -78,7 +78,7 @@ type SwaggReportsResponse struct {
 //     schema:
 //       "$ref": "#/definitions/Report"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/reports
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/reports
 // x-sample-call-input: |
 //  {
 //   "id": "f52023eb-7991-47ba-91fc-c43bd9d80c29",
@@ -330,7 +330,7 @@ type SwaggReportsResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ReportsResponse"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/reports?report_id=f52023eb-7991-47ba-91fc-c43bd9d80c29
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/reports?report_id=f52023eb-7991-47ba-91fc-c43bd9d80c29
 // x-sample-call-output: |
 //  {
 //   "id": "f52023eb-7991-47ba-91fc-c43bd9d80c29",
@@ -451,7 +451,7 @@ type SwaggReportsResponse struct {
 //     description: Successfully deleted the image trust report associated with specified report id.
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/reports/f52023eb-7991-47ba-91fc-c43bd9d80c29
+//    https://workloadservice.com:5000/wls/v1/reports/f52023eb-7991-47ba-91fc-c43bd9d80c29
 // x-sample-call-output: |
 //    204 No content
 // ---

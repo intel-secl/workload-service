@@ -10,7 +10,6 @@ package resource
 import (
 	"bytes"
 	"encoding/json"
-	"intel/isecl/lib/flavor/v3"
 	flavorUtil "intel/isecl/lib/flavor/v3/util"
 	"intel/isecl/workload-service/v3/model"
 	"net/http"
@@ -48,7 +47,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	// Post a new Flavor
 	recorder := httptest.NewRecorder()
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
+	req := httptest.NewRequest("POST", "/wls/v1/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -57,7 +56,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	// Post second Flavor
 	recorder = httptest.NewRecorder()
 	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
+	req = httptest.NewRequest("POST", "/wls/v1/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -68,7 +67,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	newImageJSON, _ := json.Marshal(newImage)
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -76,7 +75,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// Check and see if the Image has been created in the db
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -86,7 +85,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// Check and see if the Image flavor has been associated in the db correctly
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID+"/flavors?flavor_part="+f.Image.Meta.Description.FlavorPart, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -96,7 +95,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 	newImage2 := model.Image{ID: uuid2.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	newImage2JSON, _ := json.Marshal(newImage2)
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImage2JSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImage2JSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -104,7 +103,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// query all by flavorID and see if we can find both
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images?flavor_id="+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images?flavor_id="+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -124,7 +123,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// make sure we only get a single image when filtering by image_id (ISECL-3557)
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images?image_id="+newImage.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images?image_id="+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -135,7 +134,7 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// test using both image_id and flavor_id parameters
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images?image_id="+newImage.ID+"&flavor_id="+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images?image_id="+newImage.ID+"&flavor_id="+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -144,9 +143,9 @@ func TestImagesResourceIntegration(t *testing.T) {
 	assert.NotEmpty(response)
 	assert.ElementsMatch([]model.Image{i1}, response)
 
-	// test 'wls/image?filter=false (should return all new images)
+	// test 'wls/v1/image?filter=false (should return all new images)
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images?filter=false", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images?filter=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -157,34 +156,34 @@ func TestImagesResourceIntegration(t *testing.T) {
 
 	// Delete  the first one we created
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	// Assert that it doesn't exist anymore
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 
 	// Clean up Flavor
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/flavors/"+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	// Clean up Image
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage2.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage2.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
@@ -201,7 +200,7 @@ func TestImageDuplicate(t *testing.T) {
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: nil}
 	newImageJSON, _ := json.Marshal(newImage)
-	req := httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req := httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -209,7 +208,7 @@ func TestImageDuplicate(t *testing.T) {
 
 	// Post Duplicate, expect conflict
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -217,7 +216,7 @@ func TestImageDuplicate(t *testing.T) {
 
 	// Delete it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
@@ -250,7 +249,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 	// Post first Flavor
 	recorder := httptest.NewRecorder()
 	signedFlavorString, err := flavorUtil.GetSignedFlavor(string(fJSON), "../repository/mock/flavor-signing-key.pem")
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
+	req := httptest.NewRequest("POST", "/wls/v1/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -259,7 +258,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 	// Post Second Flavor
 	recorder = httptest.NewRecorder()
 	signedFlavorString2, err := flavorUtil.GetSignedFlavor(string(f2JSON), "../repository/mock/flavor-signing-key.pem")
-	req = httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
+	req = httptest.NewRequest("POST", "/wls/v1/flavors", bytes.NewBuffer([]byte(signedFlavorString2)))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -270,7 +269,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	newImageJSON, _ := json.Marshal(newImage)
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -278,7 +277,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Check to see if /imageId/flavors/flavorId works
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID+"/flavors/"+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -288,14 +287,14 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Add the second Flavor Association to the Image
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("PUT", "/wls/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("PUT", "/wls/v1/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Verify that the Image now has another Flavors associated with it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -305,7 +304,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Verify it again by querying all associated flavors
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID+"/flavors", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -315,27 +314,27 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Delete the second Flavor Association from the Image
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	// Verify that the Image now only has one Flavor associated with it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/images/"+newImage.ID+"/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNotFound, recorder.Code)
 
 	// Delete Flavors
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/flavors/"+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f2.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/flavors/"+f2.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
@@ -344,7 +343,7 @@ func TestImageAssociatedFlavors(t *testing.T) {
 
 	// Delete it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
@@ -360,7 +359,7 @@ func TestImageBadFlavorID(t *testing.T) {
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: []string{"DSFLKDJSFKLJDKSLFJDKD"}}
 	newImageJSON, _ := json.Marshal(newImage)
-	req := httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req := httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -387,7 +386,7 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 
 	// Post first Flavor
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
+	req := httptest.NewRequest("POST", "/wls/v1/flavors", bytes.NewBuffer([]byte(signedFlavorString)))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -398,7 +397,7 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 	id, _ := uuid.NewV4()
 	newImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID, f.Image.Meta.ID}}
 	newImageJSON, _ := json.Marshal(newImage)
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(newImageJSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(newImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -408,7 +407,7 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	validImage := model.Image{ID: id.String(), FlavorIDs: []string{f.Image.Meta.ID}}
 	validImageJSON, _ := json.Marshal(validImage)
-	req = httptest.NewRequest("POST", "/wls/images", bytes.NewBuffer(validImageJSON))
+	req = httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBuffer(validImageJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -416,21 +415,21 @@ func TestImageDuplicateFlavorIDs(t *testing.T) {
 
 	// PUT is idempotent, so PUT to this ID should result in no error
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("PUT", "/wls/images/"+newImage.ID+"/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("PUT", "/wls/v1/images/"+newImage.ID+"/flavors/"+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusCreated, recorder.Code)
 
 	// Delete Flavors
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/flavors/"+f.Image.Meta.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/flavors/"+f.Image.Meta.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	// Delete it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/"+newImage.ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/"+newImage.ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
@@ -444,7 +443,7 @@ func TestCreateImageEmptyFlavorsIntegration(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	iJSON := `{"id": "fffe021e-9669-4e53-9224-8880fb4e4080", "flavor_ids":[]}`
-	req := httptest.NewRequest("POST", "/wls/images", bytes.NewBufferString(iJSON))
+	req := httptest.NewRequest("POST", "/wls/v1/images", bytes.NewBufferString(iJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
@@ -452,7 +451,7 @@ func TestCreateImageEmptyFlavorsIntegration(t *testing.T) {
 
 	// Delete it
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/images/fffe021e-9669-4e53-9224-8880fb4e4080", nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/images/fffe021e-9669-4e53-9224-8880fb4e4080", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)

@@ -3,7 +3,7 @@ info:
   version: 1.0.0
   title: ISecL Workload Service
 servers:
-  - url: http://workload-service.com/wls
+  - url: http://workload-service.com/wls/v1
 paths:
   /flavors/{id}:
     get:

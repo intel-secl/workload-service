@@ -43,7 +43,7 @@ type KeyResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ReturnKey"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/keys
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/keys
 // x-sample-call-input: |
 //  {
 //      "hardware_uuid": "ecee021e-9669-4e53-9224-8880fb4e4080"

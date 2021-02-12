@@ -88,9 +88,9 @@ func TestReportResource(t *testing.T) {
 
 	r := mux.NewRouter()
 	r.Use(middleware.NewTokenAuth("../mockJWTDir", "../mockJWTDir", mockRetrieveJWTSigningCerts, cacheTime))
-	SetReportsEndpoints(r.PathPrefix("/wls/reports").Subrouter(), wlsDB)
+	SetReportsEndpoints(r.PathPrefix("/wls/v1/reports").Subrouter(), wlsDB)
 	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/wls/reports", bytes.NewBuffer(signedJSON))
+	req := httptest.NewRequest("POST", "/wls/v1/reports", bytes.NewBuffer(signedJSON))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
@@ -99,28 +99,28 @@ func TestReportResource(t *testing.T) {
 	log.Infof("%v", string(rbody))
 	assert.Equal(http.StatusCreated, recorder.Code)
 
-	// ISECL-3639: a GET without parameters to /wls/reports should return 400 and an error message
+	// ISECL-3639: a GET without parameters to /wls/v1/reports should return 400 and an error message
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 
 	// reports with filter=false should return all reports
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?filter=false", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?filter=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42&&latest_per_vm=false", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?instance_id=7b280921-83f7-4f44-9f8d-2dcf36e7af33&&from_date=2017-08-26T11:45:42&&latest_per_vm=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -128,31 +128,31 @@ func TestReportResource(t *testing.T) {
 	checkErr(json.Unmarshal(recorder.Body.Bytes(), &rResponse))
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=2019-08-26T11:45:42", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?hardware_uuid=59EED8F0-28C5-4070-91FC-F5E2E5443F6B&&to_date=2019-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?to_date=2019-08-26T11:45:42", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?to_date=2019-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?from_date=2017-08-26T11:45:42", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?from_date=2017-08-26T11:45:42", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?num_of_days=3&&latest_per_vm=false", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?num_of_days=3&&latest_per_vm=false", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?num_of_days=3", nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?num_of_days=3", nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
@@ -160,19 +160,19 @@ func TestReportResource(t *testing.T) {
 	// TODO: Fix failing tests - after Sprint 29
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?report_id="+rResponse[0].ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusOK, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("DELETE", "/wls/reports/"+rResponse[0].ID, nil)
+	req = httptest.NewRequest("DELETE", "/wls/v1/reports/"+rResponse[0].ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	assert.Equal(http.StatusNoContent, recorder.Code)
 
 	recorder = httptest.NewRecorder()
-	req = httptest.NewRequest("GET", "/wls/reports?report_id="+rResponse[0].ID, nil)
+	req = httptest.NewRequest("GET", "/wls/v1/reports?report_id="+rResponse[0].ID, nil)
 	req.Header.Add("Authorization", "Bearer "+BearerToken)
 	r.ServeHTTP(recorder, req)
 	var rResponse1 []model.Report

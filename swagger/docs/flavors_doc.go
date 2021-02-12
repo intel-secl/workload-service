@@ -57,7 +57,7 @@ type SwaggFlavorsResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ImageFlavor"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/flavors
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/flavors
 // x-sample-call-input: |
 //    {
 //       "flavor": {
@@ -134,7 +134,7 @@ type SwaggFlavorsResponse struct {
 //     schema:
 //       "$ref": "#/definitions/FlavorsResponse"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/flavors?label=label_image-test-4
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/flavors?label=label_image-test-4
 // x-sample-call-output: |
 //  [
 //    {
@@ -179,7 +179,7 @@ type SwaggFlavorsResponse struct {
 //     description: Successfully deleted the flavor for the specified flavor id.
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
+//    https://workloadservice.com:5000/wls/v1/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
 // x-sample-call-output: |
 //   204 No content
 // ---
@@ -208,7 +208,7 @@ type SwaggFlavorsResponse struct {
 //       "$ref": "#/definitions/ImageFlavor"
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
+//    https://workloadservice.com:5000/wls/v1/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
 // x-sample-call-output: |
 //  {
 //    "flavor": {

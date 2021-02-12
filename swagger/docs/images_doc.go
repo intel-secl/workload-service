@@ -51,7 +51,7 @@ type SwaggImagesResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ImageInfo"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/images
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/images
 // x-sample-call-input: |
 //    {
 //       "id" : "ffff021e-9669-4e53-9224-8880fb4e4081",
@@ -105,7 +105,7 @@ type SwaggImagesResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ImagesResponse"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/images/image_id=ffff021e-9669-4e53-9224-8880fb4e4081
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/images/image_id=ffff021e-9669-4e53-9224-8880fb4e4081
 // x-sample-call-output: |
 //  [
 //    {
@@ -141,7 +141,7 @@ type SwaggImagesResponse struct {
 //     schema:
 //       "$ref": "#/definitions/ImageInfo"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081
 // x-sample-call-output: |
 //    {
 //       "id": "ffff021e-9669-4e53-9224-8880fb4e4081",
@@ -174,7 +174,7 @@ type SwaggImagesResponse struct {
 //     description: Successfully deleted the image.
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081
+//    https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081
 // x-sample-call-output: |
 //    204 No content
 // ---
@@ -207,7 +207,7 @@ type SwaggImagesResponse struct {
 //     description: Successfully created a new flavor association with the specified image.
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
+//    https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
 // x-sample-call-output: |
 //    201 Created
 // ---
@@ -238,7 +238,7 @@ type SwaggImagesResponse struct {
 //     description: Successfully removed the specified flavor associated with the image.
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
+//    https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
 // x-sample-call-output: |
 //    204 No content
 // ---
@@ -273,7 +273,7 @@ type SwaggImagesResponse struct {
 //      "$ref": "#/definitions/ImageFlavor"
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
+//    https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors/d6129610-4c8f-4ac4-8823-df4e925688c4
 // x-sample-call-output: |
 //  {
 //    "flavor": {
@@ -324,7 +324,7 @@ type SwaggImagesResponse struct {
 //      "$ref": "#/definitions/SignedImageFlavor"
 //
 // x-sample-call-endpoint: |
-//    https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors?flavor_part=CONTAINER_IMAGE
+//    https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors?flavor_part=CONTAINER_IMAGE
 // x-sample-call-output: |
 //  {
 //    "flavor": {
@@ -373,7 +373,7 @@ type SwaggImagesResponse struct {
 //     schema:
 //       "$ref": "#/definitions/FlavorsResponse"
 //
-// x-sample-call-endpoint: https://workloadservice.com:5000/wls/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors
+// x-sample-call-endpoint: https://workloadservice.com:5000/wls/v1/images/ffff021e-9669-4e53-9224-8880fb4e4081/flavors
 // x-sample-call-output: |
 //  [
 //    {
