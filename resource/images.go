@@ -86,8 +86,8 @@ func badId(w http.ResponseWriter, r *http.Request) {
 	defer log.Trace("resource/images:badId() Leaving")
 	badid := mux.Vars(r)["badid"]
 	log.Errorf("resource/images:badId() %s : Request made with non compliant UUIDv4: %v", message.InvalidInputProtocolViolation, badid)
-
 	w.WriteHeader(http.StatusBadRequest)
+	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	_, err := w.Write([]byte(fmt.Sprintf("%s is not uuidv4 compliant", badid)))
 	if err != nil {
 		log.Errorf("resource/images:badId() : Failed to write response: %v", badid)
