@@ -63,6 +63,7 @@ func requiresPermission(eh endpointHandler, permissionNames []string) endpointHa
 		privileges, err := context.GetUserPermissions(r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 			_, err := w.Write([]byte("Could not get user roles from http context"))
 			if err != nil {
 				log.Errorf("resource/resource:requiresPermission(): Failed to write response")
