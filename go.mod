@@ -26,3 +26,4 @@ replace intel/isecl/lib/verifier/v3 => gitlab.devtools.intel.com/sst/isecl/lib/v
 replace github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output
 
 replace github.com/intel-secl/intel-secl/v3 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v3 v3.5/develop
+
