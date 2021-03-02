@@ -4,6 +4,11 @@
  */
 package version
 
+import (
+	"fmt"
+	"intel/isecl/workload-service/v3/constants"
+)
+
 // Automatically filled in by linker
 
 // Version holds the build revision for the WLS binary
@@ -14,3 +19,10 @@ var GitHash = ""
 
 // BuildDate holds the build timestamp for the WLS binary
 var BuildDate = ""
+
+func GetVersion() string {
+	verStr := fmt.Sprintf("Service Name: %s\n", constants.ExplicitServiceName)
+	verStr = verStr + fmt.Sprintf("Version: %s-%s\n", Version, GitHash)
+	verStr = verStr + fmt.Sprintf("Build Date: %s\n", BuildDate)
+	return verStr
+}

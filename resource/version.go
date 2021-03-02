@@ -5,7 +5,6 @@
 package resource
 
 import (
-	"fmt"
 	"intel/isecl/workload-service/v3/version"
 	"net/http"
 
@@ -25,8 +24,8 @@ func getVersion(w http.ResponseWriter, r *http.Request) {
 	defer log.Trace("resource/version:getVersion() Leaving")
 	w.Header().Add("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 	w.WriteHeader(http.StatusOK)
-	log.Debugf("resource/version:getVersion() WLS Version: %s CommitHash: %s", version.Version, version.GitHash)
-	_, err := w.Write([]byte(fmt.Sprintf("%s-%s", version.Version, version.GitHash)))
+	log.Debugf("resource/version:getVersion() %s", version.GetVersion())
+	_, err := w.Write([]byte(version.GetVersion()))
 	if err != nil {
 		log.Errorf("resource/version:getVersion() WLS Version: Failed to write version response")
 	}

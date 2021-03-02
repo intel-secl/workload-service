@@ -8,6 +8,7 @@ import "time"
 
 const (
 	ServiceName               = "WLS"
+	ExplicitServiceName       = "Workload Service"
 	ApiVersion                = "v1"
 	ConfigDir                 = "/etc/workload-service/"
 	ConfigFile                = ConfigDir + "config.yml"
