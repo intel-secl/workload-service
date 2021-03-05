@@ -13,6 +13,7 @@ type KeyRequest struct {
 	Body wls.RequestKey
 }
 
+// KeyResponse response payload
 // swagger:response KeyResponse
 type KeyResponse struct {
 	// in:body

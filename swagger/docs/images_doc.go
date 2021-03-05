@@ -294,7 +294,7 @@ type SwaggImagesResponse struct {
 //  }
 // ---
 
-// swagger:operation GET /images/{image_id}/flavors?flavor_part={flavor_part} ImageFlavor retrieveFlavorForImageId
+// swagger:operation GET /images/{image_id}/flavors ImageFlavor retrieveFlavorForImageId
 // ---
 // description: |
 //   Retrieves the flavor containing the provided flavor part associated with a specified image from
