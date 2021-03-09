@@ -107,7 +107,7 @@ func startServer() error {
 	r := mux.NewRouter()
 	// ISECL-8715 - Prevent potential open redirects to external URLs
 	r.SkipClean(true)
-	serviceApi := "/" + strings.ToUpper(constants.ServiceName) + "/" + constants.ApiVersion
+	serviceApi := "/" + strings.ToLower(constants.ServiceName) + "/" + constants.ApiVersion
 	noauthr := r.PathPrefix(serviceApi).Subrouter()
 	authr := r.PathPrefix(serviceApi).Subrouter()
 
