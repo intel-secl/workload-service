@@ -12,9 +12,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	uuid "github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
-	uuid "github.com/google/uuid"
 )
 
 type reportEntity struct {
