@@ -38,7 +38,7 @@ func (re *reportEntity) BeforeCreate(scope *gorm.Scope) error {
 	log.Trace("repository/postgres/report_entity:BeforeCreate() Entering")
 	defer log.Trace("repository/postgres/report_entity:BeforeCreate() Leaving")
 
-	id, err := uuid.NewV4()
+	id, err := uuid.NewRandom()
 	if err != nil {
 		return errors.New("repository/postgres/report_entity:BeforeCreate() unable to create uuid")
 	}
