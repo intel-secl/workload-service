@@ -1,4 +1,4 @@
-image: golang:1.12
+image: golang:1.14
 
 before_script:
   - git config --global http."https://${GITLAB_SERVER}".proxy ""
@@ -27,7 +27,7 @@ stages:
 
 test:
   services:
-    - postgres:latest
+    - postgres:11
   stage: test
   tags:
     - go
@@ -81,7 +81,7 @@ Stylechecker:
   stage: scan
   only:
      - merge_requests
-  image: golang:latest
+  image: golang:1.14
   tags:
     - k8s
   script:

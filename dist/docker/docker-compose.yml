@@ -1,7 +1,7 @@
 version: "3.6"
 services:
    wls-pg-db:
-      image: postgres:latest
+      image: postgres:11
       command: postgres -c 'max_connections=400' -c 'shared_buffers=400MB'
       volumes:
          - wls-pgdata-volume:/var/lib/postgresql/data
