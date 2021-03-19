@@ -32,7 +32,7 @@ test:
   tags:
     - go
   script:
-    - go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
+    - GOOS=linux GOSUMDB=off GOPROXY=direct go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
     - go tool cover -func cover.out
     - go tool cover -html=cover.out -o cover.html
   artifacts:
@@ -44,7 +44,7 @@ compile:
   tags:
     - go
   script:
-    - go build ./...
+    - make workload-service
 
 installer:
   stage: deploy
