@@ -24,7 +24,7 @@ if [ ! -f $WORKLOAD_SERVICE_CONFIGURATION/.setup_done ]; then
   touch $WORKLOAD_SERVICE_CONFIGURATION/.setup_done
 fi
 
-if [ ! -z $SETUP_TASK ]; then
+if [ ! -z "$SETUP_TASK" ]; then
   IFS=',' read -ra ADDR <<< "$SETUP_TASK"
   for task in "${ADDR[@]}"; do
     workload-service setup $task --force

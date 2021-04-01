@@ -1,10 +1,11 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
 FROM centos:8
 
-RUN mkdir -p /opt/workload-service/bin
+COPY out/workload-service  /usr/bin/workload-service
 
-COPY workload-service  /usr/bin/workload-service
-
-COPY entrypoint.sh /entrypoint.sh
+COPY dist/docker/entrypoint.sh /entrypoint.sh
 
 RUN touch /.container-env && chmod +x /entrypoint.sh
 

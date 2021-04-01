@@ -4,9 +4,6 @@ GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
-ifeq ($(PROXY_EXISTS),1)
-	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
-endif
 
 .PHONY: workload-service installer wls-docker wls-oci-archive all clean
 
@@ -20,15 +17,14 @@ installer: workload-service
 	cp out/workload-service out/wls/workload-service
 	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh
 
-docker: installer
+oci-archive: workload-service
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
-	docker build ${DOCKER_PROXY_FLAGS} -t isecl/workload-service:$(VERSION) -f ./dist/docker/Dockerfile ./out
-
-wls-docker: docker
-	docker save isecl/workload-service:$(VERSION) > ./out/docker-wls-$(VERSION)-$(GITCOMMIT).tar
-
-wls-oci-archive: docker
-	skopeo copy docker-daemon:isecl/workload-service:$(VERSION) oci-archive:out/wls-$(VERSION)-$(GITCOMMIT).tar:$(VERSION)
+ifeq ($(PROXY_EXISTS),1)
+	docker build -t isecl/workload-service:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f dist/docker/Dockerfile .
+else
+	docker build -t isecl/workload-service:$(VERSION) -f dist/docker/Dockerfile .
+endif
+	skopeo copy docker-daemon:isecl/workload-service:$(VERSION) oci-archive:out/workload-service-$(VERSION)-$(GITCOMMIT).tar:$(VERSION)
 
 swagger-get:
 	wget https://github.com/go-swagger/go-swagger/releases/download/v0.21.0/swagger_linux_amd64 -O /usr/local/bin/swagger
@@ -40,6 +36,9 @@ swagger-doc:
 	env GOOS=linux GOSUMDB=off GOPROXY=direct \
 	/usr/local/bin/swagger generate spec -o ./out/swagger/openapi.yml --scan-models
 	java -jar /usr/local/bin/swagger-codegen-cli.jar generate -i ./out/swagger/openapi.yml -o ./out/swagger/ -l html2 -t ./swagger/templates/
+
+k8s: oci-archive
+	cp -r dist/k8s out/k8s
 
 swagger: swagger-get swagger-doc
 

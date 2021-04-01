@@ -1,0 +1,79 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wls-deployment
+  namespace: isecl
+  labels:
+    app: wls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wls
+  template:
+    metadata:
+      labels:
+        app: wls
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - image: <image-name>:<image-tag>
+          name: wls
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          envFrom:
+            - configMapRef:
+                name: wls-config
+          env:
+            - name: WLS_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: WLS_SERVICE_USERNAME
+            - name: WLS_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: WLS_SERVICE_PASSWORD
+            - name: BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: BEARER_TOKEN
+            - name: WLS_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wls-db-credentials
+                  key: WLS_DB_USERNAME
+            - name: WLS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wls-db-credentials
+                  key: WLS_DB_PASSWORD
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: wls-logs-volume
+              mountPath: /var/log/workload-service/
+            - name: wls-config-volume
+              mountPath: /etc/workload-service
+            - name: wls-db-certs
+              mountPath: /etc/postgresql/
+      volumes:
+        - name: wls-logs-volume
+          persistentVolumeClaim:
+            claimName: wls-logs-pvc
+        - name: wls-config-volume
+          persistentVolumeClaim:
+            claimName: wls-config-pvc
+        - name: wls-db-certs
+          secret:
+            secretName: wls-db-certs
+            defaultMode: 0640
