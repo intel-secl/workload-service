@@ -1,5 +1,12 @@
 #!/bin/bash 
 
+source /etc/secret-volume/secrets.txt
+export WLS_SERVICE_USERNAME
+export WLS_SERVICE_PASSWORD
+export WLS_DB_USERNAME
+export WLS_DB_PASSWORD
+export BEARER_TOKEN
+
 USER_ID=$(id -u)
 WORKLOAD_SERVICE_CONFIGURATION=/etc/workload-service
 WORKLOAD_SERVICE_LOGS=/var/log/workload-service
