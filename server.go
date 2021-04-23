@@ -40,10 +40,10 @@ func fnGetJwtCerts() error {
 	defer log.Trace("server:fnGetJwtCerts() Leaving")
 
 	c := config.Configuration
-	if !strings.HasSuffix(c.AAS_API_URL, "/") {
-		c.AAS_API_URL = c.AAS_API_URL + "/"
+	if !strings.HasSuffix(c.AasApiUrl, "/") {
+		c.AasApiUrl = c.AasApiUrl + "/"
 	}
-	url := c.AAS_API_URL + "jwt-certificates"
+	url := c.AasApiUrl + "jwt-certificates"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return errors.Wrap(err, "server:fnGetJwtCerts() Could not create http request")

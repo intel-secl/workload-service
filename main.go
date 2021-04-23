@@ -69,7 +69,7 @@ func main() {
 		if len(args) >= 2 &&
 			args[1] != "download_ca_cert" &&
 			args[1] != "download_cert" &&
-			args[1] != "server" &&
+			args[1] != "update_service_config" &&
 			args[1] != "download_saml_ca_cert" &&
 			args[1] != "database" &&
 			args[1] != "hvsconnection" &&
@@ -80,9 +80,9 @@ func main() {
 		}
 
 		// check if the WLS_NOSETUP env flag is set to "true", if so then skip setup
-		nosetup, err := context.GetenvString(config.WLS_NOSETUP, "WLS Setup Skip Flag")
+		nosetup, err := context.GetenvString(constants.WlsNosetupEnv, "WLS Setup Skip Flag")
 		if err == nil && strings.ToLower(nosetup) == "true" {
-			fmt.Println(config.WLS_NOSETUP, " is true, skipping setup")
+			fmt.Println(constants.WlsNosetupEnv, " is true, skipping setup")
 			os.Exit(0)
 		}
 
@@ -117,7 +117,7 @@ func main() {
 			Tasks: []csetup.Task{
 				csetup.Download_Ca_Cert{
 					Flags:                flags,
-					CmsBaseURL:           config.Configuration.CMS_BASE_URL,
+					CmsBaseURL:           config.Configuration.CmsBaseUrl,
 					CaCertDirPath:        constants.TrustedCaCertsDir,
 					TrustedTlsCertDigest: config.Configuration.CmsTlsCertDigest,
 					ConsoleWriter:        os.Stdout,
@@ -128,7 +128,7 @@ func main() {
 					CertFile:           config.Configuration.TLSCertFile,
 					KeyAlgorithm:       constants.DefaultKeyAlgorithm,
 					KeyAlgorithmLength: constants.DefaultKeyAlgorithmLength,
-					CmsBaseURL:         config.Configuration.CMS_BASE_URL,
+					CmsBaseURL:         config.Configuration.CmsBaseUrl,
 					Subject: pkix.Name{
 						CommonName: config.Configuration.Subject.TLSCertCommonName,
 					},
@@ -138,7 +138,7 @@ func main() {
 					BearerToken:   "",
 					ConsoleWriter: os.Stdout,
 				},
-				setup.Server{
+				setup.Update_Service_Config{
 					Flags: flags,
 				},
 				setup.Database{
@@ -354,8 +354,6 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                    Required env variables if WLS_NOSETUP=true or variables not set in config.yml:")
 	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                            : AAS API url")
 	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>                                : HVS API Endpoint URL")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>      : WLS service username")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>      : WLS service password")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables specific to setup task are:")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_BASE_URL=<url>                              : for CMS API url")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
@@ -364,10 +362,8 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                    - Option [--force] overwrites any existing files, and always downloads newly signed WLS TLS cert")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables if WLS_NOSETUP=true or variable not set in config.yml:")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
-	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                            : AAS API url")
-	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>                                : HVS API Endpoint URL")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>      : WLS service username")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>      : WLS service password")
+	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                               : AAS API url")
+	fmt.Fprintln(os.Stdout, "                                        - HVS_URL   =<url>                                : HVS API Endpoint URL")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables specific to setup task are:")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_BASE_URL=<url>                       : for CMS API url")
 	fmt.Fprintln(os.Stdout, "                                        - BEARER_TOKEN=<token>                     : for authenticating with CMS")
@@ -384,8 +380,6 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
 	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                               : AAS API url")
 	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>                                   : HVS API Endpoint URL")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>         : WLS service username")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>         : WLS service password")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables specific to setup task are:")
 	fmt.Fprintln(os.Stdout, "                                        - WLS_DB_HOSTNAME=<db host name>                   : database host name")
 	fmt.Fprintln(os.Stdout, "                                        - WLS_DB_PORT=<db port>                            : database port number")
@@ -397,17 +391,21 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                        - WLS_DB_SSLCERT=<ssl certificate path>            : database SSL Certificate target path. Only applicable for WLS_DB_SSLMODE=<verify-ca|verify-full>. If left empty, the cert will be copied to /etc/workload-service/wlsdbsslcert.pem")
 	fmt.Fprintln(os.Stdout, "                                        - WLS_DB_SSLCERTSRC=<ssl certificate source path>  : database SSL Certificate source path. Mandatory if WLS_DB_SSLCERT does not already exist")
 	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "   server                           Setup http server on given port")
+	fmt.Fprintln(os.Stdout, "   update_service_config            Updates Service Configuration")
 	fmt.Fprintln(os.Stdout, "                                    - Option [--force] overwrites existing server config")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables if WLS_NOSETUP=true or variable not set in config.yml:")
-	fmt.Fprintln(os.Stdout, "                                        - CMS_BASE_URL=<url>                              : for CMS API url")
-	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
-	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                               : AAS API url")
-	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>                                   : HVS API Endpoint URL")
-	fmt.Fprintln(os.Stdout, "                                    Optional env variables specific to setup task are:")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_PORT=<port>    : WLS API listener port")
 	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>         : WLS service username")
 	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>         : WLS service password")
+	fmt.Fprintln(os.Stdout, "                                    Optional env variables specific to setup task are:")
+	fmt.Fprintln(os.Stdout, "                                        - KEY_CACHE_SECONDS                                : Key Cache Seconds")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_LOGLEVEL                                     : Logging Level")
+	fmt.Fprintln(os.Stdout, "                                        - LOG_ENTRY_MAXLENGTH                              : Maximum length of each entry in a log")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVER_READ_TIMEOUT                          : Workload Service Read Timeout")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVER_READ_HEADER_TIMEOUT                   : Workload Service Read Header Timeout")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVER_WRITE_TIMEOUT                         : Workload Service Write Timeout")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVER_IDLE_TIMEOUT                          : Workload Service Idle Timeout")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVER_MAX_HEADER_BYTES                      : Workload Service Max Header Bytes Timeout")
+	fmt.Fprintln(os.Stdout, "                                        - WLS_ENABLE_CONSOLE_LOG                           : Workload Service enable standard output")
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprintln(os.Stdout, "   hvsconnection                    Setup task for setting up the connection to the Host Verification Service(HVS)")
 	fmt.Fprintln(os.Stdout, "                                    - Option [--force] overwrites existing HVS config")
@@ -415,8 +413,6 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                        - CMS_BASE_URL=<url>                              : for CMS API url")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
 	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                               : AAS API url")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>         : WLS service username")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>         : WLS service password")
 	fmt.Fprintln(os.Stdout, "                                    Required env variable specific to setup task is:")
 	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>      : HVS API Endpoint URL")
 	fmt.Fprintln(os.Stdout, "")
@@ -426,8 +422,6 @@ func printUsage() {
 	fmt.Fprintln(os.Stdout, "                                        - CMS_BASE_URL=<url>                              : for CMS API url")
 	fmt.Fprintln(os.Stdout, "                                        - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>  : to ensure that WLS is talking to the right CMS instance")
 	fmt.Fprintln(os.Stdout, "                                        - AAS_API_URL=<url>                               : AAS API url")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_USERNAME=<service username>         : WLS service username")
-	fmt.Fprintln(os.Stdout, "                                        - WLS_SERVICE_PASSWORD=<service password>         : WLS service password")
 	fmt.Fprintln(os.Stdout, "                                    Required env variables specific to setup task are:")
 	fmt.Fprintln(os.Stdout, "                                        - HVS_URL=<url>      : HVS API Endpoint URL")
 	fmt.Fprintln(os.Stdout, "                                        - BEARER_TOKEN=<token> for authenticating with HVS")

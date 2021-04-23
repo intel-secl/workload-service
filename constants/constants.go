@@ -26,14 +26,7 @@ const (
 	DefaultKeyAlgorithmLength = 3072
 	DefaultSSLCertFilePath    = ConfigDir + "wlsdbsslcert.pem"
 	ReportCreationGroupName   = "ReportsCreate"
-	BearerToken               = "BEARER_TOKEN"
-	CmsBaseUrlEnv             = "CMS_BASE_URL"
-	WlsTLsCertCnEnv           = "WLS_TLS_CERT_CN"
-	WlsCertSANList            = "SAN_LIST"
 	DefaultKeyCacheSeconds    = 300
-	KeyCacheSeconds           = "KEY_CACHE_SECONDS"
-	CmsTlsCertDigestEnv       = "CMS_TLS_CERT_SHA384"
-	LogEntryMaxlengthEnv      = "LOG_ENTRY_MAXLENGTH"
 	JWTCertsCacheTime         = "1m"
 	HttpLogFile               = "/var/log/workload-service/http.log"
 	SamlCaCertFilePath        = TrustedCaCertsDir + "SamlCaCert.pem"
@@ -47,7 +40,32 @@ const (
 	DefaultLogEntryMaxlength  = 300
 	WLSRuntimeUser            = "wls"
 	WLSRuntimeGroup           = "wls"
-	WLSConsoleEnableEnv       = "WLS_ENABLE_CONSOLE_LOG"
+)
+
+// Env variables
+const (
+	WLSConsoleEnableEnv           = "WLS_ENABLE_CONSOLE_LOG"
+	WlsNosetupEnv                 = "WLS_NOSETUP"
+	WlsPortEnv                    = "WLS_PORT"
+	HvsUrlEnv                     = "HVS_URL"
+	WlsUserEnv                    = "WLS_SERVICE_USERNAME"
+	WlsPasswordEnv                = "WLS_SERVICE_PASSWORD"
+	WlsLoglevelEnv                = "WLS_LOGLEVEL"
+	AasApiUrlEnv                  = "AAS_API_URL"
+	TLSKeyPathEnv                 = "KEY_PATH"
+	TLSCertPathEnv                = "CERT_PATH"
+	WlsServerReadTimeoutEnv       = "WLS_SERVER_READ_TIMEOUT"
+	WlsServerReadHeaderTImeoutEnv = "WLS_SERVER_READ_HEADER_TIMEOUT"
+	WlsServerWriteTimeoutEnv      = "WLS_SERVER_WRITE_TIMEOUT"
+	WlsServerIdleTimeoutEnv       = "WLS_SERVER_IDLE_TIMEOUT"
+	WlsServerMaxHeaderBytesEnv    = "WLS_SERVER_MAX_HEADER_BYTES"
+	BearerTokenEnv                = "BEARER_TOKEN"
+	CmsBaseUrlEnv                 = "CMS_BASE_URL"
+	WlsTLsCertCnEnv               = "WLS_TLS_CERT_CN"
+	WlsCertSANListEnv             = "SAN_LIST"
+	KeyCacheSecondsEnv            = "KEY_CACHE_SECONDS"
+	CmsTlsCertDigestEnv           = "CMS_TLS_CERT_SHA384"
+	LogEntryMaxlengthEnv          = "LOG_ENTRY_MAXLENGTH"
 )
 
 //Resource endpoints

@@ -39,13 +39,13 @@ func (dc Download_Saml_Ca_Cert) Run(c csetup.Context) error {
 		return nil
 	}
 	log.Info("setup/download_saml_ca_cert:Run() Downloading SAML CA certificates.")
-	jwtToken, err := c.GetenvSecret(constants.BearerToken, "BEARER_TOKEN")
+	jwtToken, err := c.GetenvSecret(constants.BearerTokenEnv, "BEARER_TOKEN")
 	if jwtToken == "" || err != nil {
 		fmt.Fprintln(os.Stderr, "BEARER_TOKEN is not defined in environment")
 		return errors.Wrap(err, "BEARER_TOKEN is not defined in environment")
 	}
 
-	vsClientFactory, err := hvsclient.NewVSClientFactory(config.Configuration.HVS_API_URL, jwtToken, constants.TrustedCaCertsDir)
+	vsClientFactory, err := hvsclient.NewVSClientFactory(config.Configuration.HvsApiUrl, jwtToken, constants.TrustedCaCertsDir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")
 		return errors.Wrap(err, "setup/download_saml_ca_cert:Run() Error while instantiating VSClientFactory")

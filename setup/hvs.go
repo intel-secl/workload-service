@@ -9,6 +9,7 @@ import (
 	"fmt"
 	csetup "intel/isecl/lib/common/v3/setup"
 	"intel/isecl/workload-service/v3/config"
+	"intel/isecl/workload-service/v3/constants"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -45,13 +46,13 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 
 	fmt.Println("Setting up HVS configuration ...")
 	var hvsURL string
-	if hvsURL, err = c.GetenvString(config.HVS_URL, "Host Verification Service URL"); err != nil {
+	if hvsURL, err = c.GetenvString(constants.HvsUrlEnv, "Host Verification Service URL"); err != nil {
 		return errors.Wrap(err, "setup/hvs:Run() Missing HVS Endpoint URL in environment")
 	}
 	if strings.HasSuffix(hvsURL, "/") {
-		config.Configuration.HVS_API_URL = hvsURL
+		config.Configuration.HvsApiUrl = hvsURL
 	} else {
-		config.Configuration.HVS_API_URL = hvsURL + "/"
+		config.Configuration.HvsApiUrl = hvsURL + "/"
 	}
 
 	log.Info("setup/hvs:Run() Updated HVS endpoint in configuration")
@@ -62,7 +63,7 @@ func (hvs HVSConnection) Run(c csetup.Context) error {
 func (hvs HVSConnection) Validate(c csetup.Context) error {
 	log.Trace("setup/hvs:Validate() Entering")
 	defer log.Trace("setup/hvs:Validate() Leaving")
-	if config.Configuration.HVS_API_URL == "" {
+	if config.Configuration.HvsApiUrl == "" {
 		return errors.New("setup/hvs:Validate() HVS Connection: URL is not set")
 	}
 	return nil

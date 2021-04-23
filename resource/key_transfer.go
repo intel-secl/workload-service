@@ -60,7 +60,7 @@ func transfer_key(getFlavor bool, hwid string, kUrl string, id string) ([]byte, 
 	keyID := re.FindString(keyUrl.Path)
 
 	// retrieve host SAML report from HVS
-	vsClientFactory, err := hvsclient.NewVSClientFactoryWithUserCredentials(config.Configuration.HVS_API_URL, config.Configuration.AAS_API_URL, config.Configuration.WLS.User, config.Configuration.WLS.Password, constants.TrustedCaCertsDir)
+	vsClientFactory, err := hvsclient.NewVSClientFactoryWithUserCredentials(config.Configuration.HvsApiUrl, config.Configuration.AasApiUrl, config.Configuration.WLS.User, config.Configuration.WLS.Password, constants.TrustedCaCertsDir)
 	if err != nil {
 		cLog.WithError(err).Error("Error while instantiating VSClientFactory")
 		return nil, &endpointError{

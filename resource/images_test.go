@@ -25,7 +25,7 @@ func TestFlavorKey(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:1338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:1338/mtwilson/v2/"
 
 	k := mockKMS(":1337")
 	defer k.Close()
@@ -47,7 +47,7 @@ func TestFlavorKeyMissingHWUUID(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:2338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:2338/mtwilson/v2/"
 
 	k := mockKMS(":2337")
 	defer k.Close()
@@ -69,7 +69,7 @@ func TestFlavorKeyEmptyHWUUID(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:3338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:3338/mtwilson/v2/"
 
 	k := mockKMS(":3337")
 	defer k.Close()
@@ -91,7 +91,7 @@ func TestFlavorKeyHVSDown(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:4338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:4338/mtwilson/v2/"
 
 	k := mockKMS(":4337")
 	defer k.Close()
@@ -111,7 +111,7 @@ func TestFlavorKyHVSBadRequest(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:5338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:5338/mtwilson/v2/"
 
 	k := mockKMS(":5337")
 	defer k.Close()
@@ -133,7 +133,7 @@ func TestFlavorKeyKMSDown(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:6338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:6338/mtwilson/v2/"
 
 	h := mockHVS(":6338")
 	defer h.Close()
@@ -153,7 +153,7 @@ func TestFlavorKeyKMSBadRequest(t *testing.T) {
 	assert := assert.New(t)
 	db := new(mock.Database)
 	r := setupMockServer(db)
-	config.Configuration.HVS_API_URL = "http://localhost:7338/mtwilson/v2/"
+	config.Configuration.HvsApiUrl = "http://localhost:7338/mtwilson/v2/"
 
 	h := mockHVS(":7338")
 	defer h.Close()
