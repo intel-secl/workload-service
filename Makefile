@@ -4,6 +4,12 @@ GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
+MONOREPO_GITURL := "ssh://git@gitlab.devtools.intel.com:29418/sst/isecl/intel-secl.git"
+MONOREPO_GITBRANCH := "v3.6/develop"
+
+ifeq ($(PROXY_EXISTS),1)
+	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
+endif
 
 .PHONY: workload-service installer wls-docker wls-oci-archive all clean
 
@@ -15,6 +21,14 @@ installer: workload-service
 	cp dist/linux/workload-service.service out/wls/workload-service.service
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
+
+	git archive --remote=$(MONOREPO_GITURL) $(MONOREPO_GITBRANCH) pkg/lib/common/upgrades/ | tar xvf -
+	cp -a pkg/lib/common/upgrades/* out/wls/
+	rm -rf pkg/
+	cp -a upgrades/* out/wls/
+	mv out/wls/build/* out/wls/
+	chmod +x out/wls/*.sh
+
 	makeself out/wls out/wls-$(VERSION).bin "Workload Service $(VERSION)" ./install.sh
 
 oci-archive: workload-service

@@ -59,6 +59,14 @@ fi
 # Make sure that we are running in the same directory as the install script
 cd "$(dirname "$0")"
 
+COMPONENT_NAME=workload-service
+# Upgrade if component is already installed
+if command -v $COMPONENT_NAME &>/dev/null; then
+  echo "$COMPONENT_NAME is installed, proceeding with the upgrade"
+  ./${COMPONENT_NAME}_upgrade.sh
+  exit $?
+fi
+
 # load installer environment file, if present
 if [ -f ~/workload-service.env ]; then
   echo_info "Loading environment variables from $(cd ~ && pwd)/workload-service.env"
