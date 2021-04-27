@@ -32,13 +32,16 @@ if [ ! -f $WORKLOAD_SERVICE_CONFIGURATION/.setup_done ]; then
 fi
 
 if [ ! -z "$SETUP_TASK" ]; then
+  cp $WORKLOAD_SERVICE_CONFIGURATION/config.yml /tmp/config.yml
   IFS=',' read -ra ADDR <<< "$SETUP_TASK"
   for task in "${ADDR[@]}"; do
     workload-service setup $task --force
     if [ $? -ne 0 ]; then
+      cp /tmp/config.yml $WORKLOAD_SERVICE_CONFIGURATION/config.yml
       exit 1
     fi
   done
+  rm -rf /tmp/config.yml
 fi
 
 workload-service startServer
