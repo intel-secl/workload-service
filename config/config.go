@@ -79,7 +79,7 @@ func SaveConfiguration(c setup.Context) error {
 		Configuration.Port = wlsPort
 	} else if Configuration.Port <= 0 {
 		Configuration.Port = constants.DefaultWLSListenerPort
-		log.Infof("config/config:SaveConfiguration() %s not defined, using default value: %s", constants.WlsPortEnv, constants.DefaultWLSListenerPort)
+		log.Infof("config/config:SaveConfiguration() %s not defined, using default value: %d", constants.WlsPortEnv, constants.DefaultWLSListenerPort)
 	}
 
 	tlsCertDigest, err := c.GetenvString(constants.CmsTlsCertDigestEnv, "CMS TLS certificate digest")

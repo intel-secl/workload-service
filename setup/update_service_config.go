@@ -88,7 +88,7 @@ func (uc Update_Service_Config) Run(c csetup.Context) error {
 	if err == nil && logEntryMaxLength >= 300 {
 		config.Configuration.LogEntryMaxLength = logEntryMaxLength
 	} else {
-		log.Infof("setup/update_service_config:Run() Invalid Log Entry Max Length defined (should be >=  %s ), using default value: %s", constants.DefaultLogEntryMaxlength, constants.DefaultLogEntryMaxlength)
+		log.Infof("setup/update_service_config:Run() Invalid Log Entry Max Length defined (should be >=  %d ), using default value: %d", constants.DefaultLogEntryMaxlength, constants.DefaultLogEntryMaxlength)
 		config.Configuration.LogEntryMaxLength = constants.DefaultLogEntryMaxlength
 	}
 
