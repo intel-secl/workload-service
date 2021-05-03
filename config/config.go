@@ -38,9 +38,9 @@ var Configuration struct {
 		SSLMode  string
 		SSLCert  string
 	}
-	HvsApiUrl  string
-	CmsBaseUrl string
-	AasApiUrl  string
+	HvsApiUrl  string `yaml:"hvs_api_url"`
+	CmsBaseUrl string `yaml:"cms_base_url"`
+	AasApiUrl  string `yaml:"aas_api_url"`
 	Subject    struct {
 		TLSCertCommonName string
 	}
@@ -53,7 +53,7 @@ var Configuration struct {
 	LogLevel          string
 	LogEnableStdout   bool
 	LogEntryMaxLength int
-	KeyCacheSeconds   int
+	KeyCacheSeconds   int `yaml:"key_cache_seconds"`
 	ReadTimeout       time.Duration
 	ReadHeaderTimeout time.Duration
 	WriteTimeout      time.Duration
