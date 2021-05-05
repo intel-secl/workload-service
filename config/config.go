@@ -269,8 +269,8 @@ func LogConfiguration(stdOut, logFile bool) {
 
 	// creating the log file if not preset
 	var ioWriterDefault io.Writer
-	secLogFile, _ := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+	secLogFile, _ := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 
 	err := TakeOwnershipFileWLS(constants.LogDir)
 	if err != nil {

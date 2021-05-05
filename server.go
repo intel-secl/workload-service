@@ -128,7 +128,7 @@ func startServer() error {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGKILL)
 
 	httpWriter := os.Stderr
-	if httpLogFile, err := os.OpenFile(constants.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err != nil {
+	if httpLogFile, err := os.OpenFile(constants.HttpLogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640); err != nil {
 		secLog.WithError(err).Errorf("server:startServer() Failed to open http log file: %s\n", err.Error())
 		log.Tracef("%+v", err)
 	} else {

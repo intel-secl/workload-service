@@ -106,6 +106,9 @@ done
 # change the ownership of the WLS_HOME path
 chown wls:wls $WORKLOAD_SERVICE_HOME
 
+# log file permission change
+chmod 740 $WORKLOAD_SERVICE_LOGS 
+
 mkdir -p /etc/workload-service/certs/trustedca
 chown wls:wls /etc/workload-service/certs/trustedca
 
