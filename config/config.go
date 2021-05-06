@@ -266,13 +266,23 @@ func TakeOwnershipFileWLS(filename string) error {
 func LogConfiguration(stdOut, logFile bool) {
 	log.Trace("config/config:LogConfiguration() Entering")
 	defer log.Trace("config/config:LogConfiguration() Leaving")
-
+	var err error = nil
 	// creating the log file if not preset
 	var ioWriterDefault io.Writer
 	secLogFile, _ := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
-	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 
-	err := TakeOwnershipFileWLS(constants.LogDir)
+	err = os.Chmod(constants.SecurityLogFile, 0640)
+	if err != nil {
+		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", secLogFile)
+	}
+
+	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	err = os.Chmod(constants.LogFile, 0640)
+	if err != nil {
+		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", defaultLogFile)
+	}
+
+	err = TakeOwnershipFileWLS(constants.LogDir)
 	if err != nil {
 		fmt.Println("Error taking log path ownership ", constants.LogDir)
 		os.Exit(-1)
