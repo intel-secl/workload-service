@@ -21,10 +21,9 @@ installer: workload-service
 	cp dist/linux/workload-service.service out/wls/workload-service.service
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
-	tmpdir=$(mktemp)
-	git clone --depth 1 -b $(MONOREPO_GITBRANCH) $(MONOREPO_GITURL) $tmpdir
-	cp -a $tmpdir/pkg/lib/common/upgrades/* out/wls/
-	rm -rf $tmpdir
+	git clone --depth 1 -b $(MONOREPO_GITBRANCH) $(MONOREPO_GITURL) tmp_monorepo
+	cp -a tmp_monorepo/pkg/lib/common/upgrades/* out/wls/
+	rm -rf tmp_monorepo
 	cp -a upgrades/* out/wls/
 	mv out/wls/build/* out/wls/
 	chmod +x out/wls/*.sh
