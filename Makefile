@@ -5,7 +5,7 @@ VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
 MONOREPO_GITURL := "https://github.com/intel-secl/intel-secl.git"
-MONOREPO_GITBRANCH := "v3.6/develop"
+MONOREPO_GITBRANCH := "v3.6.0"
 
 ifeq ($(PROXY_EXISTS),1)
 	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
@@ -21,10 +21,10 @@ installer: workload-service
 	cp dist/linux/workload-service.service out/wls/workload-service.service
 	cp dist/linux/install.sh out/wls/install.sh && chmod +x out/wls/install.sh
 	cp out/workload-service out/wls/workload-service
-
-	git archive --remote=$(MONOREPO_GITURL) $(MONOREPO_GITBRANCH) pkg/lib/common/upgrades/ | tar xvf -
-	cp -a pkg/lib/common/upgrades/* out/wls/
-	rm -rf pkg/
+	tmpdir=$(mktemp)
+	git clone --depth 1 -b $(MONOREPO_GITBRANCH) $(MONOREPO_GITURL) $tmpdir
+	cp -a $tmpdir/pkg/lib/common/upgrades/* out/wls/
+	rm -rf $tmpdir
 	cp -a upgrades/* out/wls/
 	mv out/wls/build/* out/wls/
 	chmod +x out/wls/*.sh
