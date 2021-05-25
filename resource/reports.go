@@ -7,11 +7,11 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"intel/isecl/lib/common/v3/log/message"
-	"intel/isecl/lib/common/v3/validation"
-	"intel/isecl/workload-service/v3/constants"
-	"intel/isecl/workload-service/v3/model"
-	"intel/isecl/workload-service/v3/repository"
+	"intel/isecl/lib/common/v4/log/message"
+	"intel/isecl/lib/common/v4/validation"
+	"intel/isecl/workload-service/v4/constants"
+	"intel/isecl/workload-service/v4/model"
+	"intel/isecl/workload-service/v4/repository"
 	"net/http"
 	"strconv"
 

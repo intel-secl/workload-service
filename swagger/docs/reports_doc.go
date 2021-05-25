@@ -5,9 +5,9 @@
 package docs
 
 import (
-	"intel/isecl/lib/common/v3/crypt"
-	"intel/isecl/lib/common/v3/pkg/instance"
-	"intel/isecl/lib/verifier/v3"
+	"intel/isecl/lib/common/v4/crypt"
+	"intel/isecl/lib/common/v4/pkg/instance"
+	"intel/isecl/lib/verifier/v4"
 )
 
 type Rule struct {

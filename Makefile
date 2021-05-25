@@ -4,8 +4,8 @@ GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
 VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
-MONOREPO_GITURL := "https://github.com/intel-secl/intel-secl.git"
-MONOREPO_GITBRANCH := "v3.6.0"
+MONOREPO_GITURL := "ssh://git@gitlab.devtools.intel.com:29418/sst/isecl/intel-secl.git"
+MONOREPO_GITBRANCH := "v4.0/develop"
 
 ifeq ($(PROXY_EXISTS),1)
 	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
@@ -14,7 +14,7 @@ endif
 .PHONY: workload-service installer wls-docker wls-oci-archive all clean
 
 workload-service:
-	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/v3/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/v3/version.Version=$(VERSION) -X intel/isecl/workload-service/v3/version.GitHash=$(GITCOMMIT)" -o out/workload-service
+	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/v4/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/v4/version.Version=$(VERSION) -X intel/isecl/workload-service/v4/version.GitHash=$(GITCOMMIT)" -o out/workload-service
 
 installer: workload-service
 	mkdir -p out/wls

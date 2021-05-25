@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"intel/isecl/workload-service/v3/repository"
+	"intel/isecl/workload-service/v4/repository"
 	"strings"
 	"time"
 )

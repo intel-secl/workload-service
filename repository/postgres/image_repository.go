@@ -7,9 +7,9 @@ package postgres
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	flvr "intel/isecl/lib/flavor/v3"
-	"intel/isecl/workload-service/v3/model"
-	"intel/isecl/workload-service/v3/repository"
+	flvr "intel/isecl/lib/flavor/v4"
+	"intel/isecl/workload-service/v4/model"
+	"intel/isecl/workload-service/v4/repository"
 )
 
 type imageRepo struct {

@@ -7,23 +7,23 @@ package main
 import (
 	"crypto/x509/pkix"
 	"fmt"
-	commLog "intel/isecl/lib/common/v3/log"
-	csetup "intel/isecl/lib/common/v3/setup"
-	"intel/isecl/lib/common/v3/validation"
-	"intel/isecl/workload-service/v3/config"
-	"intel/isecl/workload-service/v3/constants"
-	"intel/isecl/workload-service/v3/setup"
-	"intel/isecl/workload-service/v3/version"
+	commLog "intel/isecl/lib/common/v4/log"
+	csetup "intel/isecl/lib/common/v4/setup"
+	"intel/isecl/lib/common/v4/validation"
+	"intel/isecl/workload-service/v4/config"
+	"intel/isecl/workload-service/v4/constants"
+	"intel/isecl/workload-service/v4/setup"
+	"intel/isecl/workload-service/v4/version"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 
 	// Import Postgres driver
-	e "intel/isecl/lib/common/v3/exec"
+	e "intel/isecl/lib/common/v4/exec"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	_ "intel/isecl/workload-service/v3/swagger/docs"
+	_ "intel/isecl/workload-service/v4/swagger/docs"
 )
 
 var log = commLog.GetDefaultLogger()

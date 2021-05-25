@@ -9,8 +9,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
-	commLog "intel/isecl/lib/common/v3/log"
-	flvr "intel/isecl/lib/flavor/v3"
+	commLog "intel/isecl/lib/common/v4/log"
+	flvr "intel/isecl/lib/flavor/v4"
 	"time"
 )
 

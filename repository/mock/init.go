@@ -6,12 +6,12 @@ package mock
 
 import (
 	"encoding/json"
-	commLog "intel/isecl/lib/common/v3/log"
-	"intel/isecl/lib/common/v3/pkg/instance"
-	"intel/isecl/lib/flavor/v3"
-	flavorUtil "intel/isecl/lib/flavor/v3/util"
-	"intel/isecl/lib/verifier/v3"
-	"intel/isecl/workload-service/v3/model"
+	commLog "intel/isecl/lib/common/v4/log"
+	"intel/isecl/lib/common/v4/pkg/instance"
+	"intel/isecl/lib/flavor/v4"
+	flavorUtil "intel/isecl/lib/flavor/v4/util"
+	"intel/isecl/lib/verifier/v4"
+	"intel/isecl/workload-service/v4/model"
 )
 
 var log = commLog.GetDefaultLogger()

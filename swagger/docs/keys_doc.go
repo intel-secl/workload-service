@@ -4,7 +4,7 @@
  */
 package docs
 
-import "github.com/intel-secl/intel-secl/v3/pkg/model/wls"
+import "github.com/intel-secl/intel-secl/v4/pkg/model/wls"
 
 // KeyRequest request payload
 // swagger:parameters KeyRequest

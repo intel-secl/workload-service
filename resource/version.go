@@ -5,7 +5,7 @@
 package resource
 
 import (
-	"intel/isecl/workload-service/v3/version"
+	"intel/isecl/workload-service/v4/version"
 	"net/http"
 
 	"github.com/gorilla/mux"

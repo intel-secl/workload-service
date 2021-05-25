@@ -6,7 +6,7 @@ package version
 
 import (
 	"fmt"
-	"intel/isecl/workload-service/v3/constants"
+	"intel/isecl/workload-service/v4/constants"
 )
 
 // Automatically filled in by linker

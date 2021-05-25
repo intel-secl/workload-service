@@ -7,11 +7,11 @@ package setup
 import (
 	"flag"
 	"fmt"
-	"github.com/intel-secl/intel-secl/v3/pkg/clients/hvsclient"
+	"github.com/intel-secl/intel-secl/v4/pkg/clients/hvsclient"
 	"github.com/pkg/errors"
-	csetup "intel/isecl/lib/common/v3/setup"
-	"intel/isecl/workload-service/v3/config"
-	"intel/isecl/workload-service/v3/constants"
+	csetup "intel/isecl/lib/common/v4/setup"
+	"intel/isecl/workload-service/v4/config"
+	"intel/isecl/workload-service/v4/constants"
 	"io/ioutil"
 	"os"
 )

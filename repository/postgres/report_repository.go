@@ -10,8 +10,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
-	"intel/isecl/workload-service/v3/model"
-	"intel/isecl/workload-service/v3/repository"
+	"intel/isecl/workload-service/v4/model"
+	"intel/isecl/workload-service/v4/repository"
 	"strconv"
 	"time"
 )
