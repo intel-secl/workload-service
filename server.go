@@ -67,7 +67,7 @@ func fnGetJwtCerts() error {
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS12,
+				MinVersion:         tls.VersionTLS13,
 				InsecureSkipVerify: false,
 				RootCAs:            rootCAs,
 			},
@@ -140,6 +140,7 @@ func startServer() error {
 		}()
 		httpWriter = httpLogFile
 	}
+	// WLS is a user-facing service, hence keeping support for TLS version v12
 	tlsconfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CipherSuites: []uint16{tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
