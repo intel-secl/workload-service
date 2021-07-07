@@ -65,10 +65,6 @@ var Configuration struct {
 var log = commLog.GetDefaultLogger()
 var secLog = commLog.GetSecurityLogger()
 
-var (
-	LogWriter io.Writer
-)
-
 func SaveConfiguration(c setup.Context) error {
 	log.Trace("config/config:SaveConfiguration() Entering")
 	defer log.Trace("config/config:SaveConfiguration() Leaving")
@@ -223,7 +219,6 @@ func init() {
 			fmt.Fprintln(os.Stderr, "Error: Unable to decode configuration")
 		}
 	}
-	LogWriter = os.Stdout
 }
 
 func TakeOwnershipFileWLS(filename string) error {
@@ -269,17 +264,23 @@ func LogConfiguration(stdOut, logFile bool) {
 	var err error = nil
 	// creating the log file if not preset
 	var ioWriterDefault io.Writer
-	secLogFile, _ := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	secLogFile, err := os.OpenFile(constants.SecurityLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	if err != nil {
+		log.Error("config/config:LogConfiguration() error in opening a security log file")
+	}
 
 	err = os.Chmod(constants.SecurityLogFile, 0640)
 	if err != nil {
-		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", secLogFile)
+		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", constants.SecurityLogFile)
 	}
 
-	defaultLogFile, _ := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	defaultLogFile, err := os.OpenFile(constants.LogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	if err != nil {
+		log.Error("config/config:LogConfiguration() error in opening a default log file")
+	}
 	err = os.Chmod(constants.LogFile, 0640)
 	if err != nil {
-		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", defaultLogFile)
+		log.Errorf("config/config:LogConfiguration() error in setting file permission for file : %s", constants.LogFile)
 	}
 
 	err = TakeOwnershipFileWLS(constants.LogDir)
