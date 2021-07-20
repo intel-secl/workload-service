@@ -4,11 +4,11 @@
 
 - git
 - makeself
-- `go` version >= `go1.14.1`
+- `go` version 1.14.4
 
-### Install `go` version >= `go1.14.1`
+### Install `go` version 1.14.4
 
-The `Workload Service` requires Go version 1.14.1 that has support for `go modules`. The build was validated with the latest version go1.14.4 of `go`. It is recommended that you use go1.14.4 version of `go`. More recent versions may introduce compatibility issues. You can use the following to install `go`.
+The `Workload Service` requires Go version 1.14.4 that has support for `go modules`. The build was validated with the latest version go1.14.4 of `go`. It is recommended that you use go1.14.4 version of `go`. More recent versions may introduce compatibility issues. You can use the following to install `go`.
 
 ```shell
 wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
