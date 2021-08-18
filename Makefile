@@ -13,6 +13,7 @@ endif
 .PHONY: workload-service installer wls-docker wls-oci-archive all clean
 
 workload-service:
+	env GOOS=linux GOSUMDB=off GOPROXY=direct go mod tidy
 	env GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X intel/isecl/workload-service/v4/version.BuildDate=$(BUILDDATE) -X intel/isecl/workload-service/v4/version.Version=$(VERSION) -X intel/isecl/workload-service/v4/version.GitHash=$(GITCOMMIT)" -o out/workload-service
 
 installer: workload-service

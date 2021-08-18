@@ -32,6 +32,7 @@ test:
   tags:
     - go
   script:
+    - GOOS=linux GOSUMDB=off GOPROXY=direct go mod tidy
     - GOOS=linux GOSUMDB=off GOPROXY=direct go test ./... -tags=integration -coverpkg=./... -coverprofile cover.out
     - go tool cover -func cover.out
     - go tool cover -html=cover.out -o cover.html
@@ -62,7 +63,7 @@ installer:
 
 docker:
   stage: deploy
-  tags: 
+  tags:
     - go
     - docker
   script:
@@ -75,21 +76,20 @@ docker:
       - "out/*.tar"
       - "out/swagger.yml"
     expire_in: 1 week
-    
-    
+
 Stylechecker:
   stage: scan
   only:
-     - merge_requests
+    - merge_requests
   image: golang:1.14
   tags:
     - k8s
   script:
     - gofmt -l .
     - |
-        if [ "$(gofmt -l . | wc -l)"  -gt 0 ]; then
-                    exit 1
-        fi    
+      if [ "$(gofmt -l . | wc -l)"  -gt 0 ]; then
+                  exit 1
+      fi
 
 snykscan:
   stage: scan
@@ -109,20 +109,20 @@ snykscan:
   artifacts:
     paths:
       - snyc-scan.json
-    
+
 
 
 
 checkmarx:
   stage: scan
   only:
-     - merge_requests
+    - merge_requests
   allow_failure: true
   services:
-     - docker:dind
+    - docker:dind
   image:
     name: ${DOCKER_REGISTRY_SERVER}:${DOCKER_REGISTRY_PORT}/checkmarx:isecl
-    entrypoint: ['']
+    entrypoint: [""]
   tags:
     - docker-checkmarx
     #  /app/cx-flow.jar
