@@ -13,5 +13,6 @@ resources:
 - config-pvc.yml
 - logs-pv.yml
 - logs-pvc.yml
+- secrets.yml
 - deployment.yml
 - service.yml
