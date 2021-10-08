@@ -5,6 +5,12 @@ BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
 MONOREPO_GITURL := "https://gitlab.devtools.intel.com/sst/isecl/intel-secl.git"
 MONOREPO_GITBRANCH := "v4.1/develop"
+DOCKER_PROXY_FLAGS := ""
+ifeq ($(PROXY_EXISTS),1)
+	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
+else
+	undefine DOCKER_PROXY_FLAGS
+endif
 
 ifeq ($(PROXY_EXISTS),1)
 	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
@@ -32,11 +38,7 @@ installer: workload-service
 
 oci-archive: workload-service
 	cp dist/docker/entrypoint.sh out/entrypoint.sh && chmod +x out/entrypoint.sh
-ifeq ($(PROXY_EXISTS),1)
-	docker build -t isecl/workload-service:$(VERSION) --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy} -f dist/docker/Dockerfile .
-else
-	docker build -t isecl/workload-service:$(VERSION) -f dist/docker/Dockerfile .
-endif
+	docker build ${DOCKER_PROXY_FLAGS} -t isecl/workload-service:$(VERSION) --label org.label-schema.build-date=$(BUILDDATE) -f dist/docker/Dockerfile .
 	skopeo copy docker-daemon:isecl/workload-service:$(VERSION) oci-archive:out/workload-service-$(VERSION)-$(GITCOMMIT).tar:$(VERSION)
 
 swagger-get:
